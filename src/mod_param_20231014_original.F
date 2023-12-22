@@ -213,20 +213,12 @@ MODULE mod_param
 #endif
 
   real(8), allocatable :: dz(:,:,:)    
-#ifdef YT_SEAGRASS
-  real(8), allocatable :: dXI(:,:)    
-  real(8), allocatable :: dETA(:,:)    
-#endif
   real(8), allocatable :: C(:,:,:,:)
   real(8), allocatable :: dC_dt(:,:,:,:)
   real(8), allocatable :: Co(:,:,:)
   
   real(8), allocatable :: p_coral(:,:,:)
-#ifdef YT_SEAGRASS
-  real(8), allocatable :: p_sgrass(:,:,:)
-#else
   real(8), allocatable :: p_sgrass(:,:)
-#endif
   real(8), allocatable :: p_algae(:,:)
   real(8), allocatable :: p_sand(:,:)
 
@@ -236,13 +228,13 @@ contains
 !!!  Set initial conditions
 !!! **********************************************************************
 
-  subroutine initialize_params(LBi, UBi, LBj, UBj, N, Nid) 
+  subroutine initialize_params(LBi, UBi, LBj, UBj, N, Nid)
 
     use mod_geochem
     
     implicit none
 ! input parameters
-    integer, intent(in) :: LBi, UBi, LBj, UBj, N !yt_edit N is the number of vertical layers I think?
+    integer, intent(in) :: LBi, UBi, LBj, UBj, N
     integer, intent(out) :: Nid
     real(8)  R13C
     integer i,j,k
@@ -251,9 +243,6 @@ contains
     integer :: ic
 
     real(8) :: d0, T0, S0
-#ifdef YT_SEAGRASS
-    real(8) :: grid_width
-#endif
     real(8) :: TAlk0, TIC_0, Oxyg0, Sed1_0
     real(8) :: DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Zoop1_0, PIC1_0
     real(8) :: d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
@@ -265,9 +254,6 @@ contains
     real(8) :: p_coral1_0, p_coral2_0, p_algae_0, p_sgrass_0, p_sand_0
 
     namelist/initial/d0, T0, S0
-#ifdef YT_SEAGRASS
-    namelist/initial/grid_width
-#endif
     namelist/initial/TAlk0, TIC_0, Oxyg0, Sed1_0
     namelist/initial/DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Zoop1_0, PIC1_0
     namelist/initial/d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
@@ -426,21 +412,13 @@ contains
 
 
    allocate( dz(LBi:UBi,LBj:UBj,N) )
-#ifdef YT_SEAGRASS
-   allocate( dXI (LBi:UBi,LBj:UBj) )
-   allocate( dETA(LBi:UBi,LBj:UBj) )
-#endif
 
    allocate( C(LBi:UBi, LBj:UBj, N, Nid) , &
              dC_dt(LBi:UBi, LBj:UBj, N, Nid)   )
    allocate( Co(LBi:UBi, LBj:UBj, Nid) )
    
    allocate( p_coral (2,LBi:UBi, LBj:UBj) , &
-#ifdef YT_SEAGRASS
-             p_sgrass(1,LBi:UBi, LBj:UBj) , &
-#else
              p_sgrass(LBi:UBi, LBj:UBj) , &
-#endif
              p_sand  (LBi:UBi, LBj:UBj) , &
              p_algae (LBi:UBi, LBj:UBj)   )   
 
@@ -451,12 +429,6 @@ contains
 
     do j=LBj,UBj
       do i=LBi,UBi
-#ifdef YT_SEAGRASS
-        dXI (i,j)=grid_width !(m)
-        dETA(i,j)=grid_width !(m)
-        ! dXI (i,j) = i*1.0 !(m) yt_edit just for testing
-        ! dETA(i,j) = j*1.2 !(m) yt_edit just for testing
-#endif
         do k=1,N
         
           dz(i,j,k)=d0 !(m)
@@ -653,11 +625,7 @@ contains
         p_sand(i,j)  = p_sand_0
 #endif
         p_algae(i,j) = p_algae_0
-#ifdef YT_SEAGRASS
-        p_sgrass(1,i,j)= p_sgrass_0
-#else
         p_sgrass(i,j)= p_sgrass_0
-#endif
         
         
       enddo

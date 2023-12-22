@@ -220,7 +220,7 @@ CONTAINS
 END MODULE mod_sedecosys
 
 
-#elif defined SEDIMENT_ECOSYS         
+#else         
 !!! **********************************************************************
 !!!  Sediment model
 !!! **********************************************************************
@@ -683,6 +683,7 @@ CONTAINS
     real(8) :: cCO3amb 
     real(8) :: Wargamb
 # endif
+
 
 !!!---- Diffusive flux calculations --------------------------
 
@@ -1175,7 +1176,6 @@ CONTAINS
 
 !!!---- Set output parameters --------------------------
 
-
     SEDECO(ng)%Pg(i,j) = 0.0d0
     SEDECO(ng)%R (i,j) = 0.0d0
     SEDECO(ng)%G (i,j) = 0.0d0
@@ -1214,7 +1214,6 @@ CONTAINS
 # if defined SEDIMENT_TESTMODE
 !------------------------------------------------------------------------
 ! Print section
-
     time = time +dt  ! sec
     
     if(time.ge.dsec) then
@@ -1266,238 +1265,5 @@ CONTAINS
   END SUBROUTINE sedecosys
 
 END MODULE mod_sedecosys
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#elif defined YT_SEDIMENT_ECOSYS         
-!!! **********************************************************************
-!!!  Sediment model
-!!! **********************************************************************
-
-MODULE mod_sedecosys
-
-  implicit none
-
-  integer, parameter :: Nsed= 50    !! Number of sediment grids
-
-  TYPE T_SEDECO
-
-    real(8), pointer :: Tmp(:,:,:) 
-    real(8), pointer :: Sal(:,:,:) 
-    real(8), pointer :: TA (:,:,:) 
-    real(8), pointer :: DIC(:,:,:)
-    real(8), pointer :: DOx(:,:,:) 
-    real(8), pointer :: pH (:,:,:) 
-    real(8), pointer :: thickness (:) ! sediment layer thickness in mm
-# if defined ORGANIC_MATTER
-    real(8), pointer :: DOC(:,:,:)
-    real(8), pointer :: POC(:,:,:)
-# endif
-# if defined NUTRIENTS
-!  Nutrients dynamics
-    real(8), pointer :: NO3(:,:,:)
-    real(8), pointer :: NH4(:,:,:)
-    real(8), pointer :: PO4(:,:,:)
-#  if defined ORGANIC_MATTER
-    real(8), pointer :: DON(:,:,:)
-    real(8), pointer :: PON(:,:,:)
-    real(8), pointer :: DOP(:,:,:)
-    real(8), pointer :: POP(:,:,:)
-#  endif
-# endif
-
-# if defined YT_SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
-real(8), pointer :: sg_dDIC_dt(:,:,:) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
-real(8), pointer :: sg_dDOx_dt(:,:,:) ! (umol L-1 s-1) change in DO due to flux from seagrass (positive means seagrass to sediment)
-# endif
-# if defined YT_SEAGRASS_ROOT_NUTRIENT_UPTAKE
-real(8), pointer :: sg_dNO3_dt(:,:,:) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
-real(8), pointer :: sg_dNH4_dt(:,:,:) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
-real(8), pointer :: sg_dPO4_dt(:,:,:) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
-# endif
-
-  END TYPE T_SEDECO
-
-  TYPE (T_SEDECO), allocatable :: SEDECO(:)
-
-CONTAINS
-
-!!! **********************************************************************
-!!!  set initial conditions for sediment ecosystem model
-!!! **********************************************************************
-
-  SUBROUTINE initialize_sedecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
-
-    USE mod_geochem
-    
-    implicit none
-! input parameters
-    integer, intent(in) :: ng, Ngrids, LBi, UBi, LBj, UBj
-    integer i,j,k
-
-    IF (ng.eq.1) allocate ( SEDECO(Ngrids) )
-
-    allocate( SEDECO(ng)%Tmp(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%Sal(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%TA (LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%DIC(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%DOx(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%pH (LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%thickness (Nsed) )
-# if defined ORGANIC_MATTER
-    allocate( SEDECO(ng)%DOC(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%POC(LBi:UBi,LBj:UBj,Nsed) )
-# endif
-# if defined NUTRIENTS
-    allocate( SEDECO(ng)%NO3(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%NH4(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%PO4(LBi:UBi,LBj:UBj,Nsed) )
-#  if defined ORGANIC_MATTER
-    allocate( SEDECO(ng)%DON(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%PON(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%DOP(LBi:UBi,LBj:UBj,Nsed) )
-    allocate( SEDECO(ng)%POP(LBi:UBi,LBj:UBj,Nsed) )
-#  endif
-# endif 
-
-# if defined YT_SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
-    allocate( SEDECO(ng)%sg_dDIC_dt(LBi:UBi,LBj:UBj,Nsed) ) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
-    allocate( SEDECO(ng)%sg_dDOx_dt(LBi:UBi,LBj:UBj,Nsed) ) ! (umol L-1 s-1) change in DO due to flux from seagrass (positive means seagrass to sediment)
-# endif
-# if defined YT_SEAGRASS_ROOT_NUTRIENT_UPTAKE
-    allocate( SEDECO(ng)%sg_dNO3_dt(LBi:UBi,LBj:UBj,Nsed) ) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
-    allocate( SEDECO(ng)%sg_dNH4_dt(LBi:UBi,LBj:UBj,Nsed) ) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
-    allocate( SEDECO(ng)%sg_dPO4_dt(LBi:UBi,LBj:UBj,Nsed) ) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
-# endif    
-
-!  Set initial conditions
-    do k=1,Nsed
-      SEDECO(ng)%thickness (k) = k*0.1d0  ! thickness (mm) 1-50
-      do j=LBj,UBj
-        do i=LBi,UBi
-          SEDECO(ng)%Tmp(i,j,k) = 29.0d0     
-          SEDECO(ng)%Sal(i,j,k) = 34.0d0
-          SEDECO(ng)%TA (i,j,k) = 2232.0d0   !TA  (umol kg-1)
-          SEDECO(ng)%DIC(i,j,k) = 1915.0d0   !DIC (umol kg-1) 
-          ! SEDECO(ng)%DIC(i,j,k) = 0.0d0   !DIC (umol kg-1) 
-          SEDECO(ng)%DOx(i,j,k) = 200.0d0      !DO  (umol L-1)
-          SEDECO(ng)%pH (i,j,k) = 7.8d0       !pH
-# if defined ORGANIC_MATTER
-          SEDECO(ng)%DOC(i,j,k) = 120.0d0     !DOC  (umol L-1) 
-          SEDECO(ng)%POC(i,j,k) = 50.0d0     !POC  (umol L-1) 
-# endif
-# if defined NUTRIENTS
-          SEDECO(ng)%NO3(i,j,k) = 0.5d0   !NO3  (umol L-1) 
-          SEDECO(ng)%NH4(i,j,k) = 0.5d0   !NH4  (umol L-1) 
-          SEDECO(ng)%PO4(i,j,k) = 0.03d0  !PO4  (umol L-1) 
-          ! SEDECO(ng)%PO4(i,j,k) = 0.0055d0  !PO4  (umol L-1) 
-#  if defined ORGANIC_MATTER                 
-          SEDECO(ng)%DON(i,j,k) = 30.0d0   !DON  (umol L-1) 
-          SEDECO(ng)%PON(i,j,k) = 6.0d0  !PON  (umol L-1) 
-          SEDECO(ng)%DOP(i,j,k) = 2.0d0   !DOP  (umol L-1) 
-          SEDECO(ng)%POP(i,j,k) = 0.4d0 !POP  (umol L-1) 
-#  endif
-# endif     
-        enddo
-      enddo
-    enddo
-
-    RETURN
-
-  END SUBROUTINE initialize_sedecosys
-      
-
-!!! **********************************************************************
-!!!  Main program of sediment ecosystem model
-!!! **********************************************************************
-
-  SUBROUTINE sedecosys           &
-!   input parameters
-    ( ng, i, j       &   ! ng: nested grid number; i,j: position
-    )
-
-!
-!-----------------------------------------------------------------------
-!                                                                       
-!                     rho point    Face                                 
-!                       (i,j)                                           
-!                    _____|______  _0    Sea bottom                     
-!                   /     |      /|                                     
-!      z     Layer /___________ / |                                     
-!                  |           |  |_1                                   
-!     dz(1) {   1  |           | /|                                     
-!                  |___________|/ |                                     
-!                  |           |  |_2    sediment column                
-!     dz(2) {   2  |           | /|                                     
-!                  |___________|/ | :                                   
-!                  |           |  :                                     
-!               :  :           :  |_Nsed-1                              
-!               :  :           : /|                                     
-!               :  |___________|/ |                                     
-!                  |           |  |_Nsed                                
-!  dz(Nsed) { Nsed |           | /                                      
-!                  |___________|/                                       
-!                                                                       
-!                                                                       
-!   A vertical section of the sediment grid showing sediment column.    
-!-----------------------------------------------------------------------
-!!! Krumins et al., (2013)���Q�l�ɂ��č��̂��ǂ�����!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    USE mod_geochem
-    
-    implicit none
-
-! input parameters
-    integer, intent(in) :: ng, i, j
-
-!!!------------Set parameters  ----------------------------------
-     real(8), parameter :: dz = 1.0d0  ! (cm) grid tickness
-
-
-
-    RETURN
-
-  END SUBROUTINE sedecosys
-
-END MODULE mod_sedecosys
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
 

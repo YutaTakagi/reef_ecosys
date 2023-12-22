@@ -16,26 +16,26 @@
 # define ANA_TOBC_BIO   /*Original CPP flag */
 
 /* compartments */
-# define ORGANIC_MATTER
+/*# define ORGANIC_MATTER*/
 # define NUTRIENTS
 /*# define CARBON_ISOTOPE*/
 # if defined CARBON_ISOTOPE
 #  define CARBON_TRACE
 # endif
 
-# define CORAL_POLYP  /* USE coral module */
-# define SEAGRASS     /* USE seagrass module */
-# define MACROALGAE        /* USE algae module  */
-# define SEDIMENT_ECOSYS        /* USE sedecosys module  */
-# if defined SEDIMENT_ECOSYS
-#  define SEDIMENT_EMPIRICAL     /* USE empirical sediment module  */
-# endif
+/*# define CORAL_POLYP  /* USE coral module */
+/*# define SEAGRASS*/     /* original seagraass model, now deprecated. use YT_SEAGRASS instead */
+# define YT_SEAGRASS  /* YT_edit USE Yuta A. Takagi seagrass module */
+
+/*# define MACROALGAE        /* USE algae module  */
+/*# define SEDIMENT_ECOSYS        /* USE sedecosys module  */
+# define YT_SEDIMENT_ECOSYS     /* USE empirical sediment module  */
 
 # if defined ORGANIC_MATTER
 #  define FOODWEB      /* USE foodweb module */
 # endif
 
-# define AIR_SEA_GAS_EXCHANGE
+/*# define AIR_SEA_GAS_EXCHANGE*/
 
 /*** Coral Polyp model options. ***/
 # if defined CORAL_POLYP
@@ -53,6 +53,20 @@
 /*#   define CORAL_NUTRIENTS*/
 #  endif
 /*#  define CORAL_BORON_ISOTOPE*/
+# endif
+
+/*** YT seagrass model options. ***/
+# if defined YT_SEAGRASS
+/*#  define YT_SEAGRASS_GROWTH /* seagrass growth dynamics */
+#   if defined NUTRIENTS
+#     define YT_SEAGRASS_LEAF_NUTRIENT_UPTAKE
+#   endif
+#   if defined YT_SEDIMENT_ECOSYS
+#     define YT_SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
+#   endif
+#   if defined NUTRIENTS && defined YT_SEDIMENT_ECOSYS
+#     define YT_SEAGRASS_ROOT_NUTRIENT_UPTAKE
+#   endif
 # endif
 
 #endif

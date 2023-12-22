@@ -644,6 +644,7 @@ CONTAINS
 # endif
 #endif
 
+
 !--------- Temperature (K)  --------------------------------
 
     TKamb=Tamb+273.15d0 !(oC->K)
@@ -1206,7 +1207,7 @@ CONTAINS
     CORAL(ng)%DICcoe (n,i,j)=CORAL(ng)%DICcoe (n,i,j)          &
                 +(F_zDIC                                       &
                   +CORAL(ng)%R (n,i,j)*ratio(n)                & !!!!Test: add  *ratio(n)
-                  +DICuptake                                   &
+                  +DICuptake                                   &   ! yt_edit   Is there a mass balance problem here??? DICuptake is used to calculate DICcoe every coral time step but only used to calculate ocean change on ROMS time step, since DICuptake is recalculated using DICcoe (line 1025), there is a mismatch between the DIC flux in the coelenteron and ocean... maybe???
                   -F_CO2                                       &
                   -Fpp_DIC                                     &
                  )/hcoe/rho_sw *dt   !nmol cm-3 s-1 = 1./1.023 umol kg-1 s-1

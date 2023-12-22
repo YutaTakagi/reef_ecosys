@@ -223,9 +223,6 @@ END SUBROUTINE files_close
     
     write(fid,'(*(g0:,", "))') 'time', 'PFDsurf'                           &
         ,'Temp','Salt','TA','DIC','DO'                                     &
-# ifdef YT_SEAGRASS
-        ,'sg_Dry-Biomass','lf_Dry-Biomass','rt_Dry-Biomass','sg_C-Biomass','p_sgrass'                        & ! yt_edit just for testing
-# endif
 #if defined ORGANIC_MATTER
         ,'DOC1','DOC2','POC1','POC2','Phyt1','Phyt2','Phyt3','Zoop','PIC'  &
 # if defined FOODWEB_TESTMODE
@@ -288,9 +285,6 @@ END SUBROUTINE files_close
 #ifdef SEAGRASS
     USE mod_seagrass
 #endif
-#ifdef YT_SEAGRASS
-    USE mod_seagrass
-#endif
 #ifdef MACROALGAE
     USE mod_macroalgae
 #endif
@@ -309,22 +303,13 @@ END SUBROUTINE files_close
     integer, intent(in) :: fid
 #if defined CARBON_ISOTOPE
     real(8) :: d13C_DIC
-#endif
 
-#if defined CARBON_ISOTOPE
     d13C_DIC=d13C_fromR13C(C(1,1,1,iT13C)/C(1,1,1,iTIC_))
 #endif
-    
+        
     write(fid,'(*(g0:,", "))') time, PFDsurf                               &
            , C(1,1,1,iTemp), C(1,1,1,iSalt)                            &
            , C(1,1,1,iTAlk), C(1,1,1,iTIC_), C(1,1,1,iOxyg)          &
-# ifdef YT_SEAGRASS
-            , SGRASS(1)%TotSgDryBm(1,1,1) & ! yt_edit just for testing
-            , SGRASS(1)%TotLfDryBm(1,1,1) & ! yt_edit just for testing
-            , SGRASS(1)%TotRtDryBm(1,1,1) & ! yt_edit just for testing
-            , SGRASS(1)%SgCBm(1,1,1) & ! yt_edit just for testing
-           , p_sgrass(1,1,1) &
-# endif
 #if defined ORGANIC_MATTER
            , C(1,1,1,iDOC(1)), C(1,1,1,iDOC(2))                        &
            , C(1,1,1,iPOC(1)), C(1,1,1,iPOC(2))                        &

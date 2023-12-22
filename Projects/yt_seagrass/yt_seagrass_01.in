@@ -1,6 +1,8 @@
 &ecosys_config
 ! Simulation period     
-  Tmax = 150.0d0  ! days
+  ! Tmax = 5000.0d0  ! days
+  Tmax = 50.0d0  ! days
+  ! Tmax = 7.d0  ! days YT_edit  just for testing
 ! Start time
   time0 = 0.0d0 ! day
 
@@ -60,13 +62,14 @@
 
 &output   
 
+! OUTFILE_prefix = 'output/coral_01'
   OUTFILE_prefix = 'output/yt_seagrass_01' ! YT_edit
 /
 
 !--- Initial Condition -----------------------------------------------------
 &initial
 
-  d0 = 3.0d0           ! Depth (m)
+  d0 = 1.0d0           ! Depth (m)
 !  T0 = 28.0d0          ! Water temperature (oC)
   T0 = 33.0d0          ! Water temperature (oC)
   S0 = 34.0d0          ! Salinity (PSU)
@@ -123,10 +126,12 @@ d15N_Phyt2_0 = -15.0d0   ! d15N_phytoplankton (permill)
 d15N_Phyt3_0 = -15.0d0   ! d15N_phytoplankton (permill)
 d15N_Zoop1_0 = -20.0d0   ! d15N_zooplankton (permill)
 
-p_coral1_0 = 0.2d0  ! Coral1 (inner reef coral) coverage (0-1)
-p_coral2_0 = 0.2d0  ! Coral2 (outer reef coral) coverage (0-1)
+p_coral1_0 = 0.0d0  ! Coral1 (inner reef coral) coverage (0-1)
+p_coral2_0 = 0.0d0  ! Coral2 (outer reef coral) coverage (0-1)
 p_algae_0  = 0.0d0  ! Macro algae coverage (0-1)
-p_sgrass_0 = 0.0d0  ! Seagrass coverage (0-1)
+p_sgrass_0 = 1.0d0  ! Seagrass coverage (0-1)
 p_sand_0   = 0.0d0  ! Sand coverage (0-1)
+
+grid_width = 1.0d0 ! Width of the simulation grid cell (m)
 
 /

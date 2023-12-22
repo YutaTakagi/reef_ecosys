@@ -7,27 +7,15 @@
 !!!**** MODULE OF ECOSYSTEM MODEL ************************************
 
 MODULE mod_reef_ecosys
-
 contains
 !!! **********************************************************************
 !!!  Set initial conditions for reef ecosystem model
 !!! **********************************************************************
-  SUBROUTINE initialize_reef_ecosys    &
-    (ng, Ngrids, LBi, UBi, LBj, UBj    &
-#ifdef YT_SEAGRASS
-    , dXI, dETA           & ! widths of grid cells in xi and eta directions
-    ! , Nsg                 & ! number of seagrass species
-    , p_sgrass            & ! seagrass coveraage by species
-#endif
-    )
-
+  SUBROUTINE initialize_reef_ecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
 #ifdef CORAL_POLYP
     USE mod_coral
 #endif
 #ifdef SEAGRASS
-    USE mod_seagrass
-#endif
-#ifdef YT_SEAGRASS
     USE mod_seagrass
 #endif
 #ifdef MACROALGAE
@@ -36,36 +24,20 @@ contains
 #ifdef SEDIMENT_ECOSYS
     USE mod_sedecosys
 #endif
-#ifdef YT_SEDIMENT_ECOSYS
-    USE mod_sedecosys
-#endif
       
     implicit none
 
     integer, intent(in) :: ng, Ngrids, LBi, UBi, LBj, UBj
-#ifdef YT_SEAGRASS
-    real(8), intent(in) :: dXI (LBi:UBi,LBj:UBj)  ! grid cell widths in XI direction
-    real(8), intent(in) :: dETA(LBi:UBi,LBj:UBj)  ! grid cell widths in ETA direction
-    ! integer, intent(in) :: Nsg                    ! Number of seagrass species
-    real(8), intent(in) :: p_sgrass(Nsg)          ! Seagrass coverage
-#endif
-
 #ifdef CORAL_POLYP
     CALL initialize_coral(ng, Ngrids, LBi, UBi, LBj, UBj)
 #endif
 #ifdef SEAGRASS
     CALL initialize_seagrass(ng, Ngrids, LBi, UBi, LBj, UBj)
 #endif
-#ifdef YT_SEAGRASS
-    CALL initialize_seagrass(ng, Ngrids, LBi, UBi, LBj, UBj, dXI, dETA, Nsg, p_sgrass)
-#endif
 #ifdef MACROALGAE
     CALL initialize_macroalgae(ng, Ngrids, LBi, UBi, LBj, UBj)
 #endif
 #ifdef SEDIMENT_ECOSYS
-    CALL initialize_sedecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
-#endif
-#ifdef YT_SEDIMENT_ECOSYS
     CALL initialize_sedecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
 #endif
       
@@ -93,9 +65,6 @@ contains
     , p_coral        &   ! Coral coverage (0-1)
 #endif
 #ifdef SEAGRASS
-    , p_sgrass       &   ! seagrass coverage (0-1)
-#endif
-#ifdef YT_SEAGRASS
     , p_sgrass       &   ! seagrass coverage (0-1)
 #endif
 #ifdef MACROALGAE
@@ -217,38 +186,25 @@ contains
 !
 !-----------------------------------------------------------------------
 !                                                                       
-!                          rho point    Face                                 
-!                            (i,j)                                           
-!                         _____|______  _N    Surface                        
-!                        /     |      /|                                     
-!           z     Layer /___________ / |                                     
-!                       |           |  |_N-1                                 
-!          dz(N) {   N  |           | /|                                     
-!                       |___________|/ : :                                   
-!                       |           |  :      Water column                   
-!                    :  :           :  |_2   _________________               
-!                    :  :           : /|                    |                
-!                    :  |___________|/ |                    |------------     
-!                       |           |  |_1                 _|           |    
-!          dz(2) {   2  |           | /|                    | z_w(2)    | z_r(2)         
-!                       |___________|/ |                    |           |    
-!                       |           |  |_0  _ Bottom  ______|___________|     
-!          dz(1) {   1  |           | /|                  |                   
-!                       |___________|/ |                  |                    
-!                       |           |  |_EcoSed_1         |
-!   ecosed_dz(1) {   1  |           | /|                  |                   
-!                       |___________|/ |                  |                    
-!                       |           |  |_EcoSed_2         |
-!   ecosed_dz(2) {   2  |           | /|                  | Reef Ecosystem Sediment layers
-!                       |___________|/ : :                |   (These sediment layers are different than the sediment transport sediment layers)
-!                       |           |  :                  |
-!                    :  :           :  |_EcoSed_N-1       |
-!                    :  :           : /|                  |
-!                    :  |___________|/ |                  |                   
-!                       |           |  |_EcoSed_N ________|
-!   ecosed_dz(N) {   N  |           | /                                      
-!                       |___________|/ dETA                                       
-!                       dXI                                                
+!                     rho point    Face                                 
+!                       (i,j)                                           
+!                    _____|______  _N    Surface                        
+!                   /     |      /|                                     
+!      z     Layer /___________ / |                                     
+!                  |           |  |_N-1                                 
+!     dz(N) {   N  |           | /|                                     
+!                  |___________|/ : :                                   
+!                  |           |  :      Water column                   
+!               :  :           :  |_2   _________________               
+!               :  :           : /|                    |                
+!               :  |___________|/ |                    |------------     
+!                  |           |  |_1                 _|           |    
+!     dz(2) {   2  |           | /|                    | z_w(2)    | z_r(2)         
+!                  |___________|/ |                    |           |    
+!                  |           |  |_0  _ Bottom  ______|___________|     
+!     dz(1) {   1  |           | /                                      
+!                  |___________|/                                       
+!                                                                       
 !                                                                       
 !      A vertical section of the ecosys grid showing water column.      
 !-----------------------------------------------------------------------
@@ -260,16 +216,10 @@ contains
 #ifdef SEAGRASS
     USE mod_seagrass
 #endif
-#ifdef YT_SEAGRASS
-    USE mod_seagrass
-#endif
 #ifdef MACROALGAE
     USE mod_macroalgae
 #endif
 #ifdef SEDIMENT_ECOSYS
-    USE mod_sedecosys
-#endif
-#ifdef YT_SEDIMENT_ECOSYS
     USE mod_sedecosys
 #endif
 #ifdef FOODWEB
@@ -294,9 +244,6 @@ contains
 #endif
 #ifdef SEAGRASS
     real(8), intent(in) :: p_sgrass   
-#endif
-#ifdef YT_SEAGRASS
-    real(8), intent(inout) :: p_sgrass(Nsg)   ! yt_edit fix me! make coverage writeable
 #endif
 #ifdef MACROALGAE
     real(8), intent(in) :: p_algae    
@@ -526,8 +473,6 @@ contains
     real(8), save :: time = 0.0d0 !sec
     real(8), save :: dsec = 0.0d0 !sec
 #endif
-
-    ! write(*,*) "yt_debug: reef_ecosys read inputs"
 
 !-----------------------------------------------------------------------
 ! Initialize all time difference values (d_XXX)
@@ -1105,71 +1050,6 @@ contains
     END IF
 #endif
 
-#if defined YT_SEAGRASS
-!-----------------------------------------------------------------------
-! Compute seagrass model.
-!-----------------------------------------------------------------------
-!
-  DO icl=1,Nsg    
-    IF(p_sgrass(icl) .gt. 0.0d0) THEN 
-
-      CALL seagrass              &
-!       input parameters
-        ( ng             &   ! ng: nested grid number; 
-        , icl, Nsg       &   ! icl: seagrass species id; Nsg: total number of seagrass species
-        , i, j           &   ! i,j: position
-        , dz(1)          &   ! vertical layer thickness (m)
-        , dt             &   ! Time step (sec)
-        , p_sgrass(:)    &   ! seagrass coverage (every species)
-        , PFDbott        &   ! Photon flux density (umol m-2 s-1)
-        ! , 0.0d0       &   ! PFD yt_debug
-        ! , 30.0d0       &   ! PFD yt_debug
-        ! , 1800.0d0       &   ! PFD yt_debug
-        ! , 100000000000.0d0       &   ! PFD yt_debug
-        , rho_sw(1)      &   ! Density of seawater (g cm-3)
-        , DIC(1)         &   ! DIC (umol kg-1)
-        ! , 0.0d0         &   ! DIC (umol kg-1)
-        ! , 100000000000.0d0         &   ! DIC (umol kg-1)
-        , DOx(1)         &   ! DO  (umol L-1)
-        ! , 5d0         &   ! DO  (umol L-1) yt_debug
-# if defined YT_SEAGRASS_LEAF_NUTRIENT_UPTAKE         
-        , NO3(1)         &   ! NO3 concentration (umol L-1)
-        , NH4(1)         &   ! NH4 concentration (umol L-1)
-        , PO4(1)         &   ! PO4 concentration (umol L-1)
-        ! , 0d0         &   ! PO4 concentration (umol L-1)
-# endif
-!       output parameters 
-        , Flux_DIC      &   ! DIC uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_DO       &   ! DO  uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-# if defined YT_SEAGRASS_LEAF_NUTRIENT_UPTAKE         
-        , Flux_NO3      &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_NH4      &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_PO4      &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-# endif
-        )
-    !   write(*,*) "yt_debug: finished seagrass call"
-
-
-      ! dDIC_dt         = Flux_CHEM      / height * coverage_area_fraction / density  * unit_conversion_factor
-      ! [umol kg-1 s-1] = [mmol m-2 s-1] / [m]    * []                     / [g cm-3] * [ (1000 umol/mmol) (0.000001 m3/cm3) (1000 g/kg) = 1]
-
-      ! dCHEM_dt        = Flux_CHEM      / height * coverage_area_fraction * unit_conversion_factor
-      ! [umol L-1 s-1]  = [mmol m-2 s-1] / [m]    * []                     * [ (1000 umol/mmol) (0.001 m3/L) = 1]
-
-      ! cff = unit_conversion_factor / height * coverage_area_fraction
-      cff = 1.0d0/dz(1) * p_sgrass(icl)
-      dDIC_dt(1) = dDIC_dt(1) - Flux_DIC * cff/rho_sw(1)
-      dDOx_dt(1) = dDOx_dt(1) - Flux_DO  * cff
-# if defined NUTRIENTS
-      dNO3_dt(1) = dNO3_dt(1) - Flux_NO3 * cff
-      dNH4_dt(1) = dNH4_dt(1) - Flux_NH4 * cff
-      dPO4_dt(1) = dPO4_dt(1) - Flux_PO4 * cff
-# endif
-
-    END IF
-  END DO
-#endif
-
 #ifdef MACROALGAE
 !-----------------------------------------------------------------------
 ! Compute algae model.
@@ -1374,11 +1254,6 @@ contains
 # endif
 
     END IF            
-#elif defined YT_SEDIMENT_ECOSYS
-CALL sedecosys     &
-!       input parameters
-        ( ng, i, j       &   ! ng: nested grid number; i,j: position
-        )
 #endif
 
 
@@ -1395,9 +1270,6 @@ CALL sedecosys     &
 # endif
 # ifdef SEAGRASS
       cff3 = p_sgrass*3600.0d0        ! cff2: convert [mmol m-2 s-1] to [mmol m-2 h-1]
-# endif
-# ifdef YT_SEAGRASS
-    !   cff3 = p_sgrass*3600.0d0        ! cff2: convert [mmol m-2 s-1] to [mmol m-2 h-1]
 # endif
 # ifdef MACROALGAE
       cff4 = p_algae *3600.0d0        ! cff3: convert [mmol m-2 s-1] to [mmol m-2 h-1]
@@ -1423,15 +1295,11 @@ CALL sedecosys     &
         , SGRASS(1)%Pg(1,1,1)*cff3, SGRASS(1)%R (1,1,1)*cff3      &
         , (SGRASS(1)%Pg(1,1,1)-SGRASS(1)%R (1,1,1))*cff3          &
 # endif
-# ifdef YT_SEAGRASS
-        ! , SGRASS(1)%Pg(1,1,1)*cff3, SGRASS(1)%R (1,1,1)*cff3      &
-        ! , (SGRASS(1)%Pg(1,1,1)-SGRASS(1)%R (1,1,1))*cff3          &
-# endif
 # ifdef MACROALGAE
         , ALGAE(1)%Pg(1,1,1)*cff4, ALGAE(1)%R (1,1,1)*cff4        &
         , (ALGAE(1)%Pg(1,1,1)-ALGAE(1)%R (1,1,1))*cff4            &
 # endif
-# ifdef initialize_sedecosys
+# ifdef SEDIMENT_ECOSYS
         , SEDECO(1)%Pg(1,1)*cff5, SEDECO(1)%R (1,1)*cff5          &
         , (SEDECO(1)%Pg(1,1)-SEDECO(1)%R (1,1))*cff5              &
         , SEDECO(1)%G (1,1)*cff5                                  &
