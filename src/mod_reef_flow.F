@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2017-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2017-2023 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -339,11 +339,12 @@ CONTAINS
 !      L = g/2/pi*tanh(2*pi*h/L) *T*T
     
     ! Initial wave length
-    L = 0.5d0*g*T*T*pi  ! wave length of Deep water wave
-    L2 = 0.5d0*g/pi*tanh(2.0d0*pi*h/L)*T*T
+    L = sqrt( g*h )*T  ! wave length of shallow water wave
+    L2 = sqrt( (0.5d0*g*L/pi*tanh(2.0d0*pi*h/L)) )*T
     do while (abs(L-L2)>err)
       L=L2
-      L2 = 0.5d0*g/pi*tanh(2.0d0*pi*h/L)*T*T
+      L2 = sqrt( (0.5d0*g*L/pi*tanh(2.0d0*pi*h/L)) )*T
+!      L2 = 0.5d0*g/pi*tanh(2.0d0*pi*h/L)*T*T
     end do
     L=L2
 
