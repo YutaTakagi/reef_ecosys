@@ -20,10 +20,11 @@ MODULE mod_foodweb
   integer, parameter :: iDtr  = 1    !  1: Detritus
   integer, parameter :: iCPOM = 2    !  2: Coarse POM (leaf litter, etc.)
 
-  integer, parameter :: Nphy  = 3    ! Number of Phytoplankton types
+  integer, parameter :: Nphy  = 4    ! Number of Phytoplankton types
   integer, parameter :: iDnfl = 1    !  1: Dinoflagellate
   integer, parameter :: iDtm  = 2    !  2: Diatom
   integer, parameter :: iCcl  = 3    !  3: Coccolithophorids
+  integer, parameter :: iCya  = 4    !  4: Cyanobacteria
    
   integer, parameter :: Nzoo = 1     ! Number of Zooplankton types
   integer, parameter :: iGzoo = 1    !  1: General Zooplankton
@@ -249,41 +250,41 @@ CONTAINS
 
 !------- Phytoplankton parameters ------------------------
 !  Maximum photosynthetic rate at 0 oC ( s-1) (0.4d0 d-1; Kishi et al., 2007)0.3
-    real(8), parameter :: k_Pp(Nphy) = [ 3.5d-6,   1.0d-5,   3.5d-6   ]  ! (s-1)
+    real(8), parameter :: k_Pp(Nphy) = [ 3.5d-6,   1.0d-5,   3.5d-6,   1.0d-6]  ! (s-1)   JS_edit check reference values for all parameters
 !  Temperature coefficient for PHY photosynthesis (0.063; Kawamiya et al., 1995)          
-    real(8), parameter :: b_Pp(Nphy) = [ 0.0693d0, 0.0693d0, 0.0693d0 ]  ! (degC-1) 
+    real(8), parameter :: b_Pp(Nphy) = [ 0.0693d0, 0.0693d0, 0.0693d0, 0.0693d0 ]  ! (degC-1) 
 !  Optimum light intensity (48.83d0 J m2 s-1; Kawamiya et al., 1995)     
-    real(8), parameter :: Ip(Nphy)   = [ 90.0d0,   90.0d0,   90.0d0   ] ! (umol m-2 s-1) 
+    real(8), parameter :: Ip(Nphy)   = [ 90.0d0,   90.0d0,   90.0d0,   90.0d0   ] ! (umol m-2 s-1) JS_edit check reference values
 !  Respiration rate at 0 oC (Kawamiya et al., 1995)
-    real(8), parameter :: k_Rp(Nphy) = [ 3.5d-7,   3.5d-7,   3.5d-7   ]    ! (s-1)
+    real(8), parameter :: k_Rp(Nphy) = [ 3.5d-7,   3.5d-7,   3.5d-7,   3.5d-7   ]    ! (s-1)
 !  Temperature coefficient for PHY respiration rate (0.03d0 d-1; Kawamiya et al., 1995)
-    real(8), parameter :: b_Rp(Nphy) = [ 0.0519d0, 0.0519d0, 0.0519d0 ] ! (degC-1)
+    real(8), parameter :: b_Rp(Nphy) = [ 0.0519d0, 0.0519d0, 0.0519d0, 0.0519d0 ] ! (degC-1)
 !  Mortality rate at 0 oC (0.00562d0 umol-1 d-1; 0.0585L/umolN/day? 0.0088; Kishi et al., 2001)0.0066     
-    real(8), parameter :: k_Mp(Nphy) = [ 6.5d-7,   3.3d-7,   6.5d-7   ] ! (L umol-1 s-1)
+    real(8), parameter :: k_Mp(Nphy) = [ 6.5d-7,   3.3d-7,   6.5d-7,   6.5d-7   ] ! (L umol-1 s-1)
 !  Temperature coefficient for PHY mortality (Kawamiya et al., 1995)
-    real(8), parameter :: b_Mp(Nphy) = [ 0.069d0,  0.069d0,  0.069d0  ] ! (degC-1)   
+    real(8), parameter :: b_Mp(Nphy) = [ 0.069d0,  0.069d0,  0.069d0,  0.069d0  ] ! (degC-1)   
 !  PHY ratio of extracellular excretion to production 0.135(Kawamiya et al., 1995)    
-    real(8), parameter :: k_Ep(Nphy) = [ 0.135d0,  0.135d0,  0.135d0  ] ! (no dim.) 
+    real(8), parameter :: k_Ep(Nphy) = [ 0.135d0,  0.135d0,  0.135d0,  0.135d0  ] ! (no dim.) 
     real(8), parameter :: rLDOMphy = 0.99d0  ! (Labile DOM)/(Total DOM) of phytoplankton excreted DOM (no dim.) 
 #if defined NUTRIENTS
 !  PHY Nutrient Assimilation Parameter         
-    real(8), parameter :: Kp_NH4(Nphy) = [ 1.5d0,  0.5d0,  1.5d0  ] ! (umol L-1)1.5         
-    real(8), parameter :: Kp_NO3(Nphy) = [ 0.1d0,  1.0d0,  0.1d0  ] ! (umol L-1)0.1         
-    real(8), parameter :: Kp_PO4(Nphy) = [ 0.01d0, 0.03d0, 0.01d0 ] ! (umol L-1)0.01 
+    real(8), parameter :: Kp_NH4(Nphy) = [ 1.5d0,  0.5d0,  1.5d0,  1.5d0  ] ! (umol L-1)1.5         
+    real(8), parameter :: Kp_NO3(Nphy) = [ 0.1d0,  1.0d0,  0.1d0,  0.1d0  ] ! (umol L-1)0.1         
+    real(8), parameter :: Kp_PO4(Nphy) = [ 0.01d0, 0.03d0, 0.01d0,  0.01d0 ] ! (umol L-1)0.01 
     ! (1.5L umolN-1; Kishi et al., 2007)  0.01  0.226  0.5
-    real(8), parameter :: psi(Nphy) =    [ 0.5d0,  0.5d0,  0.5d0  ] !(L umolC-1)   
+    real(8), parameter :: psi(Nphy) =    [ 0.5d0,  0.5d0,  0.5d0,  0.5d0  ] !(L umolC-1)   
 #endif
 !------- Zooplankton parameters ------------------------
-    real(8), parameter :: k_Gp2z(Nphy,Nzoo) = reshape( [ 3.0d-6,    2.0d-6,    3.0d-7    ], [Nphy,Nzoo] ) ! (s-1)          Maximum grazing rate of PHY1 by ZOO at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)0.16
-    real(8), parameter :: b_Gp2z(Nphy,Nzoo) = reshape( [ 0.0693d0,  0.0693d0,  0.0693d0  ], [Nphy,Nzoo] ) ! (degC-1)       Temperature coefficient for ZOO grazing (0.063d0degC-1;Kawamiya et al., 1995)
-    real(8), parameter :: e_Gp2z(Nphy,Nzoo) = reshape( [ 0.250d0,   0.250d0,   0.250d0   ], [Nphy,Nzoo] ) ! (no dim.)      Assimilation efficiency of ZOO (0.7:Kawamiya et al., 1995)
+    real(8), parameter :: k_Gp2z(Nphy,Nzoo) = reshape( [ 3.0d-6,    2.0d-6,    3.0d-7 ,    3.0d-7    ], [Nphy,Nzoo] ) ! (s-1)          Maximum grazing rate of PHY1 by ZOO at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)0.16
+    real(8), parameter :: b_Gp2z(Nphy,Nzoo) = reshape( [ 0.0693d0,  0.0693d0,  0.0693d0,   0.0693d0  ], [Nphy,Nzoo] ) ! (degC-1)       Temperature coefficient for ZOO grazing (0.063d0degC-1;Kawamiya et al., 1995)
+    real(8), parameter :: e_Gp2z(Nphy,Nzoo) = reshape( [ 0.250d0,   0.250d0,   0.250d0,    0.250d0   ], [Nphy,Nzoo] ) ! (no dim.)      Assimilation efficiency of ZOO (0.7:Kawamiya et al., 1995)
 
     real(8), parameter :: k_Rz(Nzoo) = [ 6.0d-8    ]  ! (s-1)            ZOO respiration rate at 0  oC  																					!!!(Tuning)
     real(8), parameter :: b_Rz(Nzoo) = [ 0.0693d0  ]  ! (degC-1)         Temperature coefficient for ZOO respiration rate (Kawamiya et al., 1995)
     real(8), parameter :: k_Mz(Nzoo) = [ 1.0d-8    ]  ! (L umol-1 s-1)   ZOO mortality rate at 0 oC 3.0d0/86400.0d0(0.0088d0 umol-1 d-1; Kawamiya et al., 1995)
     real(8), parameter :: b_Mz(Nzoo) = [ 0.0693d0  ]  ! (degC-1)         Temperature coefficient for ZOO mortality (Kawamiya et al., 1995)
     real(8), parameter :: lam(Nzoo)  = [ 0.211d0   ]  ! ((umol C L-1)-1) zooplankton Ivlev constant for PHY1 (1.4L/umolN.0.211; Kishi et al., 2007)
-    real(8), parameter :: t_Gp2z(Nphy,Nzoo) = reshape( [ 0.265d0,   0.265d0,   0.265d0   ], [Nphy,Nzoo] ) ! (umol C L-1)       PHY1 threshold value for grazing by ZOO (0.04umolN/L0.265; Kishi et al., 2007)
+    real(8), parameter :: t_Gp2z(Nphy,Nzoo) = reshape( [ 0.265d0,   0.265d0,   0.265d0,   0.265d0   ], [Nphy,Nzoo] ) ! (umol C L-1)       PHY1 threshold value for grazing by ZOO (0.04umolN/L0.265; Kishi et al., 2007)
 !------- Microbial loop parameters  -------
     real(8), parameter :: k_Gdoc2z(Ndom,Nzoo) = reshape( [ 1.0d-8,    0.0d0    ], [Ndom,Nzoo] ) ! (s-1)          Maximum grazing rate of DOC by ZOO at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)
     real(8), parameter :: b_Gdoc2z(Ndom,Nzoo) = reshape( [ 0.0693d0,  0.0693d0 ], [Ndom,Nzoo] ) ! (degC-1)       Temperature coefficient of DOC grazing by ZOO (Kawamiya et al., 1995)
@@ -345,13 +346,13 @@ CONTAINS
 ! Martiny et al  (2014) C:N:P -> C:N=7.4  C:P=163    N:P=22
 ! GLODAP Data           C:N:P -> C:N=9.2  C:P=131.9  N:P=14.4
 
-    real(8), parameter :: rCNp(Nphy) = [ 9.2d0,   9.2d0,   9.2d0   ]    ! (no dim.) PHY1 C:N ratio
-    real(8), parameter :: rCPp(Nphy) = [ 131.9d0, 131.9d0, 131.9d0 ]    ! (no dim.) PHY1 C:P ratio
+    real(8), parameter :: rCNp(Nphy) = [ 9.2d0,   9.2d0,   9.2d0,   9.2d0   ]    ! (no dim.) PHY1 C:N ratio    JS_edit check ratio from experiments
+    real(8), parameter :: rCPp(Nphy) = [ 131.9d0, 131.9d0, 131.9d0, 131.9d0 ]    ! (no dim.) PHY1 C:P ratio
     real(8), parameter :: rCNz(Nzoo) = [ 9.2d0   ]    ! (no dim.) ZOO  C:N ratio
     real(8), parameter :: rCPz(Nzoo) = [ 131.9d0 ]    ! (no dim.) ZOO  C:P ratio
-    real(8), parameter :: rNH4(Nphy) = 0.3d0            ! (no dim.)  PHY NH4:Nitrogen ratio 
+    real(8), parameter :: rNH4(Nphy) = 0.3d0            ! (no dim.)  PHY NH4:Nitrogen ratio JS_edit make array to use 4 categories
 #endif                                
-    real(8), parameter :: rCCp(Nphy) = [ 0.0d0, 0.0d0, 0.5d0 ]  ! ***** (no dim.) CaCO3:OrgC ratio !!! Need Ref!!!!!!!!!!
+    real(8), parameter :: rCCp(Nphy) = [ 0.0d0, 0.0d0, 0.5d0, 0.0d0 ]  ! ***** (no dim.) CaCO3:OrgC ratio !!! Need Ref!!!!!!!!!!
 #if defined CARBON_ISOTOPE
 !----- for carbon isotope ------------------------
 # if defined CARBON_TRACE
@@ -504,7 +505,7 @@ CONTAINS
       ENDIF
       Pp(k) = MAX( Pp(k), 0.0d0 )  !!! Error handling
 
-!----- Assimilation rate (umolC L-1 s-1) -----------------
+!----- Assimilation rate (umolC L-1 s-1) ----------------- JS_edit find more references about switching NH4 to NO3, etc (nutrient assimilation)
 
 #if defined NUTRIENTS
         cf1 = MAX(NH4, 0.0d0)  !!! Error handling
@@ -516,6 +517,10 @@ CONTAINS
         Vp_NO3(k) = cf2/(cf2+Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))   
         Vp_PO4(k) = cf3/(cf3+Kp_PO4(k))
       ELSE IF(k == iDtm) THEN   
+        Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4(k)
+        Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))    
+        Vp_PO4(k) = cf3*cf3/(cf3*cf3+Kp_PO4(k)*Kp_PO4(k))
+      ELSE IF(k == iCya) THEN   
         Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4(k)
         Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))    
         Vp_PO4(k) = cf3*cf3/(cf3*cf3+Kp_PO4(k)*Kp_PO4(k))
@@ -652,7 +657,7 @@ CONTAINS
 
     DO k=1, Nzoo
 
-!----- Grazing rate of PHY by ZOO (umolC L-1 s-1) -----------------
+!----- Grazing rate of PHY by ZOO (umolC L-1 s-1) ----------------- JS_edit Difficult part: Mixotrophy from Dinoflagellates
 
       DO m=1, Nphy
         Gp2z(m,k) = k_Gp2z(m,k) * exp(b_Gp2z(m,k)*Tmp)    &
@@ -957,7 +962,7 @@ CONTAINS
 #endif
 
   
-!===== Nitrification ====================================================
+!===== Nitrification ==================================================== JS_edit find reference
 
 #if defined NUTRIENTS
     Nit = k_Nit * exp(b_Nit*Tmp) * MAX( NH4, 0.0d0 )**2

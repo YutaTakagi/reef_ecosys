@@ -228,13 +228,13 @@ contains
     integer, intent(out) :: Nid
     real(8)  R13C
     integer i,j,k
-!  Local variable declarations
+!  Local variable declarations JS_edit
 !
     integer :: ic
 
     real(8) :: d0, T0, S0
     real(8) :: TAlk0, TIC_0, Oxyg0, Sed1_0
-    real(8) :: DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Zoop1_0, PIC1_0
+    real(8) :: DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
     real(8) :: d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
     real(8) :: d13C_Phyt1_0, d13C_Phyt2_0, d13C_Phyt3_0, d13C_Zoop1_0, d13C_PIC1_0
     real(8) :: NO3_0, NH4_0, PO4_0
@@ -245,7 +245,7 @@ contains
 
     namelist/initial/d0, T0, S0
     namelist/initial/TAlk0, TIC_0, Oxyg0, Sed1_0
-    namelist/initial/DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Zoop1_0, PIC1_0
+    namelist/initial/DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
     namelist/initial/d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
     namelist/initial/d13C_Phyt1_0, d13C_Phyt2_0, d13C_Phyt3_0, d13C_Zoop1_0, d13C_PIC1_0
     namelist/initial/NO3_0, NH4_0, PO4_0
@@ -454,13 +454,15 @@ contains
           C(i,j,k,iPOC(2)) = POC2_0       !POC  (umol L-1) 
           C(i,j,k,iPhyt(1)) = Phyt1_0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           C(i,j,k,iPhyt(2)) = Phyt2_0     !Phytoplankton2 0.3(umolC L-1) 							diatom
-          C(i,j,k,iPhyt(3)) = Phyt3_0     !Phytoplankton2 0.3(umolC L-1) 							diatom
+          C(i,j,k,iPhyt(3)) = Phyt3_0     !Phytoplankton3 0.3(umolC L-1) 							coccolith
+          C(i,j,k,iPhyt(4)) = Phyt4_0     !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
           C(i,j,k,iZoop(1)) = Zoop1_0     !Zooplankton (umol L-1)1.3
           C(i,j,k,iPIC(1)) =  PIC1_0      !Particulated inorganic carbon (umol L-1)1.3
 # if defined FOODWEB_TESTMODE
           C(i,j,k,iDeadPhyt(1)) = 0.0d0   !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           C(i,j,k,iDeadPhyt(2)) = 0.0d0   !Phytoplankton2 0.3(umolC L-1) 							diatom
-          C(i,j,k,iDeadPhyt(3)) = 0.0d0   !Phytoplankton2 0.3(umolC L-1) 							diatom
+          C(i,j,k,iDeadPhyt(3)) = 0.0d0   !Phytoplankton3 0.3(umolC L-1)
+          C(i,j,k,iDeadPhyt(4)) = 0.0d0   !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
 # endif
 ! Offshore values
           Co(i,j,iDOC(1)) = DOC1_0       !DOC  (umol L-1) 
@@ -469,9 +471,10 @@ contains
           Co(i,j,iPOC(2)) = POC2_0       !POC  (umol L-1) 
           Co(i,j,iPhyt(1)) = Phyt1_0       !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           Co(i,j,iPhyt(2)) = Phyt2_0       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          Co(i,j,iPhyt(3)) = Phyt3_0       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          Co(i,j,iZoop(1)) = Zoop1_0      !Zooplankton (umol L-1)1.3
-          Co(i,j,iPIC(1)) =  PIC1_0      !Particulated inorganic carbon (umol L-1)1.3
+          Co(i,j,iPhyt(3)) = Phyt3_0       !Phytoplankton2 0.3(umolC L-1)
+          Co(i,j,iPhyt(4)) = Phyt4_0       !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
+          Co(i,j,iZoop(1)) = Zoop1_0       !Zooplankton (umol L-1)1.3
+          Co(i,j,iPIC(1)) =  PIC1_0        !Particulated inorganic carbon (umol L-1)1.3
 # if defined FOODWEB_TESTMODE
           Co(i,j,iDeadPhyt(1)) = 0.0d0   !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           Co(i,j,iDeadPhyt(2)) = 0.0d0   !Phytoplankton2 0.3(umolC L-1) 							diatom
@@ -498,7 +501,7 @@ contains
           R13C=R13C_fromd13C(d13C_Phyt2_0)
           C(i,j,k,iPhyt13C(2)) = R13C*C(i,j,k,iPhyt13C(2))       !Phytoplankton2 0.3(umolC L-1) 							diatom
           R13C=R13C_fromd13C(d13C_Phyt3_0)
-          C(i,j,k,iPhyt13C(3)) = R13C*C(i,j,k,iPhyt13C(3))       !Phytoplankton2 0.3(umolC L-1) 							diatom
+          C(i,j,k,iPhyt13C(3)) = R13C*C(i,j,k,iPhyt13C(3))       !Phytoplankton3 0.3(umolC L-1) 							diatom
           R13C=R13C_fromd13C(d13C_Zoop1_0)
           C(i,j,k,iZoop13C(1)) = R13C*C(i,j,k,iZoop13C(1))       !Zooplankton (umol L-1)1.3
           R13C=R13C_fromd13C(d13C_PIC1_0)
