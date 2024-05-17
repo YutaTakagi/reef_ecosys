@@ -256,7 +256,8 @@ END SUBROUTINE files_close
     write(fid,'(*(g0:,", "))') 'time', 'PFDsurf'                           &
         ,'Temp','Salt','TA','DIC','DO'                                     &
 #if defined ORGANIC_MATTER
-        ,'DOC1','DOC2','POC1','POC2','Phyt1','Phyt2','Phyt3','Zoop','PIC'  &
+        ,'DOC1','DOC2','POC1','POC2','Phyt1','Phyt2','Phyt3', 'Phyt4'      &
+        ,'TotalPhy', 'Zoop','PIC'                                          &
 # if defined FOODWEB_TESTMODE
         ,'DeadPhyt1','DeadPhyt2','DeadPhyt3'                               &
 # endif
@@ -345,7 +346,9 @@ END SUBROUTINE files_close
 #if defined ORGANIC_MATTER
            , C(1,1,1,iDOC(1)), C(1,1,1,iDOC(2))                        &
            , C(1,1,1,iPOC(1)), C(1,1,1,iPOC(2))                        &
-           , C(1,1,1,iPhyt(1)), C(1,1,1,iPhyt(2)), C(1,1,1,iPhyt(3)) &
+           , C(1,1,1,iPhyt(1)), C(1,1,1,iPhyt(2)), C(1,1,1,iPhyt(3))   &
+           , C(1,1,1,iPhyt(4))                                         &
+           , C(1,1,1,iPhyt(1))+C(1,1,1,iPhyt(2))+C(1,1,1,iPhyt(3))     &
            , C(1,1,1,iZoop(1)), C(1,1,1,iPIC(1))                       &
 # if defined FOODWEB_TESTMODE
            , C(1,1,1,iDeadPhyt(1)), C(1,1,1,iDeadPhyt(2))              &
