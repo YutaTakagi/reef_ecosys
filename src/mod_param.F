@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2022 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
 
 !--------------------------------------------------------------------------------
 !
@@ -10,7 +10,10 @@
 #include "cppdefs.h"
 
 MODULE mod_param
-  
+
+#if defined FOODWEB
+  USE mod_foodweb
+#endif
   implicit none
 !
 !-----------------------------------------------------------------------
@@ -115,9 +118,7 @@ MODULE mod_param
   real(8) :: pCO2air    
   real(8) :: U10        
   
-  real(8) :: sspH      
   real(8) :: ssfCO2    
-  real(8) :: ssWarg    
   real(8) :: ssCO2flux 
   real(8) :: ssO2flux  
   real(8) :: PFDbott   
@@ -136,22 +137,6 @@ MODULE mod_param
   integer :: iSalt                  ! Salinity
   integer :: iSedi                  ! suspended sediment
 
-#if defined ORGANIC_MATTER
-  integer, parameter :: N_phyt = 3  ! Number of functional groups of phytoplankton
-                                    !  1: dinoflagellate
-                                    !  2: diatom
-                                    !  3: coccolithophorids
-  integer, parameter :: N_zoop = 1  ! Number of functional groups of zooplankton
-                                    !  1: General Zooplankton 
-  integer, parameter :: N_dom  = 2  ! Number of functional groups of Dissolved organoic matter
-                                    !  1: Labile DOM
-                                    !  2: Refractory DOM
-  integer, parameter :: N_pom  = 2  ! Number of functional groups of Particulate organoic matter
-                                    !  1: Detritus
-                                    !  2: Coarse POM (leaf litter, etc.)
-  integer, parameter :: N_pim  = 1  ! Number of functional groups of Particulate inorganoic matter
-                                    !  1: coccolith (CaCO3)
-#endif
   integer :: idCrl1                 ! Coral coverage
   integer :: idCrl2                 ! Coral2 coverage
   integer :: idSgrs                 ! Seagrass coverage
@@ -165,45 +150,44 @@ MODULE mod_param
   integer :: iTAlk                  ! Total alkalinity
   integer :: iOxyg                  ! Dissolved oxygen concentration
 #if defined ORGANIC_MATTER
-  integer :: iDOC(N_dom)            ! Dissolved organic C-concentration
-  integer :: iPOC(N_pom)            ! Particulate organic C-concentration
-  integer :: iPhyt(N_phyt)          ! Phytoplankton1 density
-  integer :: iZoop(N_zoop)          ! Zooplankton density
-  integer :: iPIC(N_pim)            ! Particulate inorganic C-concentration
+  integer :: iDOC(Ndom)            ! Dissolved organic C-concentration
+  integer :: iPOC(Npom)            ! Particulate organic C-concentration
+  integer :: iPhyt(Nphy)          ! Phytoplankton1 density
+  integer :: iZoop(Nzoo)          ! Zooplankton density
+  integer :: iPIC(Npim)            ! Particulate inorganic C-concentration
 # if defined FOODWEB_TESTMODE
-  integer :: iDeadPhyt(N_phyt)      ! Dead Phytoplankton density
+  integer :: iDeadPhyt(Nphy)      ! Dead Phytoplankton density
 # endif
 #endif
 #if defined CARBON_ISOTOPE
   integer :: iT13C                  ! Corbon 13 of total inorganic carbon
 # if defined ORGANIC_MATTER
-  integer :: iDO13C(N_dom)          ! Dissolved organic 13C-concentration
-  integer :: iPO13C(N_pom)          ! Particulate organic 13C-concentration
-  integer :: iPhyt13C(N_phyt)       ! Phytoplankton1 13C-concentration
-  integer :: iZoop13C(N_zoop)       ! Zooplankton 13C-concentration
-  integer :: iPI13C(N_pim)          ! Particulate inorganic 13C-concentration
+  integer :: iDO13C(Ndom)          ! Dissolved organic 13C-concentration
+  integer :: iPO13C(Npom)          ! Particulate organic 13C-concentration
+  integer :: iPhyt13C(Nphy)       ! Phytoplankton1 13C-concentration
+  integer :: iZoop13C(Nzoo)       ! Zooplankton 13C-concentration
+  integer :: iPI13C(Npim)          ! Particulate inorganic 13C-concentration
 # endif
 #endif
 #if defined NUTRIENTS
   integer :: iNO3_                  ! Nitrate concentration
-!  integer :: iNO2_                  ! Nitrite concentration
   integer :: iNH4_                  ! Ammonium concentration
   integer :: iPO4_                  ! Ammonium concentration
 # if defined ORGANIC_MATTER
-  integer :: iDON(N_dom)            ! Dissolved organic N-concentration
-  integer :: iPON(N_pom)            ! Particulate organic N-concentration
-  integer :: iDOP(N_dom)            ! Dissolved organic P-concentration
-  integer :: iPOP(N_pom)            ! Particulate organic P-concentration
+  integer :: iDON(Ndom)            ! Dissolved organic N-concentration
+  integer :: iPON(Npom)            ! Particulate organic N-concentration
+  integer :: iDOP(Ndom)            ! Dissolved organic P-concentration
+  integer :: iPOP(Npom)            ! Particulate organic P-concentration
 # endif
 # if defined NITROGEN_ISOTOPE
   integer :: i15NO3                  ! Nitrogen isotope concentration in Nitrate 
 !  integer :: i15NO2                  ! Nitrogen isotope concentration in Nitrite
   integer :: i15NH4                  ! Nitrogen isotope concentration in Ammonium
 #  if defined ORGANIC_MATTER
-  integer :: iDO15N(N_dom)          ! Dissolved organic 15N-concentration
-  integer :: iPO15N(N_pom)          ! Particulate organic 15N-concentration
-  integer :: iPhyt15N(N_phyt)       ! Phytoplankton 15N-concentration
-  integer :: iZoop15N(N_zoop)       ! Zooplankton 15N-concentration
+  integer :: iDO15N(Ndom)          ! Dissolved organic 15N-concentration
+  integer :: iPO15N(Npom)          ! Particulate organic 15N-concentration
+  integer :: iPhyt15N(Nphy)       ! Phytoplankton 15N-concentration
+  integer :: iZoop15N(Nzoo)       ! Zooplankton 15N-concentration
 #  endif
 # endif
 #endif
@@ -216,6 +200,9 @@ MODULE mod_param
   real(8), allocatable :: C(:,:,:,:)
   real(8), allocatable :: dC_dt(:,:,:,:)
   real(8), allocatable :: Co(:,:,:)
+  real(8), allocatable :: pH(:,:,:)
+  real(8), allocatable :: Warg(:,:,:)
+  real(8), allocatable :: Wcal(:,:,:)
   
   real(8), allocatable :: p_coral(:,:,:)
   real(8), allocatable :: p_sgrass(:,:)
@@ -231,7 +218,10 @@ contains
   subroutine initialize_params(LBi, UBi, LBj, UBj, N, Nid)
 
     use mod_geochem
-    
+#if defined FOODWEB
+    use mod_foodweb
+#endif
+   
     implicit none
 ! input parameters
     integer, intent(in) :: LBi, UBi, LBj, UBj, N
@@ -288,28 +278,28 @@ contains
     i=i+1
     iOxyg=ic+i  !  4
 #if defined ORGANIC_MATTER
-    DO j=1,N_dom
+    DO j=1,Ndom
       i=i+1
       iDOC(j)=ic+i
     END DO
-    DO j=1,N_pom
+    DO j=1,Npom
       i=i+1
       iPOC(j)=ic+i
     END DO
-    DO j=1,N_phyt
+    DO j=1,Nphy
       i=i+1
       iPhyt(j)=ic+i
     END DO
-    DO j=1,N_zoop
+    DO j=1,Nzoo
       i=i+1
       iZoop(j)=ic+i
     END DO
-    DO j=1,N_pim
+    DO j=1,Npim
       i=i+1
       iPIC(j)=ic+i
     END DO
 # if defined FOODWEB_TESTMODE
-    DO j=1,N_phyt
+    DO j=1,Nphy
       i=i+1
       iDeadPhyt(j)=ic+i
     END DO
@@ -319,23 +309,23 @@ contains
     i=i+1
     iT13C=ic+i  ! +1
 # if defined ORGANIC_MATTER
-    DO j=1,N_dom
+    DO j=1,Ndom
       i=i+1
       iDO13C(j)=ic+i
     END DO
-    DO j=1,N_pom
+    DO j=1,Npom
       i=i+1
       iPO13C(j)=ic+i
     END DO
-    DO j=1,N_phyt
+    DO j=1,Nphy
       i=i+1
       iPhyt13C(j)=ic+i
     END DO
-    DO j=1,N_zoop
+    DO j=1,Nzoo
       i=i+1
       iZoop13C(j)=ic+i
     END DO
-    DO j=1,N_pim
+    DO j=1,Npim
       i=i+1
       iPI13C(j)=ic+i
     END DO
@@ -351,19 +341,19 @@ contains
     i=i+1
     iPO4_=ic+i
 # if defined ORGANIC_MATTER
-    DO j=1,N_dom
+    DO j=1,Ndom
       i=i+1
       iDON(j)=ic+i
     END DO
-    DO j=1,N_pom
+    DO j=1,Npom
       i=i+1
       iPON(j)=ic+i
     END DO
-    DO j=1,N_dom
+    DO j=1,Ndom
       i=i+1
       iDOP(j)=ic+i
     END DO
-    DO j=1,N_pom
+    DO j=1,Npom
       i=i+1
       iPOP(j)=ic+i
     END DO
@@ -376,19 +366,19 @@ contains
     i=i+1
     i15NH4=ic+i  ! +1
 #  if defined ORGANIC_MATTER
-    DO j=1,N_dom
+    DO j=1,Ndom
       i=i+1
       iDO15N(j)=ic+i
     END DO
-    DO j=1,N_pom
+    DO j=1,Npom
       i=i+1
       iPO15N(j)=ic+i
     END DO
-    DO j=1,N_phyt
+    DO j=1,Nphy
       i=i+1
       iPhyt15N(j)=ic+i
     END DO
-    DO j=1,N_zoop
+    DO j=1,Nzoo
       i=i+1
       iZoop15N(j)=ic+i
     END DO
@@ -416,6 +406,9 @@ contains
    allocate( C(LBi:UBi, LBj:UBj, N, Nid) , &
              dC_dt(LBi:UBi, LBj:UBj, N, Nid)   )
    allocate( Co(LBi:UBi, LBj:UBj, Nid) )
+   allocate( pH(LBi:UBi, LBj:UBj, N) )
+   allocate( Warg(LBi:UBi, LBj:UBj, N) )
+   allocate( Wcal(LBi:UBi, LBj:UBj, N) )
    
    allocate( p_coral (2,LBi:UBi, LBj:UBj) , &
              p_sgrass(LBi:UBi, LBj:UBj) , &

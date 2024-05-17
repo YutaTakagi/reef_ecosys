@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -7,11 +7,68 @@
 !!!**** MODULE OF ECOSYSTEM MODEL ************************************
 
 MODULE mod_reef_ecosys
+#if defined REEF_ECOSYS
+
 contains
+
+!!! **********************************************************************
+!!!  Allocate module variables of reef ecosystem model
+!!! **********************************************************************
+SUBROUTINE allocate_reef_ecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
+#ifdef CORAL_POLYP
+  USE mod_coral
+#endif
+#ifdef SEAGRASS
+  USE mod_seagrass
+#endif
+#ifdef MACROALGAE
+  USE mod_macroalgae
+#endif
+#ifdef SEDIMENT_ECOSYS
+  USE mod_sedecosys
+#endif
+    
+  implicit none
+
+  integer, intent(in) :: ng, Ngrids, LBi, UBi, LBj, UBj
+
+#ifdef CORAL_POLYP
+  CALL allocate_coral(ng, Ngrids, LBi, UBi, LBj, UBj)
+  write(*,*) 'yt_debug: mod_reef_ecosys.F allocate_reef_ecosys() finished coral aloc'
+#endif
+#ifdef SEAGRASS
+  CALL allocate_seagrass(ng, Ngrids, LBi, UBi, LBj, UBj)
+  write(*,*) 'yt_debug: mod_reef_ecosys.F allocate_reef_ecosys() finished seagrass aloc'
+#endif
+#ifdef MACROALGAE
+  CALL allocate_macroalgae(ng, Ngrids, LBi, UBi, LBj, UBj)
+  write(*,*) 'yt_debug: mod_reef_ecosys.F allocate_reef_ecosys() finished macroalgae aloc'
+#endif
+#ifdef SEDIMENT_ECOSYS
+  CALL allocate_sedecosys(ng, Ngrids, LBi, UBi, LBj, UBj  &
+# if defined SEAGRASS && (defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || \
+     defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM)
+                          , Nsg                   &
+# endif
+                          )
+  write(*,*) 'yt_debug: mod_reef_ecosys.F allocate_reef_ecosys() finished sediment aloc'
+#endif
+    
+  RETURN
+END SUBROUTINE allocate_reef_ecosys
+
+
 !!! **********************************************************************
 !!!  Set initial conditions for reef ecosystem model
 !!! **********************************************************************
-  SUBROUTINE initialize_reef_ecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
+  SUBROUTINE initialize_reef_ecosys(ng, LBi, UBi, LBj, UBj &
+      , start_of_new_run    &   ! TRUE = initialize coral, seagass, macroalgae, sediment from start; FALSE = continue from previous run
+#ifdef SEAGRASS
+      , XI_size, ETA_size   &   ! grid size XI-direction (meters); grid size ETA-direction (meters)
+      , p_sgrass            &   ! seagrass coverage (habitat area in grid / grid area)
+#endif
+    )
+
 #ifdef CORAL_POLYP
     USE mod_coral
 #endif
@@ -24,23 +81,79 @@ contains
 #ifdef SEDIMENT_ECOSYS
     USE mod_sedecosys
 #endif
-      
-    implicit none
 
-    integer, intent(in) :: ng, Ngrids, LBi, UBi, LBj, UBj
+    integer, intent(in) :: ng, LBi, UBi, LBj, UBj
+    logical, intent(in) :: start_of_new_run
+#ifdef SEAGRASS
+    real(8), intent(in) :: XI_size (    LBi:UBi,LBj:UBj)   ! grid size XI-direction (meters)
+    real(8), intent(in) :: ETA_size(    LBi:UBi,LBj:UBj)   ! grid size ETA-direction (meters)
+    real(8), intent(in) :: p_sgrass(Nsg,LBi:UBi,LBj:UBj)   ! seagrass coverage (habitat area in grid / grid area)
+#endif
+
+
+!     USE mod_param
+
+!     implicit none
+!     integer, intent(in) :: ng, tile
+!     integer :: i, j
+!     integer :: Imin, Imax, Jmin, Jmax
+
+! !
+! # include "tile.h"
+! !
+! !  Set array initialization range.
+! !
+! #ifdef _OPENMP
+!     IF (DOMAIN(ng)%Western_Edge(tile)) THEN
+!       Imin=BOUNDS(ng)%LBi(tile)
+!     ELSE
+!       Imin=Istr
+!     END IF
+!     IF (DOMAIN(ng)%Eastern_Edge(tile)) THEN
+!       Imax=BOUNDS(ng)%UBi(tile)
+!     ELSE
+!       Imax=Iend
+!     END IF
+!     IF (DOMAIN(ng)%Southern_Edge(tile)) THEN
+!       Jmin=BOUNDS(ng)%LBj(tile)
+!     ELSE
+!       Jmin=Jstr
+!     END IF
+!     IF (DOMAIN(ng)%Northern_Edge(tile)) THEN
+!       Jmax=BOUNDS(ng)%UBj(tile)
+!     ELSE
+!       Jmax=Jend
+!     END IF
+! #else
+!     Imin=LBi
+!     Imax=UBi
+!     Jmin=LBj
+!     Jmax=UBj
+! #endif
+
+    write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() start_of_new_run =', start_of_new_run
+
 #ifdef CORAL_POLYP
-    CALL initialize_coral(ng, Ngrids, LBi, UBi, LBj, UBj)
+    CALL initialize_coral(ng, LBi, UBi, LBj, UBj)
+    write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished coral init'
 #endif
 #ifdef SEAGRASS
-    CALL initialize_seagrass(ng, Ngrids, LBi, UBi, LBj, UBj)
+    CALL initialize_seagrass( ng, LBi, UBi, LBj, UBj    &
+                            , start_of_new_run          & ! TRUE = initialize coral, seagass, macroalgae, sediment from start; FALSE = continue from previous run
+                            , XI_size, ETA_size         & ! grid size XI-direction (meters); grid size ETA-direction (meters)
+                            , p_sgrass                  & ! seagrass coverage (habitat area/grid area)
+                            )
+    write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished seagrass init'
 #endif
 #ifdef MACROALGAE
-    CALL initialize_macroalgae(ng, Ngrids, LBi, UBi, LBj, UBj)
+    CALL initialize_macroalgae(ng, LBi, UBi, LBj, UBj)
+    write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished macroalgae init'
 #endif
 #ifdef SEDIMENT_ECOSYS
-    CALL initialize_sedecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
+    CALL initialize_sedecosys(ng, LBi, UBi, LBj, UBj, start_of_new_run)
+    write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished sediment init'
 #endif
-      
+
     RETURN
   END SUBROUTINE initialize_reef_ecosys
 
@@ -55,6 +168,7 @@ contains
     , N              &   ! Number of vertical grid (following ROMS vertical grid)
     , isplitc        &   ! Internal loop counts of coral polyp model
     , isplitsed      &   ! Internal loop counts of sediment ecosystem model
+    , date           &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
     , dt             &   ! Time step (sec)
     , dz             &   ! dz(N): vertical grid size (m)
     , PFDsurf        &   ! Sea surface photon flux density (umol m-2 s-1)
@@ -73,59 +187,79 @@ contains
 #ifdef SEDIMENT_ECOSYS
     , p_sand         &   ! sediment coverage (0-1)
 #endif
-    , Tmp            &   ! Tmp(N): Temperature (oC)
-    , Sal            &   ! Sal(N): Salinity (PSU)
-    , DIC            &   ! DIC(N): Total dissolved inorganic carbon (DIC: umol kg-1)
-    , TA             &   ! TA (N): Total alkalinity (TA: umol kg-1)
-    , DOx            &   ! DOx(N): Dissolved oxygen (umol L-1)
+    , Tmp_in            &   ! Tmp(N): Temperature (oC)
+    , Sal_in            &   ! Sal(N): Salinity (PSU)
+    , DIC_in            &   ! DIC(N): Total dissolved inorganic carbon (DIC: umol kg-1)
+    , TA_in             &   ! TA (N): Total alkalinity (TA: umol kg-1)
+    , DOx_in            &   ! DOx(N): Dissolved oxygen (umol L-1)
 #if defined ORGANIC_MATTER
-    , DOC            &   ! DOC(N,Ndom): Labile Dissolved organic carbon (DOC: umol L-1)
-    , POC            &   ! POC (N,:): Particulate organic carbon (POC: umol L-1)
-    , PHY            &   ! PHY(N,:): phytoplankton1 (umol C L-1), dinoflagellate
-    , ZOO            &   ! ZOO (N,:): zooplankton (umol C L-1)
-    , PIC            &   ! PIC (N,:): Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+    , DOC_in            &   ! DOC(N,Ndom): Labile Dissolved organic carbon (DOC: umol L-1)
+    , POC_in            &   ! POC (N,:): Particulate organic carbon (POC: umol L-1)
+    , PHY_in            &   ! PHY(N,:): phytoplankton1 (umol C L-1), dinoflagellate
+    , ZOO_in            &   ! ZOO (N,:): zooplankton (umol C L-1)
+    , PIC_in            &   ! PIC (N,:): Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
 # if defined FOODWEB_TESTMODE
-    , DeadPHY        &   ! DeadPHY(Nphy): Dead phytoplankton (umol C L-1)
+    , DeadPHY_in        &   ! DeadPHY(Nphy): Dead phytoplankton (umol C L-1)
 # endif
 #endif
 #if defined CARBON_ISOTOPE
-    , DI13C          &   ! DI13C (N): 13C of DIC (umol kg-1)
+    , DI13C_in          &   ! DI13C (N): 13C of DIC (umol kg-1)
 # if defined ORGANIC_MATTER
-    , DO13C          &   ! DO13C (N): 13C of Labile Dissolved organic carbon (DOC: umol L-1)
-    , PO13C          &   ! PO13C (N): 13C of Particulate organic carbon (POC: umol L-1)
-    , PHY13C         &   ! PHY13C(N): 13C of phytoplankton1 (umol C L-1), dinoflagellate
-    , ZOO13C         &   ! ZOO13C(N): 13C of zooplankton (umol C L-1)
-    , PI13C          &   ! PI13C (N): 13C of Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+    , DO13C_in          &   ! DO13C (N): 13C of Labile Dissolved organic carbon (DOC: umol L-1)
+    , PO13C_in          &   ! PO13C (N): 13C of Particulate organic carbon (POC: umol L-1)
+    , PHY13C_in         &   ! PHY13C(N): 13C of phytoplankton1 (umol C L-1), dinoflagellate
+    , ZOO13C_in         &   ! ZOO13C(N): 13C of zooplankton (umol C L-1)
+    , PI13C_in          &   ! PI13C (N): 13C of Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
 # endif
 #endif
 #if defined NUTRIENTS            
-    , NO3            &   ! NO3(N): NO3 (umol L-1)
-!    , NO2            &   ! NO2(N): NO2 (umol L-1)
-    , NH4            &   ! NH4(N): NH4 (umol L-1)
-    , PO4            &   ! PO4(N): PO4 (umol L-1)
+    , NO3_in            &   ! NO3(N): NO3 (umol L-1)
+    , NH4_in            &   ! NH4(N): NH4 (umol L-1)
+    , PO4_in            &   ! PO4(N): PO4 (umol L-1)
 # if defined ORGANIC_MATTER
-    , DON            &   ! DON(N): Labile Dissolved organic nitrogen (DON: umol L-1)
-    , PON            &   ! PON(N): Particulate organic nitrogen (PON: umol L-1)
-    , DOP            &   ! DOP(N): Labile Dissolved organic phosporius (DOP: umol L-1)
-    , POP            &   ! POP(N): Particulate organic phosporius (POP: umol L-1)
+    , DON_in            &   ! DON(N): Labile Dissolved organic nitrogen (DON: umol L-1)
+    , PON_in            &   ! PON(N): Particulate organic nitrogen (PON: umol L-1)
+    , DOP_in            &   ! DOP(N): Labile Dissolved organic phosporius (DOP: umol L-1)
+    , POP_in            &   ! POP(N): Particulate organic phosporius (POP: umol L-1)
 # endif
 # if defined NITROGEN_ISOTOPE
-    , NO3_15N        &   ! NO3_15N(N): 15N of NO3 (umol L-1)
-!    , NO2_15N        &   ! NO2_15N(N): 15N of NO2 (umol L-1)
-    , NH4_15N        &   ! NH4_15N(N): 15N of NH4 (umol L-1)
+    , NO3_15N_in        &   ! NO3_15N(N): 15N of NO3 (umol L-1)
+    , NH4_15N_in        &   ! NH4_15N(N): 15N of NH4 (umol L-1)
 #  if defined ORGANIC_MATTER
-    , DO15N          &   ! LDO15N  (N): 15N of Labile Dissolved organic nitrogen (DON: umol L-1)
-    , PO15N          &   ! PO15N   (N): 15N of Particulate organic nitrogen (PON: umol L-1)
-    , PHY15N         &   ! PHY15N(N): 15N of phytoplankton1 (umol C L-1), dinoflagellate
-    , ZOO15N         &   ! ZOO15N (N): 15N of zooplankton (umol C L-1)
+    , DO15N_in          &   ! LDO15N  (N): 15N of Labile Dissolved organic nitrogen (DON: umol L-1)
+    , PO15N_in          &   ! PO15N   (N): 15N of Particulate organic nitrogen (PON: umol L-1)
+    , PHY15N_in         &   ! PHY15N(N): 15N of phytoplankton1 (umol C L-1), dinoflagellate
+    , ZOO15N_in         &   ! ZOO15N (N): 15N of zooplankton (umol C L-1)
 #  endif
 # endif
 #endif
 #if defined COT_STARFISH         
-    , COTe           &   ! COTe(N): COT starfish egg (umol L-1)
-    , COTl           &   ! COTl(N): COT starfish larvae (umol L-1)
+    , COTe_in           &   ! COTe(N): COT starfish egg (umol L-1)
+    , COTl_in           &   ! COTl(N): COT starfish larvae (umol L-1)
+#endif
+#if defined SEDECO_ADVECTION && defined SGD_ON
+    , sgd_flux          &   ! sumbarine groundwater discharge rate (cm s-1)  This flux is assumed to be the same throughout the sediment ecosystem layers (no compression/expansion) So volume flux doesn't change but concentrations of tracers do
+    , sgd_Tmp_in        &   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
+    , sgd_Sal_in        &   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
+    , sgd_DIC_in        &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+    , sgd_TA_in         &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+    , sgd_DOx_in        &   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
+# if defined CARBON_ISOTOPE
+    , sgd_DI13C_in      &   ! SGD concentration coming in through bottom: DI13C : 13C of DIC (umol kg-1)
+# endif
+# if defined NUTRIENTS            
+    , sgd_NO3_in        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+    , sgd_NH4_in        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+    , sgd_PO4_in        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+#  if defined NITROGEN_ISOTOPE
+    , sgd_NO3_15N_in    &   ! SGD concentration coming in through bottom: NO3_15N: 15N of NO3 (umol L-1)
+    , sgd_NH4_15N_in    &   ! SGD concentration coming in through bottom: NH4_15N: 15N of NH4 (umol L-1)
+#  endif
+# endif
 #endif
 !   output parameters
+    , dTemp_dt       &   ! Tmp(N): Temperature (oC)
+    , dSalt_dt       &   ! Sal(N): Salinity (PSU)
     , dDIC_dt        &   ! dDIC_dt(N): dDIC/dt (umol kg-1 s-1)
     , dTA_dt         &   ! dTA_dt (N): dTA/dt (umol kg-1 s-1)
     , dDOx_dt        &   ! dDOx_dt(N): dDO/dt (umol L-1 s-1)
@@ -176,9 +310,10 @@ contains
     , dCOTe_dt       &   ! dCOTe/dt(N): (umol L-1 s-1)
     , dCOTl_dt       &   ! dCOTl/dt(N): (umol L-1 s-1)
 #endif
-    , sspH           &   ! sea surface pH
+    , pH             &   ! pH
+    , Warg           &   ! aragonite saturation state
+    , Wcal           &   ! calcite saturation state
     , ssfCO2         &   ! sea surface fCO2 (uatm)
-    , ssWarg         &   ! sea surface aragonite saturation state
     , ssCO2flux      &   ! sea surface CO2 flux (mmol m-2 s-1)
     , ssO2flux       &   ! sea surface O2 flux (mmol m-2 s-1)
     , PFDbott        &   ! Bottom photon flux density (umol m-2 s-1)
@@ -230,9 +365,10 @@ contains
 
 ! input parameters
     integer, intent(in) :: ng,i,j     
-    integer, intent(in) :: N          
+    integer, intent(in) :: N
     integer, intent(in) :: isplitc     
     integer, intent(in) :: isplitsed     
+    real(8), intent(in) :: date
     real(8), intent(in) :: dt         
     real(8), intent(in) :: dz(N)      
     real(8), intent(in) :: PFDsurf    
@@ -243,7 +379,7 @@ contains
     real(8), intent(in) :: p_coral(Ncl)
 #endif
 #ifdef SEAGRASS
-    real(8), intent(in) :: p_sgrass   
+    real(8), intent(inout) :: p_sgrass(Nsg)   ! yt_edit fix me! make coverage writeable
 #endif
 #ifdef MACROALGAE
     real(8), intent(in) :: p_algae    
@@ -252,57 +388,131 @@ contains
     real(8), intent(in) :: p_sand      
 #endif
 
-    real(8), intent(in) :: Tmp(N)        
-    real(8), intent(in) :: Sal(N)        
-    real(8), intent(in) :: DIC(N)        
-    real(8), intent(in) :: TA (N)        
-    real(8), intent(in) :: DOx(N)        
+! raw tracer inputs
+    real(8), intent(in) :: Tmp_in(N)        
+    real(8), intent(in) :: Sal_in(N)        
+    real(8), intent(in) :: DIC_in(N)        
+    real(8), intent(in) :: TA_in (N)        
+    real(8), intent(in) :: DOx_in(N)        
 #if defined ORGANIC_MATTER
-    real(8), intent(in) :: DOC(N,Ndom)           ! Labile Dissolved organic carbon (DOC: umol L-1)
-    real(8), intent(in) :: POC(N,Npom)            ! Particulate organic carbon (POC: umol L-1)
-    real(8), intent(in) :: PHY(N,Nphy)           ! phytoplankton1 (umol C L-1), dinoflagellate
-    real(8), intent(in) :: ZOO(N,Nzoo)            ! zooplankton (umol C L-1)
-    real(8), intent(in) :: PIC(N,Npim)            ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-#if defined FOODWEB_TESTMODE
-    real(8), intent(in) :: DeadPHY(N,Nphy)  ! DeadPHY(Nphy): Dead phytoplankton (umol C L-1)
-#endif
+    real(8), intent(in) :: DOC_in(N,Ndom)           ! Labile Dissolved organic carbon (DOC: umol L-1)
+    real(8), intent(in) :: POC_in(N,Npom)           ! Particulate organic carbon (POC: umol L-1)
+    real(8), intent(in) :: PHY_in(N,Nphy)           ! phytoplankton1 (umol C L-1), dinoflagellate
+    real(8), intent(in) :: ZOO_in(N,Nzoo)           ! zooplankton (umol C L-1)
+    real(8), intent(in) :: PIC_in(N,Npim)           ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+# if defined FOODWEB_TESTMODE
+    real(8), intent(in) :: DeadPHY_in(N,Nphy)  ! DeadPHY(Nphy): Dead phytoplankton (umol C L-1)
+# endif
 #endif
 #if defined CARBON_ISOTOPE
-    real(8), intent(in) :: DI13C(N)          ! 13C of DIC (umol kg-1)
+    real(8), intent(in) :: DI13C_in(N)          ! 13C of DIC (umol kg-1)
 # if defined ORGANIC_MATTER
-    real(8), intent(in) :: DO13C(N,Ndom)         ! 13C of Labile Dissolved organic carbon (DOC: umol L-1)
-    real(8), intent(in) :: PO13C(N,Npom)          ! 13C of Particulate organic carbon (POC: umol L-1)
-    real(8), intent(in) :: PHY13C(N,Nphy)       ! 13C of phytoplankton1 (umol C L-1), dinoflagellate
-    real(8), intent(in) :: ZOO13C(N,Nzoo)        ! 13C of zooplankton (umol C L-1)
-    real(8), intent(in) :: PI13C(N,Npim)          ! 13C of Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+    real(8), intent(in) :: DO13C_in (N,Ndom)         ! 13C of Labile Dissolved organic carbon (DOC: umol L-1)
+    real(8), intent(in) :: PO13C_in (N,Npom)          ! 13C of Particulate organic carbon (POC: umol L-1)
+    real(8), intent(in) :: PHY13C_in(N,Nphy)       ! 13C of phytoplankton1 (umol C L-1), dinoflagellate
+    real(8), intent(in) :: ZOO13C_in(N,Nzoo)        ! 13C of zooplankton (umol C L-1)
+    real(8), intent(in) :: PI13C_in (N,Npim)          ! 13C of Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
 # endif
 #endif
 #if defined NUTRIENTS            
-    real(8), intent(in) :: NO3(N)         
-    real(8), intent(in) :: NH4(N)        
-    real(8), intent(in) :: PO4(N)        
+    real(8), intent(in) :: NO3_in(N)         
+    real(8), intent(in) :: NH4_in(N)        
+    real(8), intent(in) :: PO4_in(N)        
 # if defined ORGANIC_MATTER
-    real(8), intent(in) :: DON(N,Ndom)           ! Labile Dissolved organic nitrogen (DON: umol L-1)
-    real(8), intent(in) :: PON(N,Npom)            ! Particulate organic nitrogen (PON: umol L-1)
-    real(8), intent(in) :: DOP(N,Ndom)           ! Labile Dissolved organic phosporius (DOP: umol L-1)
-    real(8), intent(in) :: POP(N,Npom)            ! Particulate organic phosporius (POP: umol L-1)
+    real(8), intent(in) :: DON_in(N,Ndom)           ! Labile Dissolved organic nitrogen (DON: umol L-1)
+    real(8), intent(in) :: PON_in(N,Npom)            ! Particulate organic nitrogen (PON: umol L-1)
+    real(8), intent(in) :: DOP_in(N,Ndom)           ! Labile Dissolved organic phosporius (DOP: umol L-1)
+    real(8), intent(in) :: POP_in(N,Npom)            ! Particulate organic phosporius (POP: umol L-1)
 # endif
 # if defined NITROGEN_ISOTOPE
-    real(8), intent(in) :: NO3_15N(N)        ! 15N of NO3 (umol L-1)
-    real(8), intent(in) :: NH4_15N(N)        ! 15N of NH4 (umol L-1)
+    real(8), intent(in) :: NO3_15N_in(N)        ! 15N of NO3 (umol L-1)
+    real(8), intent(in) :: NH4_15N_in(N)        ! 15N of NH4 (umol L-1)
 #  if defined ORGANIC_MATTER
-    real(8), intent(in) :: DO15N(N,Ndom)         ! 15N of Labile Dissolved organic nitrogen (DON: umol L-1)
-    real(8), intent(in) :: PO15N(N,Npom)          ! 15N of Particulate organic nitrogen (PON: umol L-1)
-    real(8), intent(in) :: PHY15N(N,Nphy)       ! 15N of phytoplankton1 (umol C L-1), dinoflagellate
-    real(8), intent(in) :: ZOO15N(N,Nzoo)        ! 15N of zooplankton (umol C L-1)
+    real(8), intent(in) :: DO15N_in(N,Ndom)         ! 15N of Labile Dissolved organic nitrogen (DON: umol L-1)
+    real(8), intent(in) :: PO15N_in(N,Npom)          ! 15N of Particulate organic nitrogen (PON: umol L-1)
+    real(8), intent(in) :: PHY15N_in(N,Nphy)       ! 15N of phytoplankton1 (umol C L-1), dinoflagellate
+    real(8), intent(in) :: ZOO15N_in(N,Nzoo)        ! 15N of zooplankton (umol C L-1)
 #  endif
 # endif
 #endif
 #if defined COT_STARFISH         
-    real(8), intent(in) :: COTe(N)         ! COT starfish egg (umol L-1)
-    real(8), intent(in) :: COTl(N)         ! COT starfish larvae (umol L-1)
+    real(8), intent(in) :: COTe_in(N)         ! COT starfish egg (umol L-1)
+    real(8), intent(in) :: COTl_in(N)         ! COT starfish larvae (umol L-1)
+#endif
+#if defined SEDECO_ADVECTION && defined SGD_ON
+    real(8), intent(in) :: sgd_flux           ! sumbarine groundwater discharge rate of grid (cm s-1)  
+    real(8), intent(in) :: sgd_Tmp_in         ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
+    real(8), intent(in) :: sgd_Sal_in         ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
+    real(8), intent(in) :: sgd_DIC_in         ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+    real(8), intent(in) :: sgd_TA_in          ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+    real(8), intent(in) :: sgd_DOx_in         ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
+# if defined CARBON_ISOTOPE
+    real(8), intent(in) :: sgd_DI13C_in       ! SGD concentration coming in through bottom: DI13C : 13C of DIC (umol kg-1)
+# endif
+# if defined NUTRIENTS            
+    real(8), intent(in) :: sgd_NO3_in         ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+    real(8), intent(in) :: sgd_NH4_in         ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+    real(8), intent(in) :: sgd_PO4_in         ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+#  if defined NITROGEN_ISOTOPE
+    real(8), intent(in) :: sgd_NO3_15N_in     ! SGD concentration coming in through bottom: NO3_15N: 15N of NO3 (umol L-1)
+    real(8), intent(in) :: sgd_NH4_15N_in     ! SGD concentration coming in through bottom: NH4_15N: 15N of NH4 (umol L-1)
+#  endif
+# endif
+#endif
+! input with negatives corrected to zero
+    real(8) :: Tmp(N)        
+    real(8) :: Sal(N)        
+    real(8) :: DIC(N)        
+    real(8) :: TA (N)        
+    real(8) :: DOx(N)        
+#if defined ORGANIC_MATTER
+    real(8) :: DOC(N,Ndom)           ! Labile Dissolved organic carbon (DOC: umol L-1)
+    real(8) :: POC(N,Npom)            ! Particulate organic carbon (POC: umol L-1)
+    real(8) :: PHY(N,Nphy)           ! phytoplankton1 (umol C L-1), dinoflagellate
+    real(8) :: ZOO(N,Nzoo)            ! zooplankton (umol C L-1)
+    real(8) PIC(N,Npim)            ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+# if defined FOODWEB_TESTMODE
+    real(8) :: DeadPHY(N,Nphy)  ! DeadPHY(Nphy): Dead phytoplankton (umol C L-1)
+# endif
+#endif
+#if defined CARBON_ISOTOPE
+    real(8) :: DI13C(N)          ! 13C of DIC (umol kg-1)
+# if defined ORGANIC_MATTER
+    real(8) :: DO13C(N,Ndom)         ! 13C of Labile Dissolved organic carbon (DOC: umol L-1)
+    real(8) :: PO13C(N,Npom)          ! 13C of Particulate organic carbon (POC: umol L-1)
+    real(8) :: PHY13C(N,Nphy)       ! 13C of phytoplankton1 (umol C L-1), dinoflagellate
+    real(8) :: ZOO13C(N,Nzoo)        ! 13C of zooplankton (umol C L-1)
+    real(8) :: PI13C(N,Npim)          ! 13C of Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+# endif
+#endif
+#if defined NUTRIENTS            
+    real(8) :: NO3(N)         
+    real(8) :: NH4(N)        
+    real(8) :: PO4(N)        
+# if defined ORGANIC_MATTER
+    real(8) :: DON(N,Ndom)           ! Labile Dissolved organic nitrogen (DON: umol L-1)
+    real(8) :: PON(N,Npom)            ! Particulate organic nitrogen (PON: umol L-1)
+    real(8) :: DOP(N,Ndom)           ! Labile Dissolved organic phosporius (DOP: umol L-1)
+    real(8) :: POP(N,Npom)            ! Particulate organic phosporius (POP: umol L-1)
+# endif
+# if defined NITROGEN_ISOTOPE
+    real(8) :: NO3_15N(N)        ! 15N of NO3 (umol L-1)
+    real(8) :: NH4_15N(N)        ! 15N of NH4 (umol L-1)
+#  if defined ORGANIC_MATTER
+    real(8) :: DO15N(N,Ndom)         ! 15N of Labile Dissolved organic nitrogen (DON: umol L-1)
+    real(8) :: PO15N(N,Npom)          ! 15N of Particulate organic nitrogen (PON: umol L-1)
+    real(8) :: PHY15N(N,Nphy)       ! 15N of phytoplankton1 (umol C L-1), dinoflagellate
+    real(8) :: ZOO15N(N,Nzoo)        ! 15N of zooplankton (umol C L-1)
+#  endif
+# endif
+#endif
+#if defined COT_STARFISH         
+    real(8) :: COTe(N)         ! COT starfish egg (umol L-1)
+    real(8) :: COTl(N)         ! COT starfish larvae (umol L-1)
 #endif
 ! output parameters
+    real(8), intent(out) :: dTemp_dt(N)          ! Tmp(N): Temperature (oC)
+    real(8), intent(out) :: dSalt_dt(N)          ! Sal(N): Salinity (PSU)
     real(8), intent(out) :: dDIC_dt(N)     
     real(8), intent(out) :: dTA_dt(N)     
     real(8), intent(out) :: dDOx_dt(N)     
@@ -312,9 +522,9 @@ contains
     real(8), intent(out) :: dPHY_dt(N,Nphy)      ! dPHY1/dt  (umol L-1 s-1)  
     real(8), intent(out) :: dZOO_dt(N,Nzoo)       ! dZOO/dt  (umol L-1 s-1)  
     real(8), intent(out) :: dPIC_dt(N,Npim)       ! dPIC/dt  (umol L-1 s-1) 
-#if defined FOODWEB_TESTMODE
+# if defined FOODWEB_TESTMODE
     real(8), intent(out) :: dDeadPHY_dt(N,Nphy)  ! dDeadPHY/dt  (umol L-1 s-1)
-#endif
+# endif
 #endif
 #if defined CARBON_ISOTOPE
     real(8), intent(out) :: dDI13C_dt(N)     ! dDI13C/dt (umol kg-1 s-1)
@@ -353,9 +563,10 @@ contains
     real(8), intent(out) :: dCOTe_dt(N)    ! dCOTe/dt (umol L-1 s-1)
     real(8), intent(out) :: dCOTl_dt(N)    ! dCOTl/dt (umol L-1 s-1)
 #endif
-    real(8), intent(out) :: sspH      
+    real(8), intent(out) :: pH(N)
+    real(8), intent(out) :: Warg(N)
+    real(8), intent(out) :: Wcal(N)
     real(8), intent(out) :: ssfCO2    
-    real(8), intent(out) :: ssWarg    
     real(8), intent(out) :: ssCO2flux 
     real(8), intent(out) :: ssO2flux  
     real(8), intent(out) :: PFDbott   
@@ -370,12 +581,9 @@ contains
     
     real(8) :: dtc     ! Internal time step for coral polyp model (sec)
     real(8) :: dtsed   ! Internal time step for sediment ecosystem model (sec)
-
-!    real(8) :: sed_Pg  
-!    real(8) :: sed_R   
-!    real(8) :: sed_Gn  
-
+  
     integer :: k, m, itrc          
+    integer :: yt_iter ! yt_debug
     integer :: icl, itic
     real(8) :: TmpK
     real(8) :: rho_sw(N)
@@ -384,10 +592,11 @@ contains
     real(8) :: PFD, Att, AttFac, ExpAtt, Itop
     real(8) :: cff, cff1, cff2, cff3, cff4, cff5
 
-    real(8) :: Flux_Tmp, Flux_Sal
-    real(8) :: Flux_DIC, Flux_TA,  Flux_DO
+    real(8) :: SGD_Temp, Flux_Sal
+    real(8) :: Flux_DIC, Flux_TA,  Flux_DO, Flux_CO2sed, Flux_N2  ! yuta_edits_for_masa
 #if defined ORGANIC_MATTER
     real(8) :: Flux_DOC(Ndom), Flux_POC(Npom)
+    real(8) :: Flux_sedPOC(3)   ! yuta_edits_for_masa
     real(8) :: Flux_PHY(Nphy), Flux_ZOO(Nzoo)  
     real(8) :: Flux_PIC(Npim)  
 #endif
@@ -404,6 +613,8 @@ contains
 # if defined ORGANIC_MATTER
     real(8) :: Flux_DON(Ndom), Flux_PON(Npom)    
     real(8) :: Flux_DOP(Ndom), Flux_POP(Npom)    
+    real(8) :: Flux_sedPON(3)   ! yuta_edits_for_masa
+    real(8) :: Flux_sedPOP(3)   ! yuta_edits_for_masa
 # endif
 # if defined NITROGEN_ISOTOPE
     real(8) :: Flux_NO3_15N, Flux_NH4_15N  !, Flux_NO2_15N
@@ -413,7 +624,13 @@ contains
 #  endif
 # endif
 #endif
-
+!!! yuta_edits_for_masa >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>YT:Add
+#if defined SULFATE
+    real(8) :: Flux_Mn2, Flux_MnO2 
+    real(8) :: Flux_Fe2, Flux_FeS, Flux_FeS2, Flux_FeOOH, Flux_FeOOH_PO4
+    real(8) :: Flux_H2S, Flux_S0, Flux_SO4 ! ,Flux_HS, Flux_S2
+#endif
+!!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<YT:Add
     real(8) :: dDIC(N), dTA(N),  dDOx(N)
 #if defined ORGANIC_MATTER
     real(8) :: dDOC(N,Ndom), dPOC(N,Npom)
@@ -470,8 +687,190 @@ contains
 #if defined ECOSYS_TESTMODE
 !  Output
     real(8), parameter :: OUTPUT_INTERVAL = 5.0d0     ! Output interval (min)
-    real(8), save :: time = 0.0d0 !sec
     real(8), save :: dsec = 0.0d0 !sec
+#endif
+
+
+! write(*,*) 'yt_debug: start of mod_reef_ecosys.F reef_ecosys()'
+
+
+!-----------------------------------------------------------------------
+! Rewrite inputs to replace negative values with zeros
+!-----------------------------------------------------------------------
+
+    Tmp = Tmp_in
+    where ( Sal_in > 0.0d0 )
+      Sal = Sal_in
+    else where
+      Sal = 0.0d0
+    end where
+    where ( DIC_in > 0.0d0 )
+      DIC = DIC_in
+    else where
+      DIC = 0.0d0
+    end where
+    where ( TA_in > 0.0d0 )
+      TA = TA_in
+    else where
+      TA = 0.0d0
+    end where
+    where ( DOx_in > 0.0d0 )
+      DOx = DOx_in
+    else where
+      DOx = 0.0d0
+    end where
+#if defined ORGANIC_MATTER
+    where ( DOC_in > 0.0d0 )
+      DOC = DOC_in
+    else where
+      DOC = 0.0d0
+    end where
+    where ( POC_in > 0.0d0 )
+      POC = POC_in
+    else where
+      POC = 0.0d0
+    end where
+    where ( PHY_in > 0.0d0 )
+      PHY = PHY_in
+    else where
+      PHY = 0.0d0
+    end where
+    where ( ZOO_in > 0.0d0 )
+      ZOO = ZOO_in
+    else where
+      ZOO = 0.0d0
+    end where
+    where ( PIC_in > 0.0d0 )
+      PIC = PIC_in
+    else where
+      PIC = 0.0d0
+    end where
+# if defined FOODWEB_TESTMODE
+    where ( DeadPHY_in > 0.0d0 )
+      DeadPHY = DeadPHY_in
+    else where
+      DeadPHY = 0.0d0
+    end where
+# endif
+#endif
+#if defined CARBON_ISOTOPE
+    where ( DI13C_in > 0.0d0 )
+      DI13C = DI13C_in
+    else where
+      DI13C = 0.0d0
+    end where
+# if defined ORGANIC_MATTER
+    where ( DO13C_in > 0.0d0 )
+      DO13C = DO13C_in
+    else where
+      DO13C = 0.0d0
+    end where
+    where ( PO13C_in > 0.0d0 )
+      PO13C = PO13C_in
+    else where
+      PO13C = 0.0d0
+    end where
+    where ( PHY13C_in > 0.0d0 )
+      PHY13C = PHY13C_in
+    else where
+      PHY13C = 0.0d0
+    end where
+    where ( ZOO13C_in > 0.0d0 )
+      ZOO13C = ZOO13C_in
+    else where
+      ZOO13C = 0.0d0
+    end where
+    where ( PI13C_in > 0.0d0 )
+      PI13C = PI13C_in
+    else where
+      PI13C = 0.0d0
+    end where
+# endif
+#endif
+#if defined NUTRIENTS            
+    where ( NO3_in > 0.0d0 )
+      NO3 = NO3_in
+    else where
+      NO3 = 0.0d0
+    end where
+    where ( NH4_in > 0.0d0 )
+      NH4 = NH4_in
+    else where
+      NH4 = 0.0d0
+    end where
+    where ( PO4_in > 0.0d0 )
+      PO4 = PO4_in
+    else where
+      PO4 = 0.0d0
+    end where
+# if defined ORGANIC_MATTER
+    where ( DON_in > 0.0d0 )
+      DON = DON_in
+    else where
+      DON = 0.0d0
+    end where
+    where ( PON_in > 0.0d0 )
+      PON = PON_in
+    else where
+      PON = 0.0d0
+    end where
+    where ( DOP_in > 0.0d0 )
+      DOP = DOP_in
+    else where
+      DOP = 0.0d0
+    end where
+    where ( POP_in > 0.0d0 )
+      POP = POP_in
+    else where
+      POP = 0.0d0
+    end where
+# endif
+# if defined NITROGEN_ISOTOPE
+    where ( NO3_15N_in > 0.0d0 )
+      NO3_15N = NO3_15N_in
+    else where
+      NO3_15N = 0.0d0
+    end where
+    where ( NH4_15N_in > 0.0d0 )
+      NH4_15N = NH4_15N_in
+    else where
+      NH4_15N = 0.0d0
+    end where
+#  if defined ORGANIC_MATTER
+    where ( DO15N_in > 0.0d0 )
+      DO15N = DO15N_in
+    else where
+      DO15N = 0.0d0
+    end where
+    where ( PO15N_in > 0.0d0 )
+      PO15N = PO15N_in
+    else where
+      PO15N = 0.0d0
+    end where
+    where ( PHY15N_in > 0.0d0 )
+      PHY15N = PHY15N_in
+    else where
+      PHY15N = 0.0d0
+    end where
+    where ( ZOO15N_in > 0.0d0 )
+      ZOO15N = ZOO15N_in
+    else where
+      ZOO15N = 0.0d0
+    end where
+#  endif
+# endif
+#endif
+#if defined COT_STARFISH         
+    where ( COTe_in > 0.0d0 )
+      COTe = COTe_in
+    else where
+      COTe = 0.0d0
+    end where
+    where ( COTl_in > 0.0d0 )
+      COTl = COTl_in
+    else where
+      COTl = 0.0d0
+    end where
 #endif
 
 !-----------------------------------------------------------------------
@@ -485,6 +884,8 @@ contains
 
       rho_sw(k) = densSW( Tmp(k),Sal(k) )  ! Density of seawater [g/cm3]
 
+      dTemp_dt(k) = 0.0d0         ! Tmp(N): Temperature (oC)
+      dSalt_dt(k) = 0.0d0         ! Sal(N): Salinity (PSU)
       dDIC_dt(k) = 0.0d0
       dTA_dt(k)  = 0.0d0
       dDOx_dt(k) = 0.0d0
@@ -528,10 +929,11 @@ contains
 #  endif
 # endif
 #endif
+      pH(k)   = 8.0d0   ! sea surface pH
+      Warg(k) = 4.0d0   ! aragonite saturation state
+      Wcal(k) = 4.0d0   ! calcite saturation state
     END DO
-    sspH      = 8.0d0   ! sea surface pH
-    ssfCO2    = 380.0d0   ! sea surface fCO2 (uatm)
-    ssWarg    = 4.0d0   ! sea surface aragonite saturation state
+    ssfCO2    = 380.0d0 ! sea surface fCO2 (uatm)
     ssCO2flux = 0.0d0   ! sea surface CO2 flux (mmol m-2 s-1)
     ssO2flux  = 0.0d0   ! sea surface O2 flux (mmol m-2 s-1)
     PFDbott   = 0.0d0   ! Bottom photon flux density (umol m-2 s-1)
@@ -557,18 +959,18 @@ contains
 
 !----------- CO2 system in ambient seawater -------------------
 
-    sspH = pH_fromATCT( TA(N), DIC(N),TmpK, Sal(N) )
-    cCO2aq = cCO2aq_fromCTpH( DIC(N), sspH, TmpK, Sal(N) )
-!    cHCO3 = cHCO3_fromCTpH( DIC(N), sspH, TmpK, Sal(N) )
-    cCO3 = cCO3_fromCTpH( DIC(N), sspH, TmpK, Sal(N) )
+    pH(N) = pH_fromATCT( TA(N), DIC(N),TmpK, Sal(N) )
+    cCO2aq = cCO2aq_fromCTpH( DIC(N), pH(N), TmpK, Sal(N) )
+!    cHCO3 = cHCO3_fromCTpH( DIC(N), pH(N), TmpK, Sal(N) )
+!    cCO3 = cCO3_fromCTpH( DIC(N), pH(N), TmpK, Sal(N) )
     ssfCO2 = fCO2_fromcCO2aq( cCO2aq, TmpK, Sal(N) )  !! for output
-    ssWarg = Warg_fromcCO3( cCO3, TmpK, Sal(N) )
+!    Warg(N) = Warg_fromcCO3( cCO3, TmpK, Sal(N) )
 
 !----------- CO2 gas exchange rate (mmol m-2 s-1). -------------------
     ssCO2flux = Flux_CO2(ssfCO2, pCO2air, U10, TmpK, Sal(N) )  ! sea to air is positive
 
     IF(ssCO2flux*0.0d0 /= 0.0d0) THEN  !!!---------Error Handling: Check NAN
-!      write(50,*) ssCO2flux, TA(N), DIC(N),TmpK, Sal(N), sspH, cCO3, ssWarg
+!      write(50,*) ssCO2flux, TA(N), DIC(N),TmpK, Sal(N), pH(N)
       ssCO2flux = 0.0d0
     END IF
     
@@ -655,9 +1057,9 @@ contains
         , PHY(k,:)       &   ! phytoplankton1 (umol C L-1), dinoflagellate
         , ZOO(k,:)       &   ! zooplankton (umol C L-1)
         , PIC(k,:)       &   ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-#if defined FOODWEB_TESTMODE
+# if defined FOODWEB_TESTMODE
         , DeadPHY(k,:)   &   ! DeadPHY(Nphy): Dead phytoplankton (umol C L-1)
-#endif
+# endif
 # if defined CARBON_ISOTOPE
         , DI13C(k)       &   ! 13C of DIC (umol kg-1)
         , DO13C(k,:)     &   ! 13C of Labile Dissolved organic carbon (DOC: umol L-1)
@@ -698,9 +1100,9 @@ contains
         , dPHY(k,:)      &   ! dPHY1/dt  (umol L-1 s-1)  
         , dZOO(k,:)      &   ! dZOO/dt  (umol L-1 s-1)  
         , dPIC(k,:)      &   ! dPIC/dt  (umol L-1 s-1)  
-#if defined FOODWEB_TESTMODE
+# if defined FOODWEB_TESTMODE
         , dDeadPHY(k,:)  &   ! dDeadPHY/dt  (umol L-1 s-1)
-#endif
+# endif
 # if defined CARBON_ISOTOPE
         , dDI13C(k)      &   ! dDI13C/dt (umol kg-1 s-1)
         , dDO13C(k,:)    &   ! dLDO13C/dt  (umol L-1 s-1) 
@@ -730,10 +1132,12 @@ contains
         , dCOTe(k)       &   ! dCOTe/dt (umol L-1 s-1)
         , dCOTl(k)       &   ! dCOTl/dt (umol L-1 s-1)
 # endif
+        , pH(k)          &   ! pH
+        , Wcal(k)        &   ! Calcite saturation state
+        , Warg(k)        &   ! Aragonite saturation state
         )
     
 !----- Mass balance equation -----------------------------------------------------------
-
       dDIC_dt(k) = dDIC_dt(k) + dDIC(k)
       dTA_dt (k) = dTA_dt (k) + dTA(k)
       dDOx_dt(k) = dDOx_dt(k) + dDOx(k)
@@ -742,9 +1146,9 @@ contains
       dPHY_dt(k,:) = dPHY_dt(k,:) + dPHY(k,:)
       dZOO_dt(k,:) = dZOO_dt(k,:) + dZOO(k,:)
       dPIC_dt(k,:) = dPIC_dt(k,:) + dPIC(k,:)
-#if defined FOODWEB_TESTMODE
+# if defined FOODWEB_TESTMODE
       dDeadPHY_dt(k,:) = dDeadPHY_dt(k,:) + dDeadPHY(k,:)
-#endif
+# endif
 # if defined CARBON_ISOTOPE
       dDI13C_dt(k) = dDI13C_dt(k) + dDI13C(k)
       dDO13C_dt(k,:) = dDO13C_dt(k,:) + dDO13C(k,:)
@@ -776,7 +1180,6 @@ contains
 # endif
 #endif
                              
-
 !  Light attenuation at the bottom of the grid cell. It is the starting
 !  PFD value for the next (deeper) vertical grid cell.
 !
@@ -785,9 +1188,6 @@ contains
     END DO
 
     PFDbott=PFD  !!! Photon flux density at sea bottom
-#if defined  INPUT_BOTTOM_PFD
-    PFDbott=PFDsurf
-#endif
 
 #if defined ORGANIC_MATTER && !defined ECOSYS_TESTMODE
 !-----------------------------------------------------------------------
@@ -808,6 +1208,12 @@ contains
       ELSE
         w_PM = -(rho_POM(itrc)/1.024d0 - 1.0d0)*grav*D_POM(itrc)*D_POM(itrc)*1.0d-6/18.0d0/vis_sw
       END IF
+      !!!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MY:Add
+#ifdef UPWELL_TRACER
+      ! Give zero settling velocity
+      w_PM = 0.0d0
+#endif
+!!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<MY:Add
       CALL bio_vadv2(N, dt, dz, z_r, z_w, w_PM, POC(:,itrc), dPOC(:,itrc), Fdep_POC(itrc))
 # if defined CARBON_ISOTOPE
       CALL bio_vadv2(N, dt, dz, z_r, z_w, w_PM, PO13C(:,itrc), dPO13C(:,itrc), Fdep_PO13C(itrc))
@@ -849,6 +1255,8 @@ contains
 !!!---------------------------------------------------------------------
 !!!  Benthic interactions.
 !!!---------------------------------------------------------------------
+    SGD_Temp = 0.0d0
+    Flux_Sal = 0.0d0
     Flux_DIC = 0.0d0
     Flux_TA  = 0.0d0
     Flux_DO  = 0.0d0
@@ -1003,52 +1411,97 @@ contains
 ! Compute seagrass model.
 !-----------------------------------------------------------------------
 !
-    IF(p_sgrass .gt. 0.0d0) THEN
 
-      CALL seagrass              &
+!!! yuta_seagrass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>YT:Add
+    ! write(*,*) 'yt_debug: PFD = ', PFD, 'PFDbott = ', PFDbott
+    DO icl=1,Nsg    
+      IF(p_sgrass(icl) .gt. 0.0d0) THEN 
+
+        CALL seagrass         &
 !       input parameters
-        ( ng, 1, i, j    &   ! ng: nested grid number; n: seagrass compartment; i,j: position
-        , PFDbott        &   ! Photon flux density (umol m-2 s-1)
-        , rho_sw(1)      &   ! Density of seawater (g cm-3)
-        , DIC(1)         &   ! DIC (umol kg-1)
-        , DOx(1)         &   ! DO  (umol L-1)
-# if defined NUTRIENTS         
-        , NH4(1)         &   ! NH4 concentration (umol L-1)
+          ( ng                &   ! ng: nested grid number; 
+          , icl               &   ! icl: seagrass species id
+          , i, j              &   ! i,j: position
+# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
+          , Nsed(ng)          &   ! Number of sediment layers
 # endif
-# if defined CARBON_ISOTOPE
-        , DI13C(1)       &   ! 13C of DIC (umol kg-1)
+          , dz(1)             &   ! vertical layer thickness (m)
+          , date              &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
+          , dt                &   ! Time step (sec)
+          , p_sgrass(:)       &   ! seagrass coverage (every species)
+# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
+          , p_sand            &   ! Sediment coverage
 # endif
-!       output parameters
-        , Flux_DIC      &   ! DIC uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_DO       &   ! DO  uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-# if defined NUTRIENTS         
-        , Flux_NO3      &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_NH4      &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_PO4      &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+          , PFD               &   ! Photon flux density (umol m-2 s-1)
+          , rho_sw(1)         &   ! Density of seawater (g cm-3)
+          , DIC(1)*rho_sw(1)  &   ! DIC (umol l-1)            ! [umol/L] = [umol/kg] [g/cm3] (kg/1000g)(1000cm3/L)
+          , DOx(1)            &   ! DO  (umol L-1)
+# if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE         
+          , NO3(1)            &   ! NO3 concentration (umol L-1)
+          , NH4(1)            &   ! NH4 concentration (umol L-1)
+          , PO4(1)            &   ! PO4 concentration (umol L-1)
 # endif
-# if defined CARBON_ISOTOPE
-        , Flux_DI13C    &   ! DI13C uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+!       output parameters 
+          , Flux_DIC          &   ! DIC uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_DO           &   ! DO  uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+# if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE         
+          , Flux_NO3          &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_NH4          &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_PO4          &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
 # endif
-        )
+# if defined SEAGRASS_LEAF_POM
+          , Flux_POC(iDtr)    &   ! POC uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+#  if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE || defined  SEAGRASS_ROOT_NUTRIENT_UPTAKE
+          , Flux_PON(iDtr)    &   ! PON uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_POP(iDtr)    &   ! POP uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+#  endif
+# endif
+          )
+        !   write(*,*) "yt_debug: finished seagrass call"
 
-      ! 1 mmol m-2 s-1, 1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
-      ! cff: convert [mmol m-2 s-1] to [umol L-1 s-1]
 
-      cff = 1.0d0/dz(1) * p_sgrass
+        ! dDIC_dt         = Flux_CHEM      / height * coverage_area_fraction / density  * unit_conversion_factor
+        ! [umol kg-1 s-1] = [mmol m-2 s-1] / [m]    * []                     / [g cm-3] * [ (1000 umol/mmol) (0.000001 m3/cm3) (1000 g/kg) = 1]
 
-      dDIC_dt(1) = dDIC_dt(1) - Flux_DIC * cff/rho_sw(1)
-      dDOx_dt(1) = dDOx_dt(1) - Flux_DO  * cff
+        ! dCHEM_dt        = Flux_CHEM      / height * coverage_area_fraction * unit_conversion_factor
+        ! [umol L-1 s-1]  = [mmol/m2 s]    / [m]    * []                     * [ (1000 umol/mmol) (m3/1000 L) = 1]
+
+        ! cff = unit_conversion_factor / height * coverage_area_fraction
+        cff = 1.0d0/dz(1) * p_sgrass(icl)
+        dDIC_dt(1) = dDIC_dt(1) - Flux_DIC * cff/rho_sw(1)
+        dDOx_dt(1) = dDOx_dt(1) - Flux_DO  * cff
 # if defined NUTRIENTS
-      dNO3_dt(1) = dNO3_dt(1) - Flux_NO3 * cff
-      dNH4_dt(1) = dNH4_dt(1) - Flux_NH4 * cff
-      dPO4_dt(1) = dPO4_dt(1) - Flux_PO4 * cff
+        dNO3_dt(1) = dNO3_dt(1) - Flux_NO3 * cff
+        dNH4_dt(1) = dNH4_dt(1) - Flux_NH4 * cff
+        dPO4_dt(1) = dPO4_dt(1) - Flux_PO4 * cff
 # endif
-# if defined CARBON_ISOTOPE
-      dDI13C_dt(1) = dDI13C_dt(1) - Flux_DI13C * cff/rho_sw(1)
+# if defined SEAGRASS_LEAF_POM
+        dPOC_dt(1,iDtr) = dPOC_dt(1,iDtr) - Flux_POC(iDtr) * cff
+#  if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE || defined  SEAGRASS_ROOT_NUTRIENT_UPTAKE
+        dPON_dt(1,iDtr) = dPON_dt(1,iDtr) - Flux_PON(iDtr) * cff
+        dPOP_dt(1,iDtr) = dPOP_dt(1,iDtr) - Flux_POP(iDtr) * cff
+#  endif
 # endif
 
-    END IF
+      ELSE
+        CALL no_seagrass              &
+  !       input parameters
+          ( ng             &   ! ng: nested grid number; 
+          , icl            &   ! icl: seagrass species id
+          , i, j           &   ! i,j: position
+# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
+          , Nsed(ng)       &   ! Number of sediment layers
+# endif
+          , dz(1)          &   ! vertical layer thickness (m)
+          , date           &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
+          , dt             &   ! Time step (sec)
+          )
+      END IF
+    END DO
 #endif
+!!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<YT:Add
+
+
 
 #ifdef MACROALGAE
 !-----------------------------------------------------------------------
@@ -1100,6 +1553,8 @@ contains
 
     END IF            
 #endif
+
+
 
 #ifdef SEDIMENT_ECOSYS
 !-----------------------------------------------------------------------
@@ -1154,116 +1609,178 @@ contains
       dNH4_dt(1) = dNH4_dt(1) - Flux_NH4 * cff
       dPO4_dt(1) = dPO4_dt(1) - Flux_PO4 * cff
 #  endif
+
+
 # else
+
+
 !!!  Sediment ecosystem model
 
-      DO m=1,isplitsed   !!! Loop for coral polyp model: dtc <= 0.05 sec
+! yt_edit to do put output data in his2.nc file
+! yt_edit don't run under reef rock (confirm coverage type interactions) (don't forget to fix seagrass -> sediment coupling when you implement this: umol/L volume shouuld be; gridarea * sed_dz -> p_sediment * sed_dz)
+! yt_edit porosity from coverage??
 
-        CALL sedecosys     &
+
+      DO m=1,isplitsed   !!! Loop for sediment model: dtc <= 0.05 sec
+
+        CALL sedecosys      &
 !         input parameters
-          ( ng, i, j       &   ! ng: nested grid number; i,j: position
-          , dtsed          &   ! Time step (sec)
-          , PFDbott        &   ! Photon flux density (umol m-2 s-1)
-          , Tmp(1)         &   ! Tmp: Temperature (oC)
-          , Sal(1)         &   ! Sal: Salinity (PSU)
-          , DIC(1)         &   ! DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
-          , TA (1)         &   ! TA : Total alkalinity (TA: umol kg-1)
-          , DOx(1)         &   ! DOx: Dissolved oxygen (umol L-1)
+          ( ng, i, j        &   ! ng: nested grid number; i,j: position
+          , Nsed(ng)        &   ! Number of vertical biological sediment layers
+          , dtsed           &   ! Time step (sec)
+          , Tmp(1)          &   ! Tmp: Temperature (oC)
+          , Sal(1)          &   ! Sal: Salinity (PSU)
+          , TA(1)*rho_sw(1) &   ! TA: Total alkalinity (umol L-1)
+          , DOx(1)          &   ! DOx: Dissolved oxygen (umol L-1)
+          , DIC(1)*rho_sw(1)&   ! DIC: Dissolved inorganic carbon (µmol L-1)   ! DIC(umol kg-1) * rho(kg L-1) = (umol L-1)
+          , 0.0d0           &   ! N2: Dissolved Nitrogen(µmol L-1)
 #  if defined ORGANIC_MATTER
-          , DOC(1,1)         &   ! DOC: Dissolved organic carbon (DOC: umol L-1)
-          , POC(1)         &   ! POC: Particulate organic carbon (DOC: umol L-1)
-#  endif 
-#  if defined CARBON_ISOTOPE
-          , DI13C(1)       &   ! DI13C 13C of DIC (umol kg-1)
+          , POC(1,iDtr)     &   ! POC: Particulate organic carbon (DOC: umol L-1)
 #  endif
 #  if defined NUTRIENTS            
           , NO3(1)         &   ! NO3: NO3 (umol L-1)
-!          , NO2(1)         &   ! NO2: NO2 (umol L-1)
           , NH4(1)         &   ! NH4: NH4 (umol L-1)
           , PO4(1)         &   ! PO4: PO4 (umol L-1)
 #   if defined ORGANIC_MATTER
-          , DON(1,:)         &   ! DON: Dissolved organic nitrogen (DON: umol L-1)
-          , PON(1,:)         &   ! PON: Particulate organic nitrogen (PON: umol L-1)
-          , DOP(1,:)         &   ! DOP: Dissolved organic phosporius (DOP: umol L-1)
-          , POP(1,:)         &   ! POP: Particulate organic phosporius (POP: umol L-1)
+          , PON(1,iDtr)      &   ! PON: Particulate organic nitrogen (PON: umol L-1)
+          , POP(1,iDtr)      &   ! POP: Particulate organic phosporius (POP: umol L-1)
 #   endif
 #  endif
+#  if defined SULFATE
+          , 0.0d0            &  ! Mn2: Manganese ion    (µmol L-1)
+          , 0.0d0            &  ! Fe2: iron(II)         (µmol L-1)
+          , 0.0d0            &  ! H2S: hydrogen sulfide (µmol L-1)
+          , 27300d0          &  ! SO4: sulfate          (µmol L-1)
+          , 10d0  / 86400d0  &  ! MnO2 deposition flux  (nmol cm-2 s-1)
+          , 100d0 / 86400d0  &  ! FeOOH depositoin flux (nmol cm-2 s-1)    
+#  endif
 #  if defined ORGANIC_MATTER
-          , Fdep_POC(:)*1.0d2  &   ! POC deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , -Fdep_POC(iDtr)*100.0d0  &   ! POC deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive ! yt_edit POC deposition flux   ! double check advection scheme
 #   if defined NUTRIENTS
-          , Fdep_PON(:)*1.0d2  &   ! PON deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-          , Fdep_POP(:)*1.0d2  &   ! POP deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , -Fdep_PON(iDtr)*100.0d0  &   ! PON deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , -Fdep_POP(iDtr)*100.0d0  &   ! POP deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
 #   endif
 #  endif
-          , tau            &   ! bottom shear stress (N m-2)
-          , 0.0d0          &   ! sedimentation rate (??)
-!         output parameters
-          , Flux_Tmp       &   ! Temperature flux (K cm-2 s-1)  * direction of water column to sediment is positive
-          , Flux_Sal       &   ! Salinity  flux (cm-2 s-1)  * direction of water column to sediment is positive
-          , Flux_DIC       &   ! DIC flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-          , Flux_TA        &   ! TA  flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-          , Flux_DO        &   ! DO  flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-#  if defined ORGANIC_MATTER
-          , Flux_DOC(:)       &   ! DOC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_POC(:)       &   ! POC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+#  if defined SEDECO_ADVECTION && defined SGD_ON
+          , sgd_flux/p_sand   &   ! sumbarine groundwater discharge rate of sediment (cm s-1)  This flux is assumed to be the same throughout the sediment ecosystem layers (no compression/expansion) So volume flux doesn't change but concentrations of tracers do
+          , sgd_Tmp_in        &   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
+          , sgd_Sal_in        &   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
+          , sgd_DIC_in*rho_sw(1) &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+          , sgd_TA_in*rho_sw(1)  &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+          , sgd_DOx_in        &   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
+#   if defined CARBON_ISOTOPE
+          , sgd_DI13C_in*rho_sw(1)&   ! SGD concentration coming in through bottom: DI13C : 13C of DIC (umol kg-1)
+#   endif
+#   if defined NUTRIENTS            
+          , sgd_NO3_in        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+          , sgd_NH4_in        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+          , sgd_PO4_in        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+#    if defined NITROGEN_ISOTOPE
+          , sgd_NO3_15N_in    &   ! SGD concentration coming in through bottom: NO3_15N: 15N of NO3 (umol L-1)
+          , sgd_NH4_15N_in    &   ! SGD concentration coming in through bottom: NH4_15N: 15N of NH4 (umol L-1)
+#    endif
+#   endif
 #  endif
-#  if defined CARBON_ISOTOPE
-          , Flux_DI13C     &   ! DI13C flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+!         output parameters
+          , SGD_Temp       &   ! Temperature flux (K cm-2 s-1)  * direction of water column to sediment is positive
+          , Flux_Sal       &   ! Salinity  flux PSU (cm-2 s-1)  * direction of water column to sediment is positive
+          , Flux_TA        &   ! Total Alkalinity flux (??? cm-2 s-1)  * direction of water column to sediment is positive
+          , Flux_DO        &   ! DO  flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , Flux_DIC       &   ! DIC flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , Flux_N2        &   ! N2 flux
+#  if defined ORGANIC_MATTER
+          , Flux_sedPOC     &   ! POC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
 #  endif
 #  if defined NUTRIENTS
           , Flux_NO3       &   ! NO3 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-!          , Flux_NO2       &   ! NO2 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_NH4       &   ! NH4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_PO4       &   ! PO4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
 #   if defined ORGANIC_MATTER
-          , Flux_DON(:)       &   ! DON flux (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_PON(:)       &   ! PON flux (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_DOP(:)       &   ! DOP flux (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_POP(:)       &   ! POP flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_sedPON    &   ! PONf flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_sedPOP    &   ! POPf flux (nmol cm-2 s-1) * direction of water column to sediment is positive
 #   endif
 #  endif
-          )
+#  if defined SULFATE
+          , Flux_Mn2       &   ! Mn2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_MnO2      &   ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_Fe2       &   ! Fe2 flux    (nmol cm-2 s-1) * direction of water column to sediment is positive
+        ! , Flux_FeS       &   ! FeS flux    (nmol cm-2 s-1) * direction of water column to sediment is positive  ! yt_edit diffusion is not modeled so flux is zero
+        ! , Flux_FeS2      &   ! FeS2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive  ! yt_edit diffusion is not modeled so flux is zero
+          , Flux_FeOOH     &   ! FeOOH flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
+        ! , Flux_FeOOH_PO4 &   ! FeOOH=PO43 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive  ! yt_edit diffusion is not modeled so flux is zero
+          , Flux_H2S       &   ! H2S flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+        ! , Flux_S0        &   ! S0 flux    (nmol cm-2 s-1) * direction of water column to sediment is positive  ! yt_edit diffusion is not modeled so flux is zero
+          , Flux_SO4       &   ! SO4 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+#  endif
+        )
       END DO
-      ! 1 nmol cm-2 s-1 = 0.01 mmol m-2 s-1, 1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
-      ! cff: convaert [nmol cm-2 s-1] to [umol L-1 s-1]
 
+#  if defined SEDECO_ADVECTION && defined SGD_ON
+      ! [oC s]    =              
+      ! ocean_temp = Tmp(1)
+      ! sgd_temp = sgd_temp
+      ! ocean_vol = dz(1)*gridarea
+      ! sgd_vol = sgd_flux*0.01*dt*gridarea  [cm/s][0.01m/cm][s][m2]
+      ! avg_temp = ( ocean_temp * ocean_vol + sgd_temp * sgd_vol) / (ocean_vol + sgd_vol)
+      ! dTemp_dt = ( avg_temp - ocean_temp ) / dt
+      
+      dTemp_dt(1) = ( ((Tmp(1)*dz(1) + sgd_temp*sgd_flux*0.01d0*dt)/(dz(1) + sgd_flux*0.01d0*dt)) - Tmp(1) ) / dt
+      ! dTemp_dt(1) = 0.001d0 ! yt_debug
+#  endif
+
+    ! 1 nmol cm-2 s-1 = 0.01 mmol m-2 s-1, 1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
+    ! x[nmol/cm2 s] (umol/1000nmol) (10000cm2/m2) (1/dz)[1/m] (m3/1000L)= x/dz 0.01(umol L-1 s-1)
+    ! cff: convaert [nmol cm-2 s-1] to [umol L-1 s-1]
+      ! cff=0.01d0 /dz(1) * p_sand ! yt_edit  implement coverage scheme later
       cff=0.01d0 /dz(1) * p_sand
+    ! (umol L-1 s-1) / rho(kg L-1) = (1/rho) (umol kg-1 s-1)
 
-      dDIC_dt(1) = dDIC_dt(1) - Flux_DIC * cff/rho_sw(1)
-      dTA_dt (1) = dTA_dt (1) - Flux_TA  * cff/rho_sw(1)
+      ! [PSU/L s] =               [PSU/cm2 s] * [1/m]   (10000cm2/m2) (m3/1000L)
+      dSalt_dt(1) = dSalt_dt(1) + Flux_Sal    / dz(1) * p_sand * 10d0      ! Sal(N): Salinity (PSU)
+
+      ! dTA_dt (1) = dTA_dt (1) - Flux_TA  * cff ! yt_edit what are the units? do we need to divide by rho?
       dDOx_dt(1) = dDOx_dt(1) - Flux_DO  * cff
+      dDIC_dt(1) = dDIC_dt(1) - Flux_DIC * cff/rho_sw(1)
+
 #  if defined ORGANIC_MATTER
-      dDOC_dt(1,:) = dDOC_dt(1,:) - Flux_DOC(:) * cff
-      dPOC_dt(1,:) = dPOC_dt(1,:) - Flux_POC(:) * cff
+      dPOC_dt(1,iDtr) = dPOC_dt(1,iDtr) - (Flux_sedPOC(1) + Flux_sedPOC(2) + Flux_sedPOC(3)) * cff
 #  endif
-#  if defined CARBON_ISOTOPE
-      dDI13C_dt(1) = dDI13C_dt(1) - Flux_DI13C * cff/rho_sw(1)
-#  endif
+
 #  if defined NUTRIENTS
       dNO3_dt(1) = dNO3_dt(1) - Flux_NO3 * cff
-!      dNO2_dt(1) = dNO2_dt(1) - Flux_NO2 * cff
       dNH4_dt(1) = dNH4_dt(1) - Flux_NH4 * cff
       dPO4_dt(1) = dPO4_dt(1) - Flux_PO4 * cff
 #   if defined ORGANIC_MATTER
-      dDON_dt(1,:) = dDON_dt(1,:) - Flux_DON(:) * cff
-      dPON_dt(1,:) = dPON_dt(1,:) - Flux_PON(:) * cff
-      dDOP_dt(1,:) = dDOP_dt(1,:) - Flux_DOP(:) * cff
-      dPOP_dt(1,:) = dPOP_dt(1,:) - Flux_POP(:) * cff
+      dPON_dt(1,iDtr) = dPON_dt(1,iDtr) - (Flux_sedPON(1) + Flux_sedPON(2) + Flux_sedPON(3)) * cff
+      dPOP_dt(1,iDtr) = dPOP_dt(1,iDtr) - (Flux_sedPOP(1) + Flux_sedPOP(2) + Flux_sedPOP(3)) * cff
 #   endif
 #  endif
+!#  if defined SULFATE
+!      Flux_Mn2         ! Mn2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+!      Flux_MnO2        ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
+
+!      Flux_Fe2         ! Fe2 flux    (nmol cm-2 s-1) * direction of water column to sediment is positive
+!      Flux_FeS         ! FeS flux    (nmol cm-2 s-1) * direction of water column to sediment is positive
+!      Flux_FeS2        ! FeS2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+!      Flux_FeOOH       ! FeOOH flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
+!      Flux_FeOOH_PO4   ! FeOOH=PO43 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+
+!      Flux_H2S         ! H2S flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+!      Flux_S0          ! S0 flux    (nmol cm-2 s-1) * direction of water column to sediment is positive
+!      Flux_SO4         ! SO4 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
+!#  endif
+
+
 # endif
 
-    END IF            
+    END IF 
 #endif
-
 
 #if defined ECOSYS_TESTMODE
 !------------------------------------------------------------------------
 ! Print section
-
-    time = time +dt  ! sec
     
-    IF(time.ge.dsec) THEN
+    IF(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
 # ifdef CORAL_POLYP 
       cff1=0.01d0*p_coral(1)*P2R(1)*3600.0d0  ! cff1: convert [nmol cm-2 s-1] to [mmol m-2 h-1]
       cff2=0.01d0*p_coral(2)*P2R(2)*3600.0d0  ! cff1: convert [nmol cm-2 s-1] to [mmol m-2 h-1]
@@ -1282,7 +1799,7 @@ contains
 #  endif
 # endif
 
-      write(40,'(*(g0,", "))') time/86400.0d0,PFDbott             &
+      write(40,'(*(g0,", "))') date,PFDbott             &
 # ifdef CORAL_POLYP 
         , CORAL(1)%Pg(1,1,1)*cff1, CORAL(1)%R (1,1,1)*cff1        &
         , (CORAL(1)%Pg(1,1,1)-CORAL(1)%R (1,1,1))*cff1            &
@@ -1319,10 +1836,8 @@ contains
         , dDOP_dt(1,1), dPOP_dt(1,1)                              &
 #  endif
 # endif
-        , sspH, ssfCO2, ssWarg, U10, ssCO2flux, ssO2flux
+        , pH(N), ssfCO2, Warg(N), Wcal(N), U10, ssCO2flux, ssO2flux
         
-    dsec=dsec+OUTPUT_INTERVAL*60.
-
     END IF
 !-----------------------------------------------------------------------
 #endif
@@ -1432,10 +1947,10 @@ contains
     real(8), intent(in ) :: dz(N)          ! (m) vertical layer tickness
     real(8), intent(in ) :: z_r(N)         ! (m) distance between bottom and RHO point
     real(8), intent(in ) :: z_w(0:N)       ! (m) distance between bottom and W point 
-    real(8), intent(in ) :: w              ! (m s-1) vertical advection verocity (upper-ward is positive)
+    real(8), intent(in ) :: w              ! (m s-1) vertical advection velocity (upward is positive)
     real(8), intent(in ) :: trc(N)         ! (umol L-1) Concentration of tracer   
     real(8), intent(out) :: dtrc_dt(N)     ! (umol L-1 s-1) Time derivative of concentration
-    real(8), intent(out) :: Fb_trc         ! (mmol m-2 s-1) Bottom flux from sediment to water column (upper-ward is positive)    
+    real(8), intent(out) :: Fb_trc         ! (mmol m-2 s-1) Bottom flux from sediment to water column (upward is positive)    
 
     real(8) :: dz_r(N-1)    
     real(8) :: F(0:N),v(0:N-1)
@@ -1452,8 +1967,8 @@ contains
 
     DO k=1,N-1
       Courant = abs( w*dt/dz_r(k) )
-      if(Courant > 1 ) then
-        v(k) = sign( dz_r(k)/dt, w )
+      if(Courant > 0.4d0 ) then
+        v(k) = sign( dz_r(k)/dt*0.4d0, w )
       else
         v(k) = w
       endif
@@ -1461,12 +1976,12 @@ contains
     v(0) = v(1)
 
     if(w>0) then
-      kup = 0
-      F(0) = 0.0d0
+      kup = 0   
     else
       kup = 1
-      F(0) = trc(1)*v(0)
     endif
+
+    F(0) = 0.0d0
     DO k=1,N-1
       F(k) = v(k) * trc(K+kup)
     END DO
@@ -1475,10 +1990,10 @@ contains
     DO k=1,N
       dtrc_dt(k) = (F(k-1)-F(k))/dz(k)
     END DO    
-    Fb_trc = F(0)
+    Fb_trc = trc(1)*v(0)
 
     RETURN
   END SUBROUTINE bio_vadv2
-
+#endif
 END MODULE mod_reef_ecosys
 

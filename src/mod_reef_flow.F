@@ -91,6 +91,7 @@ CONTAINS
   SUBROUTINE reef_flow &
 !   input parameters
     ( ng, i, j       & ! ng: nested grid number; i,j: position
+    , date           & ! Date (days since x or elapsed days) 
     , dt             & ! Time step (sec)
     , Hs_o           & ! Significant wave hight at offshore (m)
     , Ts             & ! Significant Wave period (s)
@@ -121,6 +122,7 @@ CONTAINS
 
 ! input parameters
     integer, intent(in ) :: ng, i, j        
+    real(8), intent(in ) :: date
     real(8), intent(in ) :: dt         
     real(8), intent(in ) :: Hs_o
     real(8), intent(in ) :: Ts
@@ -140,8 +142,6 @@ CONTAINS
 
 #if defined REEF_FLOW_TESTMODE
     real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
-    real(8), save :: time = 0.d0  !sec
-    real(8), save :: dsec = 0.d0  !sec
 #endif
 
     d_o = el_o + REEF(ng)%Drc(i,j)
@@ -191,16 +191,12 @@ CONTAINS
 !------------------------------------------------------------------------
 ! Print section
 
-    time = time + dt  ! sec
-    
-    if(time.ge.dsec) then
+    IF(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
       
-      write(45,'(*(g0:,", "))') time/86400.0d0   &
+      write(45,'(*(g0:,", "))') date   &
       , Hs_o, Ts, d_o, d_i                          & 
       , el_o, REEF(ng)%el(i,j)                      &
       , REEF(ng)%Qrc(i,j), REEF(ng)%Qch(i,j)
-
-      dsec =dsec+OUTPUT_INTERVAL*60.0d0
     
     endif
 # endif

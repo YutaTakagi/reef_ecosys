@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2022 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -12,6 +12,9 @@ PROGRAM main
 ! **********************************************************************
 !
   USE mod_param
+#if defined FOODWEB
+  USE mod_foodweb
+#endif
   USE mod_reef_ecosys
 #if defined USE_HEAT
   USE mod_heat
@@ -56,6 +59,7 @@ PROGRAM main
   integer :: in_file(12)
   real(8) :: Tmax, time0
   integer :: nSetting
+  logical :: start_of_new_run = .true.
 
   namelist/input_info/in_file
   namelist/ecosys_config/Tmax, time0
@@ -90,13 +94,18 @@ PROGRAM main
 #if defined REEF_FLOW
   CALL initialize_reef_flow(1, Ngrids, 1, Im, 1, Jm)
 #endif
-  CALL initialize_reef_ecosys(1, Ngrids, 1, Im, 1, Jm)
-
+  CALL allocate_reef_ecosys(1, Ngrids, 1, Im, 1, Jm)
+  CALL initialize_reef_ecosys(1, 1, Im, 1, Jm      &
+      , start_of_new_run    &   ! TRUE = initialize coral, seagass, macroalgae, sediment from start; FALSE = continue from previous run
+#ifdef SEAGRASS
+      , XI_size, ETA_size   &   ! grid size XI-direction (meters); grid size ETA-direction (meters)
+      , p_sgrass            &   ! seagrass coverage (habitat area in grid / grid area)
+#endif
+)
 !  call Coral_iniSizeDis
 !  call Coral_Size2Cover
 
   time=time0
-  dsec=time0*86400.0d0
 
   istep=0
   iprint=0
@@ -142,6 +151,7 @@ PROGRAM main
       CALL reef_flow         &
 !      input parameters
               (1, 1, 1        &   ! ng: nested grid number; i,j: position
+              ,time           &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
               ,dt             &   ! Time step (sec)
               ,Hs             &   ! Significant wave hight at offshore (m)
               ,Tp             &   ! Significant Wave period (s)
@@ -190,6 +200,7 @@ PROGRAM main
               ,N              &   ! Number of vertical grid (following ROMS vertical grid)
               ,isplitc        &   ! Internal loop counts of coral polyp model
               ,isplitsed      &   ! Internal loop counts of sediment ecosystem model
+              ,time           &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
               ,dt             &   ! Time step (sec)
               ,dz(1,1,:)      &   ! dz(N): vertical grid size (m)
               ,PFDsurf        &   ! Sea surface photon flux density (umol m-2 s-1)
@@ -236,7 +247,6 @@ PROGRAM main
 #endif
 #if defined NUTRIENTS         
               ,C(1,1,:,iNO3_)     &   ! NO3(N): NO3 (umol L-1)
-!              ,C(1,1,:,iNO2_)     &   ! NO2(N): NO2 (umol L-1)
               ,C(1,1,:,iNH4_)     &   ! NH4(N): NH4 (umol L-1)
               ,C(1,1,:,iPO4_)     &   ! PO4(N): PO4 (umol L-1)
 # if defined ORGANIC_MATTER
@@ -247,7 +257,6 @@ PROGRAM main
 # endif
 # if defined NITROGEN_ISOTOPE
              ,C(1,1,:,i15NO3)     &   ! NO3_15N(N): 15N of NO3 (umol L-1)
-!             ,C(1,1,:,i15NO2)     &   ! NO2_15N(N): 15N of NO2 (umol L-1)
              ,C(1,1,:,i15NH4)     &   ! NH4_15N(N): 15N of NH4 (umol L-1)
 #  if defined ORGANIC_MATTER
              ,C(1,1,:,iDO15N(:))     &   ! DO15N (N): 15N of Labile Dissolved organic nitrogen (LDON: umol L-1)
@@ -261,28 +270,50 @@ PROGRAM main
               ,C(1,1,:,iCOTe)     &   ! COTe(N): COT starfish egg (umol L-1)
               ,C(1,1,:,iCOTl)     &   ! COTl(N): COT starfish larvae (umol L-1)
 #endif
+#if defined SEDECO_ADVECTION && defined SGD_ON
+              , sgd_flux          &   ! sumbarine groundwater discharge rate (cm s-1)  This flux is assumed to be the same throughout the sediment ecosystem layers (no compression/expansion) So volume flux doesn't change but concentrations of tracers do
+              , sgd_Tmp_in        &   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
+              , sgd_Sal_in        &   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
+              , sgd_DIC_in        &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+              , sgd_TA_in         &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+              , sgd_DOx_in        &   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
+# if defined CARBON_ISOTOPE
+              , sgd_DI13C_in      &   ! SGD concentration coming in through bottom: DI13C : 13C of DIC (umol kg-1)
+# endif
+# if defined NUTRIENTS            
+              , sgd_NO3_in        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+              , sgd_NH4_in        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+              , sgd_PO4_in        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+#  if defined NITROGEN_ISOTOPE
+              , sgd_NO3_15N_in    &   ! SGD concentration coming in through bottom: NO3_15N: 15N of NO3 (umol L-1)
+              , sgd_NH4_15N_in    &   ! SGD concentration coming in through bottom: NH4_15N: 15N of NH4 (umol L-1)
+#  endif
+# endif
+#endif
 !      output parameters
+              ,dC_dt(1,1,:,iTemp)   &   ! Tmp(N): Temperature (oC)
+              ,dC_dt(1,1,:,iSalt)   &   ! Sal(N): Salinity (PSU)
               ,dC_dt(1,1,:,iTIC_)   &   ! dDIC_dt(N): dDIC/dt (umol kg-1 s-1)
               ,dC_dt(1,1,:,iTAlk)   &   ! dTA_dt (N): dTA/dt (umol kg-1 s-1)
               ,dC_dt(1,1,:,iOxyg)   &   ! dDOx_dt(N): dDO/dt (umol L-1 s-1)
 #if defined ORGANIC_MATTER
-              ,dC_dt(1,1,:,iDOC(1):iDOC(N_dom))      &   ! dDOC_dt(N): dDOC/dt (umol L-1 s-1)
-              ,dC_dt(1,1,:,iPOC(1):iPOC(N_pom))      &   ! dPOC_dt(N): dPOC/dt (umol L-1 s-1)
-              ,dC_dt(1,1,:,iPhyt(1):iPhyt(N_phyt))   &   ! dPHY_dt(N): dPHY/dt (umol C L-1 s-1)
-              ,dC_dt(1,1,:,iZoop(1):iZoop(N_zoop))   &   ! dZOO_dt(N): dZOO/dt (umol C L-1 s-1)
-              ,dC_dt(1,1,:,iPIC(1):iPIC(N_pim))      &   ! dPIC_dt(N): dPIC/dt (umol L-1 s-1)
+              ,dC_dt(1,1,:,iDOC(1):iDOC(Ndom))      &   ! dDOC_dt(N): dDOC/dt (umol L-1 s-1)
+              ,dC_dt(1,1,:,iPOC(1):iPOC(Npom))      &   ! dPOC_dt(N): dPOC/dt (umol L-1 s-1)
+              ,dC_dt(1,1,:,iPhyt(1):iPhyt(Nphy))   &   ! dPHY_dt(N): dPHY/dt (umol C L-1 s-1)
+              ,dC_dt(1,1,:,iZoop(1):iZoop(Nzoo))   &   ! dZOO_dt(N): dZOO/dt (umol C L-1 s-1)
+              ,dC_dt(1,1,:,iPIC(1):iPIC(Npim))      &   ! dPIC_dt(N): dPIC/dt (umol L-1 s-1)
 # if defined FOODWEB_TESTMODE
-              ,dC_dt(1,1,:,iDeadPhyt(1):iDeadPhyt(N_phyt))   &   ! dDeadPHY/dt  (umol L-1 s-1)
+              ,dC_dt(1,1,:,iDeadPhyt(1):iDeadPhyt(Nphy))   &   ! dDeadPHY/dt  (umol L-1 s-1)
 # endif
 #endif
 #if defined CARBON_ISOTOPE
               ,dC_dt(1,1,:,iT13C)   &   ! dDI13C_dt(N): dDI13C/dt (umol kg-1 s-1)
 # if defined ORGANIC_MATTER     
-              ,dC_dt(1,1,:,iDO13C(1):iDO13C(N_dom))    &   ! dDO13C_dt (N): dDO13C/dt  (umol L-1 s-1) 
-              ,dC_dt(1,1,:,iPO13C(1):iPO13C(N_pom))    &   ! dPO13C_dt (N): dPO13C/dt  (umol L-1 s-1) 
-              ,dC_dt(1,1,:,iPhyt13C(1):iPhyt13C(N_phyt))  &   ! dPHY13C_dt(N): dPHY13C/dt  (umol L-1 s-1)  
-              ,dC_dt(1,1,:,iZoop13C(1):iZoop13C(N_zoop))  &   ! dZOO13C_dt(N): dZOO13C/dt  (umol L-1 s-1)  
-              ,dC_dt(1,1,:,iPI13C(1):iPI13C(N_pim))    &   ! dPI13C_dt (N): dPI13C/dt  (umol L-1 s-1)  
+              ,dC_dt(1,1,:,iDO13C(1):iDO13C(Ndom))    &   ! dDO13C_dt (N): dDO13C/dt  (umol L-1 s-1) 
+              ,dC_dt(1,1,:,iPO13C(1):iPO13C(Npom))    &   ! dPO13C_dt (N): dPO13C/dt  (umol L-1 s-1) 
+              ,dC_dt(1,1,:,iPhyt13C(1):iPhyt13C(Nphy))  &   ! dPHY13C_dt(N): dPHY13C/dt  (umol L-1 s-1)  
+              ,dC_dt(1,1,:,iZoop13C(1):iZoop13C(Nzoo))  &   ! dZOO13C_dt(N): dZOO13C/dt  (umol L-1 s-1)  
+              ,dC_dt(1,1,:,iPI13C(1):iPI13C(Npim))    &   ! dPI13C_dt (N): dPI13C/dt  (umol L-1 s-1)  
 # endif
 #endif
 #if defined NUTRIENTS 
@@ -291,20 +322,20 @@ PROGRAM main
               ,dC_dt(1,1,:,iNH4_)   &   ! dNH4_dt(N): dNH4/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iPO4_)   &   ! dPO4_dt(N): dPO4/dt (umol L-1 s-1)
 # if defined ORGANIC_MATTER
-              ,dC_dt(1,1,:,iDON(1):iDON(N_dom))      &   ! dDON_dt(N): dDON/dt (umol L-1 s-1)
-              ,dC_dt(1,1,:,iPON(1):iPON(N_pom))      &   ! dPON_dt(N): dPON/dt (umol L-1 s-1)
-              ,dC_dt(1,1,:,iDOP(1):iDOP(N_dom))      &   ! dDOP_dt(N): dDOP/dt (umol L-1 s-1)
-              ,dC_dt(1,1,:,iPOP(1):iPOP(N_pom))      &   ! dPOP_dt(N): dPOP/dt (umol L-1 s-1)
+              ,dC_dt(1,1,:,iDON(1):iDON(Ndom))      &   ! dDON_dt(N): dDON/dt (umol L-1 s-1)
+              ,dC_dt(1,1,:,iPON(1):iPON(Npom))      &   ! dPON_dt(N): dPON/dt (umol L-1 s-1)
+              ,dC_dt(1,1,:,iDOP(1):iDOP(Ndom))      &   ! dDOP_dt(N): dDOP/dt (umol L-1 s-1)
+              ,dC_dt(1,1,:,iPOP(1):iPOP(Npom))      &   ! dPOP_dt(N): dPOP/dt (umol L-1 s-1)
 # endif
 # if defined NITROGEN_ISOTOPE
               ,C_dt(1,1,:,i15NO3)        &   ! dNO3_15N_dt(N): dNO3_15N/dt (umol L-1 s-1)
 !              ,C_dt(1,1,:,i15NO2)        &   ! dNO2_15N_dt(N): dNO2_15N/dt (umol L-1 s-1)
               ,C_dt(1,1,:,i15NH4)        &   ! dNH4_15N_dt(N): dNH4_15N/dt (umol L-1 s-1)
 #  if defined ORGANIC_MATTER
-              ,C_dt(1,1,:,iDO15N(1):iDO15N(N_dom))     &   ! dDO15N_dt (N): dDO15N/dt  (umol L-1 s-1) 
-              ,C_dt(1,1,:,iPO15N(1):iPO15N(N_pom))     &   ! dPO15N_dt (N): dPO15N/dt  (umol L-1 s-1) 
-              ,C_dt(1,1,:,iPhyt15N(1):iPhyt15N(N_phyt))   &   ! dPHY15N_dt(N): dPHY1_15N/dt  (umol L-1 s-1)  
-              ,C_dt(1,1,:,iZoop15N(1):iZoop15N(N_zoop))   &   ! dZOO15N_dt(N): dZOO_15N/dt  (umol L-1 s-1)  
+              ,C_dt(1,1,:,iDO15N(1):iDO15N(Ndom))     &   ! dDO15N_dt (N): dDO15N/dt  (umol L-1 s-1) 
+              ,C_dt(1,1,:,iPO15N(1):iPO15N(Npom))     &   ! dPO15N_dt (N): dPO15N/dt  (umol L-1 s-1) 
+              ,C_dt(1,1,:,iPhyt15N(1):iPhyt15N(Nphy))   &   ! dPHY15N_dt(N): dPHY1_15N/dt  (umol L-1 s-1)  
+              ,C_dt(1,1,:,iZoop15N(1):iZoop15N(Nzoo))   &   ! dZOO15N_dt(N): dZOO_15N/dt  (umol L-1 s-1)  
 #  endif
 # endif
 #endif
@@ -312,9 +343,10 @@ PROGRAM main
               ,dC_dt(1,1,:,iCOTe)   &   ! dCOTe/dt(N): (umol L-1 s-1)
               ,dC_dt(1,1,:,iCOTl)   &   ! dCOTl/dt(N): (umol L-1 s-1)
 #endif
-              ,sspH           &   ! sea surface pH
+              ,pH(1,1,:)      &   ! pH
+              ,Warg(1,1,:)    &   ! aragonite saturation state
+              ,Wcal(1,1,:)    &   ! calcite saturation state
               ,ssfCO2         &   ! sea surface fCO2 (uatm)
-              ,ssWarg         &   ! sea surface aragonite saturation state
               ,ssCO2flux      &   ! sea surface CO2 flux (mmol m-2 s-1)
               ,ssO2flux       &   ! sea surface O2 flux (mmol m-2 s-1)
               ,PFDbott        &   ! Bottom photon flux density (umol m-2 s-1)
@@ -511,19 +543,17 @@ PROGRAM main
 !      p_coral(1,i,j)=0.
 !    end if
 
-
-!    time=dt*istep/86400.
-    time=time+dt/86400.
-
 !------- Print section --------------------------------------
 
-    if(time .ge. dsec/86400.) then
-      dsec=dsec+OUTPUT_INTERVAL*60.
-    
+    IF(mod(int(time*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
       write(*,*) 'Time (day): ', time  ! Output for standard out
       CALL write_env_data(10)
 
     endif
+
+!------- Update time --------------------------------------
+
+    time=time+dt/86400.
 
   enddo
       

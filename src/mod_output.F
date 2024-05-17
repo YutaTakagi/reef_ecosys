@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2017-2022 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2017-2024 Takashi NAKAMURA  =====
 
 !--------------------------------------------------------------------------------
 !
@@ -125,29 +125,61 @@ contains
 #endif
       
 #if defined SEDIMENT_TESTMODE
-    open(56,file='./output/eco5-sedDIC_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(57,file='./output/eco5-sedTA_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(58,file='./output/eco5-sedDO_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(59,file='./output/eco5-sedpH_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(60,file='./output/eco5-sedWarg_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(61,file='./output/eco5-sedNH4_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(56,file='./output/eco5-sedDIC_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(57,file='./output/eco5-sedTA_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    open(58,file='./output/eco5-sedDO_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(59,file='./output/eco5-sedpH_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(60,file='./output/eco5-sedWarg_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    open(61,file='./output/eco5-sedNH4_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
 !    open(62,file='./output/eco5-sedNO2_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(63,file='./output/eco5-sedNO3_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(64,file='./output/eco5-sedPO4_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(65,file='./output/eco5-sedDOC_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(66,file='./output/eco5-sedPOC_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(67,file='./output/eco5-sedDON_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(68,file='./output/eco5-sedPON_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(69,file='./output/eco5-sedDOP_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(70,file='./output/eco5-sedPOP_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(71,file='./output/eco5-sedPg_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(72,file='./output/eco5-sedRdoc_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(73,file='./output/eco5-sedRpoc_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(74,file='./output/eco5-sedGn_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(75,file='./output/eco5-sedNit1_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(76,file='./output/eco5-sedNit2_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(78,file='./output/eco5-sedDNd_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    open(79,file='./output/eco5-sedDNp_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    open(63,file='./output/eco5-sedNO3_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(64,file='./output/eco5-sedPO4_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(65,file='./output/eco5-sedDOCf_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(66,file='./output/eco5-sedPOCf_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(67,file='./output/eco5-sedDON_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(68,file='./output/eco5-sedPON_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(69,file='./output/eco5-sedDOP_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(70,file='./output/eco5-sedPOP_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(71,file='./output/eco5-sedPg_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(72,file='./output/eco5-sedRdoc_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(73,file='./output/eco5-sedRpoc_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(74,file='./output/eco5-sedGn_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(75,file='./output/eco5-sedNit1_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(76,file='./output/eco5-sedNit2_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(78,file='./output/eco5-sedDNd_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(79,file='./output/eco5-sedDNp_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+
+    !! MM edit 2023
+    open(80,file='./output/eco5-sedCO2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(81,file='./output/eco5-sedN2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(82,file='./output/eco5-sedDOCs_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(83,file='./output/eco5-sedPOCs_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(84,file='./output/eco5-sedMn2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(85,file='./output/eco5-sedMnO2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(86,file='./output/eco5-sedFe2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(87,file='./output/eco5-sedFeS_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(88,file='./output/eco5-sedFeS2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(89,file='./output/eco5-sedFeOOH_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(90,file='./output/eco5-sedFeOOH_PO4_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(91,file='./output/eco5-sedH2S_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(92,file='./output/eco5-sedHS_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    open(93,file='./output/eco5-sedS0_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(94,file='./output/eco5-sedSO4_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    ! open(95,file='./output/eco5-sedS2_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+
+    open(96,file='./output/sedeco-calcheck0.csv',status='replace')!!!!!!!!!for debug
+    open(97,file='./output/sedeco-calcheck1.csv',status='replace')!!!!!!!!!for debug
+    open(98,file='./output/redoxlevel.txt',status='replace')!!!!!!!!!for debug
+    open(99,file='./output/depth.txt',status='replace')!!!!!!!!!for debug
+    open(100,file='./output/eco5-sedPOCn_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(101,file='./output/sedeco-v1.txt',status='replace')!!!!!!!!!for debug
+    open(102,file='./output/sedeco-v2.txt',status='replace')!!!!!!!!!for debug
+    open(103,file='./output/sedeco-v3.txt',status='replace')!!!!!!!!!for debug
+    open(104,file='./output/sedeco-v4.txt',status='replace')!!!!!!!!!for debug
+    open(105,file='./output/sedeco-v5.txt',status='replace')!!!!!!!!!for debug
+    open(106,file='./output/sedeco-vom.txt',status='replace')!!!!!!!!!for debug
+    open(107,file='./output/sedeco-R_O2.txt',status='replace')!!!!!!!!!for debug
+    open(108,file='./output/sedeco-flux_DO.txt',status='replace')!!!!!!!!!for debug
 #endif
     RETURN
 
@@ -519,7 +551,7 @@ END SUBROUTINE write_crl_ave_lavel
         ,'dDON_dt','dPON_dt','dDOP_dt','dPOP_dt'             &
 #  endif
 # endif
-        ,'pH', 'fCO2', 'Warg'                                &
+        ,'pH', 'fCO2', 'Warg', 'Wcal'                        &
         ,'U10', 'CO2flux' , 'O2flux'
 
     RETURN
