@@ -1,6 +1,6 @@
 &ecosys_config
 ! Simulation period     
-  Tmax = 5.7d0  ! days
+  Tmax = 5.75d0  ! days
 ! Start time
   time0 = 0.0d0 ! day
 
@@ -50,9 +50,9 @@
   Cloud_FILE = "input/Ishigaki_frc_JMAobs_2018_cloud.nc"    ! Relative humidity (%)
 
 ! Only ascii text file is acceptable.
-  PPFD_FILE  = "input/PFD_2022.txt"  !!! Used
+  PPFD_FILE  = "input/PFD2023.txt"  !!! Used
 ! Only ascii text file is acceptable.
-  WTEMP_FILE  = "input/Temp_2022.txt" !!! Used
+  WTEMP_FILE  = "input/Temp2023.txt" !!! Used
   
   WLEVEL_FILE = "input/level2017.txt"
 ! Only ascii text file is acceptable.
@@ -60,14 +60,14 @@
 /
 
 &output   
-  OUTFILE_prefix = 'output/foodweb'
+  OUTFILE_prefix = 'output/JpGU/HighNP'
 /
 
 !--- Initial Condition -----------------------------------------------------
 &initial
 
-  d0 = 0.1d0           ! Depth (m)
-  T0 = 27.0d0          ! Water temperature (oC)
+  d0 = 1.5d0           ! Depth (m)
+  T0 = 30.0d0          ! Water temperature (oC)
   S0 = 34.0d0          ! Salinity (PSU)
 
 !  pCO2air = 400.0d0   ! 383.0d0  !!! RCP8.5: 936.0d0 (uatm); RCP2.6: 421.0d0 (uatm)
@@ -81,9 +81,9 @@
   DOC2_0 = 40.0d0      ! Refractory DOC  (umol L-1) 
   POC1_0 = 5.5d0       ! Detritus POC  (umol L-1) 
   POC2_0 = 0.0d0       ! Coarse POC  (umol L-1) 
- Phyt1_0 = 1.0d0       ! Phytoplankton1: Dinoflagellate (umolC L-1) 
+ Phyt1_0 = 3.0d0       ! Phytoplankton1: Dinoflagellate (umolC L-1) 
  Phyt2_0 = 2.0d0       ! Phytoplankton2: Diatom (umolC L-1) 
- Phyt3_0 = 2.0d0       ! Phytoplankton3: Coccolithophorids (umolC L-1)
+ Phyt3_0 = 0.1d0       ! Phytoplankton3: Coccolithophorids (umolC L-1)
  Phyt4_0 = 1.0d0       ! Phytoplankton4: Cyanobacteria (N2 fixation)
  Zoop1_0 = 0.0d0       ! Zooplankton (umol L-1)
   PIC1_0 = 0.5d0       ! PIC  (umol L-1) 
@@ -99,16 +99,16 @@ d13C_Phyt3_0 = -15.0d0 ! d13C_phytoplankton3 (permill VPDB)
 d13C_Zoop1_0 = -20.0d0 ! d13C_zooplankton (permill VPDB)
 d13C_PIC1_0 = -5.0d0   ! d13C_PIC (permill VPDB)
 
-  NO3_0 = 1.5d0        ! NO3  (umol L-1)  control: 0.2d0, N: 1.8d0, N*2: 3.5d0
-  NH4_0 = 1.9d0       ! NH4  (umol L-1) 
-  PO4_0 = 0.11d0       ! PO4  (umol L-1)  control: 0.04d0, P: 0.2d0
+  NO3_0 = 20.0d0        ! NO3  (umol L-1)  control: 0.2d0, N: 1.8d0, N*2: 3.5d0
+  NH4_0 = 0.25d0        ! NH4  (umol L-1) 
+  PO4_0 = 1.25d0        ! PO4  (umol L-1)  control: 0.04d0, P: 0.2d0
 
   DON1_0 = 4.5d0   ! Labile DON  (umol L-1) 
   DON2_0 = 6.04d0  ! Refractory DON  (umol L-1) 
   PON1_0 = 0.4d0   ! Detritus PON  (umol L-1) 
   PON2_0 = 0.0d0   ! Coarse PON  (umol L-1) 
   DOP1_0 = 0.28d0  ! Labile DOP  (umol L-1) 
-  DOP2_0 = 0.38d0   ! Refractory DOP  (umol L-1) 
+  DOP2_0 = 0.38d0  ! Refractory DOP  (umol L-1) 
   POP1_0 = 0.03d0  ! Detritus POP  (umol L-1) 
   POP2_0 = 0.0d0   ! Coarse POP  (umol L-1) 
 
