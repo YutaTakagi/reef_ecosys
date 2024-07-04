@@ -21,7 +21,7 @@ MODULE mod_foodweb
   integer, parameter :: iCPOM = 2    !  2: Coarse POM (leaf litter, etc.)
 
   integer, parameter :: Nphy  = 4    ! Number of Phytoplankton types
-  integer, parameter :: iDnfl = 1    !  1: Dinoflagellate
+  integer, parameter :: iDnfl = 1    !  1: Dinoflagellates & Ciliates (Microzooplankton)
   integer, parameter :: iDtm  = 2    !  2: Diatom
   integer, parameter :: iCcl  = 3    !  3: Coccolithophorids
   integer, parameter :: iCya  = 4    !  4: Cyanobacteria
@@ -260,7 +260,7 @@ CONTAINS
 !  Temperature coefficient for PHY respiration rate (0.03d0 d-1; Kawamiya et al., 1995)
     real(8), parameter :: b_Rp(Nphy) = [ 0.0519d0, 0.0519d0, 0.0519d0, 0.0519d0 ] ! (degC-1)
 !  Mortality rate at 0 oC (0.00562d0 umol-1 d-1; 0.0585L/umolN/day? 0.0088; Kishi et al., 2001)0.0066     
-    real(8), parameter :: k_Mp(Nphy) = [ 3.3d-7,   3.3d-7,   6.5d-7,   6.5d-7   ] ! (L umol-1 s-1)
+    real(8), parameter :: k_Mp(Nphy) = [ 6.5d-7,   3.3d-7,   6.5d-7,   6.5d-7   ] ! (L umol-1 s-1)
 !  Temperature coefficient for PHY mortality (Kawamiya et al., 1995)
     real(8), parameter :: b_Mp(Nphy) = [ 0.069d0,  0.069d0,  0.069d0,  0.069d0  ] ! (degC-1)   
 !  PHY ratio of extracellular excretion to production 0.135(Kawamiya et al., 1995)    
@@ -268,9 +268,9 @@ CONTAINS
     real(8), parameter :: rLDOMphy = 0.99d0  ! (Labile DOM)/(Total DOM) of phytoplankton excreted DOM (no dim.) 
 #if defined NUTRIENTS
 !  PHY Nutrient Assimilation Parameter         
-real(8), parameter :: Kp_NH4(Nphy) = [3.0d-1, 5.0d-2, 1.0d-2, 2.0d-1]      ! (µmol L-1)       JS_edit   
-real(8), parameter :: Kp_NO3(Nphy) = [2.0d-1, 5.0d-1, 2.0d-1, 5.0d0]       ! (µmol L-1)       JS_edit 
-real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µmol L-1)       JS_edit 
+    real(8), parameter :: Kp_NH4(Nphy) = [ 1.5d0,  0.5d0,  1.5d0,  1.5d0  ] ! (umol L-1)1.5         
+    real(8), parameter :: Kp_NO3(Nphy) = [ 2.0d0,  2.0d0,  1.1d0,  1.1d0  ] ! (umol L-1)0.1       JS_edit Adjust for higher NO3 
+    real(8), parameter :: Kp_PO4(Nphy) = [ 0.01d0, 0.1d0, 0.01d0,  0.01d0 ] ! (umol L-1)0.01      JS_edit Adjust for higher NO3
     ! (1.5L umolN-1; Kishi et al., 2007)  0.01  0.226  0.5
     real(8), parameter :: psi(Nphy) =    [ 0.5d0,  0.5d0,  0.5d0,  0.5d0  ] !(L umolC-1)   
 #endif
@@ -346,7 +346,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 ! Martiny et al  (2014) C:N:P -> C:N=7.4  C:P=163    N:P=22
 ! GLODAP Data           C:N:P -> C:N=9.2  C:P=131.9  N:P=14.4
 
-    real(8), parameter :: rCNp(Nphy) = [ 6.6d0,   6.6d0,   6.6d0,   6.6d0   ]    ! (no dim.) PHY1 C:N ratio    JS_edit Set to Redfield Ratio
+    real(8), parameter :: rCNp(Nphy) = [ 6.6d0,   6.6d0,   6.6d0,   6.6d0   ]    ! (no dim.) PHY1 C:N ratio    JS_edit check ratio from experiments
     real(8), parameter :: rCPp(Nphy) = [ 106d0, 106d0, 106d0, 106d0 ]    ! (no dim.) PHY1 C:P ratio
     real(8), parameter :: rCNz(Nzoo) = [ 9.2d0   ]    ! (no dim.) ZOO  C:N ratio
     real(8), parameter :: rCPz(Nzoo) = [ 131.9d0 ]    ! (no dim.) ZOO  C:P ratio
@@ -513,9 +513,9 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         cf3 = MAX(PO4, 0.0d0)  !!! Error handling
 
       IF(k == iDnfl) THEN
-        Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4(k)
-        Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))    
-        Vp_PO4(k) = cf3*cf3/(cf3*cf3+Kp_PO4(k)*Kp_PO4(k))
+        Vp_NH4(k) = cf1/(cf1+Kp_NH4(k)) * rNH4(k)          
+        Vp_NO3(k) = cf2/(cf2+Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))   
+        Vp_PO4(k) = cf3/(cf3+Kp_PO4(k))
       ELSE IF(k == iDtm) THEN   
         Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4(k)
         Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))    
@@ -549,7 +549,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Ap(k) = MIN( Ap(k), 0.1d0*PO4*rCPp(k)/dt ) !!! yt_edit Error handling  assimilation should not exceed 10% PO4 concentration in a timestep
 #endif
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dPHY_dt(k) = dPHY_dt(k) + Ap(k)
       dTA_dt = dTA_dt - Ap(k)*rCCp(k)*2.0d0  ! calcification
@@ -581,7 +581,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Ep(k) = MIN( Ep(k), 0.1d0*DIC/dt ) !!! yt_edit Error handling  excretion should not exceed 10% DIC concentration in a timestep
 
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dDIC_dt = dDIC_dt - Ep(k)
       dDOx_dt = dDOx_dt + Ep(k)  !!!!!!**************
@@ -612,7 +612,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Rp(k) = MIN( Rp(k), 0.1d0*PHY(k)/dt ) !!! yt_edit Error handling  respiration should not exceed 10% PHY concentration in a timestep
       Rp(k) = MIN( Rp(k), 0.1d0*DOx/dt )    !!! yt_edit Error handling  respiration should not consume over 10% DO concentration in a time step
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dPHY_dt(k) = dPHY_dt(k) - Rp(k)
       dDIC_dt = dDIC_dt + Rp(k)
@@ -634,7 +634,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Mp(k) = MAX( Mp(k), 0.0d0 )  !!! Error handling
       Mp(k) = MIN( Mp(k), 0.1d0*PHY(k)/dt ) !!! yt_edit Error handling  mortality should not exceed 10% PHY concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dPHY_dt(k) = dPHY_dt(k) - Mp(k)
       dPOC_dt(iDtr) = dPOC_dt(iDtr) + Mp(k)
@@ -668,7 +668,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Gp2z(m,k) = MAX( Gp2z(m,k), 0.0d0 )  !!! Error handling
         Gp2z(m,k) = MIN( Gp2z(m,k), 0.1d0*PHY(m)/dt ) !!! yt_edit Error handling  grazing should not exceed 10% PHY concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
 
         dPHY_dt(m) = dPHY_dt(m) - Gp2z(m,k)
         dZOO_dt(k) = dZOO_dt(k) + Gp2z(m,k)*e_Gp2z(m,k)
@@ -684,7 +684,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 #endif
       END DO
 
-!!!------- Microbial loop (implicitly assumed) ---------------
+!!!------- Microbial loop (inplicitly assumed) ---------------
 
 !----- Grazing rate of DOC(iLbl) by ZOO (umolC L-1 s-1) -----------------
 
@@ -697,7 +697,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Gdoc2z(m,k) = MAX( Gdoc2z(m,k), 0.0d0 )  !!! Error handling
         Gdoc2z(m,k) = MIN( Gdoc2z(m,k), 0.1d0*cf1/dt ) !!! yt_edit Error handling  grazing should not exceed 10% total of limiting factor concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
         dZOO_dt(k) = dZOO_dt(k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)
         dDOC_dt(m) = dDOC_dt(m) - Gdoc2z(m,k)
         dDOC_dt(iLbl) = dDOC_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))
@@ -725,7 +725,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Gpoc2z(m,k) = MAX( Gpoc2z(m,k), 0.0d0 )  !!! Error handling
         Gpoc2z(m,k) = MIN( Gpoc2z(m,k), 0.1d0*cf1/dt ) !!! yt_edit Error handling  grazing should not exceed 10% total of limiting factor concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
         dZOO_dt(k) = dZOO_dt(k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)
         dPOC_dt(m) = dPOC_dt(m) - Gpoc2z(m,k)
         dPOC_dt(iDtr) = dPOC_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))
@@ -752,7 +752,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Rz(k) = MIN( Rz(k), 0.1d0*ZOO(k)/dt )  !!! yt_edit Error handling  respiration should not exceed 10% ZOO in a timestep
       Rz(k) = MIN( Rz(k), 0.1d0*DOx/dt )     !!! yt_edit Error handling  respiration should not consume over 10% DO concentration in a time step
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dZOO_dt(k) = dZOO_dt(k) - Rz(k)
       dDIC_dt = dDIC_dt + Rz(k)
@@ -773,7 +773,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Mz(k) = MAX( Mz(k), 0.0d0 )  !!! Error handling
       Mz(k) = MIN( Mz(k), 0.1d0*ZOO(k)/dt )  !!! yt_edit Error handling mortality should not exceed 10% ZOO in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dZOO_dt(k) = dZOO_dt(k) - Mz(k)
       dPOC_dt(iDtr) = dPOC_dt(iDtr) + Mz(k)
@@ -801,7 +801,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Ddoc(k) = MIN( Ddoc(k), 0.1d0*DOx/dt )     !!! yt_edit Error handling decomposition should not consume over 10% DO concentration in a time step
 
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dDOC_dt(k) = dDOC_dt(k) - Ddoc(k)
       dDIC_dt = dDIC_dt + Ddoc(k)
@@ -825,7 +825,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Ddop(k) = MAX( Ddop(k), 0.0d0 )  !!! Error handling
       Ddop(k) = MIN( Ddop(k), 0.1d0*DOP(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% DOP concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dDON_dt(k) = dDON_dt(k) - Ddon(k)
       dDOP_dt(k) = dDOP_dt(k) - Ddop(k)
@@ -846,7 +846,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Dpoc(k) = MIN( Dpoc(k), 0.1d0*POC(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POC concentration in a timestep
       Dpoc(k) = MIN( Dpoc(k), 0.1d0*DOx/dt )     !!! yt_edit Error handling decomposition should not consume over 10% DO concentration in a time step
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dPOC_dt(k) = dPOC_dt(k) - Dpoc(k)
       dDIC_dt = dDIC_dt + Dpoc(k)
@@ -871,7 +871,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Dpop(k) = MAX( Dpop(k), 0.0d0 )  !!! Error handling
       Dpop(k) = MIN( Dpop(k), 0.1d0*POP(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POP concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
 
       dPON_dt(k) = dPON_dt(k) - Dpon(k)
       dPOP_dt(k) = dPOP_dt(k) - Dpop(k)
@@ -892,7 +892,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Dp2doc(m,k) = MAX( Dp2doc(m,k), 0.0d0 )  !!! Error handling
         Dp2doc(m,k) = MIN( Dp2doc(m,k), 0.1d0*POC(m)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POC concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
 
         dDOC_dt(k) = dDOC_dt(k) + Dp2doc(m,k)
         dPOC_dt(m) = dPOC_dt(m) - Dp2doc(m,k)
@@ -915,7 +915,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Dp2dop(m,k) = MAX( Dp2dop(m,k), 0.0d0 )  !!! Error handling
         Dp2dop(m,k) = MIN( Dp2dop(m,k), 0.1d0*POP(m)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POP concentration in a timestep
 
-!     === Mass balance ===
+!     === Mass barance ===
 
         dDON_dt(k) = dDON_dt(k) + Dp2don(m,k)
         dPON_dt(m) = dPON_dt(m) - Dp2don(m,k)
@@ -932,7 +932,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
     Dcpoc2dtr = MAX( Dcpoc2dtr, 0.0d0 )  !!! Error handling
     Dcpoc2dtr = MIN( Dcpoc2dtr, 0.1d0*POC(iCPOM)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POC(iCPOM) concentration in a timestep
 
-  !     === Mass balance ===
+  !     === Mass barance ===
   
     dPOC_dt(iCPOM) = dPOC_dt(iCPOM) - Dcpoc2dtr
     dPOC_dt(iDtr ) = dPOC_dt(iDtr ) + Dcpoc2dtr
@@ -949,7 +949,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
     Dcpop2dtr = MAX( Dcpop2dtr, 0.0d0 )  !!! Error handling
     Dcpop2dtr = MIN( Dcpop2dtr, 0.1d0*POP(iCPOM)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POP(iCPOM) concentration in a timestep
   
-  !     === Mass balance ===
+  !     === Mass barance ===
   
     ! dPON_dt(iCPOM) = dPON_dt(iCPOM) - Dcpon2dtr
     ! dPOP_dt(iDtr ) = dPOP_dt(iDtr ) + Dcpop2dtr
@@ -974,7 +974,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
     Nit = MIN( Nit, 0.1d0*DOx/dt/2.0d0 )  !!! yt_edit Error handling nitrification should not exceed 10% DOx concentration in a timestep
 
 
-!     === Mass balance ===
+!     === Mass barance ===
 
     dNO3_dt = dNO3_dt + Nit
     dNH4_dt = dNH4_dt - Nit
@@ -998,7 +998,7 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
     Dissol = MIN( Dissol, 0.1d0*PIC(iCaCO3)/dt )  !!! yt_edit Error handling  carbonate dissolution should not exceed 10% PIC(iCaCO3) in a timestep
 
 
-!     === Mass balance ===
+!     === Mass barance ===
 
     dPIC_dt(iCaCO3) = dPIC_dt(iCaCO3) - Dissol
     dTA_dt = dTA_dt + Dissol*2.0d0
