@@ -989,7 +989,7 @@ CONTAINS
     CO3   = cCO3_fromCTpH( DIC, pH, Tmp+273.15d0, Sal )  ! CO32- concentration
     Wcal   = Wcal_fromcCO3( CO3, Tmp+273.15d0, Sal )  ! Calcite saturation state
     Warg   = Warg_fromcCO3( CO3, Tmp+273.15d0, Sal )  ! Calcite saturation state
-    IF ( Wcal < 1.0d0 ) THEN
+    IF ( Wcal < 1.0d0 ) THEN !!! CHECK: Keir 1979 !!!!!!
       Dissol = 1.3d7*(1.d0-Wcal)**2.8d0 * PIC(iCaCO3)  !! [umol L-1 s-1] Low-Mg Calcite dissolution rate (Walter and Morse, 1985)
     ELSE
       Dissol = 0.0d0

@@ -1799,7 +1799,7 @@ END SUBROUTINE allocate_reef_ecosys
 #  endif
 # endif
 
-      write(40,'(*(g0,", "))') date,PFDbott             &
+      write(40,'(*(g0:,", "))') date,PFDbott             &
 # ifdef CORAL_POLYP 
         , CORAL(1)%Pg(1,1,1)*cff1, CORAL(1)%R (1,1,1)*cff1        &
         , (CORAL(1)%Pg(1,1,1)-CORAL(1)%R (1,1,1))*cff1            &

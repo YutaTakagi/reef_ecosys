@@ -13,9 +13,7 @@ PFDmax =2000;
 env = readtable(evn_file,'Delimiter',',', 'ReadVariableNames', true);
 eco = readtable(eco_file,'Delimiter',',', 'ReadVariableNames', true);
 
-mean(eco.coral1_G(1297:1333))
-mean(eco.coral1_G(1153:1225))
-
+%% 
 
 % tot_Pn = eco.coral1_Pn + eco.coral2_Pn + eco.sedeco_Pn;
 % tot_G  = eco.coral1_G + eco.coral2_G  + eco.sedeco_G ;
