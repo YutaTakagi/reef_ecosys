@@ -543,11 +543,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Ap(k) = (1.0d0-k_Ep(k)) * Pp(k)
 
 #endif
-      Ap(k) = MIN( Ap(k), 0.1d0*DIC/dt ) !!! yt_edit Error handling  assimilation should not exceed 10% DIC concentration in a timestep
-#if defined NUTRIENTS
-      Ap(k) = MIN( Ap(k), 0.1d0*(NO3+NH4)*rCNp(k)/dt ) !!! yt_edit Error handling  assimilation should not exceed 10% N concentration in a timestep
-      Ap(k) = MIN( Ap(k), 0.1d0*PO4*rCPp(k)/dt ) !!! yt_edit Error handling  assimilation should not exceed 10% PO4 concentration in a timestep
-#endif
 
 !     === Mass balance ===
 
@@ -578,8 +573,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 #else
       Ep(k) = k_Ep(k) * Pp(k)
 #endif
-      Ep(k) = MIN( Ep(k), 0.1d0*DIC/dt ) !!! yt_edit Error handling  excretion should not exceed 10% DIC concentration in a timestep
-
 
 !     === Mass balance ===
 
@@ -609,14 +602,13 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       !   Rp(k) = 0.0d0
       ! ENDIF
       Rp(k) = MAX( Rp(k), 0.0d0 )  !!! Error handling
-      Rp(k) = MIN( Rp(k), 0.1d0*PHY(k)/dt ) !!! yt_edit Error handling  respiration should not exceed 10% PHY concentration in a timestep
-      Rp(k) = MIN( Rp(k), 0.1d0*DOx/dt )    !!! yt_edit Error handling  respiration should not consume over 10% DO concentration in a time step
 
 !     === Mass balance ===
 
       dPHY_dt(k) = dPHY_dt(k) - Rp(k)
       dDIC_dt = dDIC_dt + Rp(k)
       dDOx_dt = dDOx_dt - Rp(k)
+      dPIC_dt(iCaCO3) = dPIC_dt(iCaCO3) + Rp(k)*rCCp(k)
 #if defined CARBON_ISOTOPE
       dPHY13C_dt(k) = dPHY13C_dt(k) - Rp(k)*rPHY13C(k)
       dDI13C_dt = dDI13C_dt + Rp(k)*rPHY13C(k)
@@ -632,7 +624,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Mp(k) = k_Mp(k) * exp(b_Mp(k)*Tmp) * MAX(PHY(k),0.0d0)*MAX(PHY(k),0.0d0)
 !      Mphy = k_Mphy * exp(b_Mphy*Tmp) * PHY
       Mp(k) = MAX( Mp(k), 0.0d0 )  !!! Error handling
-      Mp(k) = MIN( Mp(k), 0.1d0*PHY(k)/dt ) !!! yt_edit Error handling  mortality should not exceed 10% PHY concentration in a timestep
 
 !     === Mass balance ===
 
@@ -666,21 +657,21 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
           Gp2z(m,k) = 0.0d0
         ENDIF
         Gp2z(m,k) = MAX( Gp2z(m,k), 0.0d0 )  !!! Error handling
-        Gp2z(m,k) = MIN( Gp2z(m,k), 0.1d0*PHY(m)/dt ) !!! yt_edit Error handling  grazing should not exceed 10% PHY concentration in a timestep
 
 !     === Mass balance ===
 
         dPHY_dt(m) = dPHY_dt(m) - Gp2z(m,k)
         dZOO_dt(k) = dZOO_dt(k) + Gp2z(m,k)*e_Gp2z(m,k)
         dPOC_dt(iDtr) = dPOC_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))
+        dPIC_dt(iCaCO3) = dPIC_dt(iCaCO3) + Gp2z(m,k)*rCCp(m)
 #if defined CARBON_ISOTOPE
         dPHY13C_dt(m) = dPHY13C_dt(m) - Gp2z(m,k)*rPHY13C(m)
         dZOO13C_dt(k) = dZOO13C_dt(k) + Gp2z(m,k)*e_Gp2z(m,k)*a_grz*rPHY13C(m)
         dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*a_grz)*rPHY13C(m)  !!!!****Need check
 #endif
 #if defined NUTRIENTS
-        dPON_dt(iDtr) = dPON_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNz(k)
-        dPOP_dt(iDtr) = dPOP_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCPz(k)
+        dPON_dt(iDtr) = dPON_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNp(m)
+        dPOP_dt(iDtr) = dPOP_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCPp(m)
 #endif
       END DO
 
@@ -695,7 +686,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 #endif
         Gdoc2z(m,k) = k_Gdoc2z(m,k) * exp(b_Gdoc2z(m,k)*Tmp) * cf1 * ZOO(k) ! yt_edit consider making this michaelis-menten dependent on ZOO to not exceed exceed 100% uptake
         Gdoc2z(m,k) = MAX( Gdoc2z(m,k), 0.0d0 )  !!! Error handling
-        Gdoc2z(m,k) = MIN( Gdoc2z(m,k), 0.1d0*cf1/dt ) !!! yt_edit Error handling  grazing should not exceed 10% total of limiting factor concentration in a timestep
 
 !     === Mass balance ===
         dZOO_dt(k) = dZOO_dt(k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)
@@ -723,7 +713,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 #endif
         Gpoc2z(m,k) = k_Gpoc2z(m,k) * exp(b_Gpoc2z(m,k)*Tmp) * cf1 * ZOO(k)
         Gpoc2z(m,k) = MAX( Gpoc2z(m,k), 0.0d0 )  !!! Error handling
-        Gpoc2z(m,k) = MIN( Gpoc2z(m,k), 0.1d0*cf1/dt ) !!! yt_edit Error handling  grazing should not exceed 10% total of limiting factor concentration in a timestep
 
 !     === Mass balance ===
         dZOO_dt(k) = dZOO_dt(k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)
@@ -749,8 +738,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       !   Rz(k) = 0.0d0
       ! ENDIF
       Rz(k) = MAX( Rz(k), 0.0d0 )  !!! Error handling
-      Rz(k) = MIN( Rz(k), 0.1d0*ZOO(k)/dt )  !!! yt_edit Error handling  respiration should not exceed 10% ZOO in a timestep
-      Rz(k) = MIN( Rz(k), 0.1d0*DOx/dt )     !!! yt_edit Error handling  respiration should not consume over 10% DO concentration in a time step
 
 !     === Mass balance ===
 
@@ -771,7 +758,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 
       Mz(k) = k_Mz(k) * exp(b_Mz(k)*Tmp) * ZOO(k)*ZOO(k)
       Mz(k) = MAX( Mz(k), 0.0d0 )  !!! Error handling
-      Mz(k) = MIN( Mz(k), 0.1d0*ZOO(k)/dt )  !!! yt_edit Error handling mortality should not exceed 10% ZOO in a timestep
 
 !     === Mass balance ===
 
@@ -793,13 +779,10 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 
     DO k=1, Ndom
       Ddoc(k) = k_Ddoc(k) * exp(b_Ddoc(k)*Tmp) * DOC(k)
-      ! IF(DOx <= 0.0d0) THEN !-----For Error handling
-      !   Ddoc(k) = 0.0d0
-      ! ENDIF
+      IF(DOx <= 0.0d0) THEN !-----For Error handling
+        Ddoc(k) = 0.0d0
+      ENDIF
       Ddoc(k) = MAX( Ddoc(k), 0.0d0 )  !!! Error handling
-      Ddoc(k) = MIN( Ddoc(k), 0.1d0*DOC(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% DOC concentration in a timestep
-      Ddoc(k) = MIN( Ddoc(k), 0.1d0*DOx/dt )     !!! yt_edit Error handling decomposition should not consume over 10% DO concentration in a time step
-
 
 !     === Mass balance ===
 
@@ -816,14 +799,12 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Ddon(k) = 0.0d0
       ENDIF
       Ddon(k) = MAX( Ddon(k), 0.0d0 )  !!! Error handling
-      Ddon(k) = MIN( Ddon(k), 0.1d0*DON(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% DON concentration in a timestep
 
       Ddop(k) = k_Ddop(k) * exp(b_Ddop(k)*Tmp) * DOP(k)
       IF(DOx <= 0.0d0) THEN !-----For Error handling
         Ddop(k) = 0.0d0
       ENDIF
       Ddop(k) = MAX( Ddop(k), 0.0d0 )  !!! Error handling
-      Ddop(k) = MIN( Ddop(k), 0.1d0*DOP(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% DOP concentration in a timestep
 
 !     === Mass balance ===
 
@@ -839,12 +820,10 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 
     DO k=1, Npom
       Dpoc(k) = k_Dpoc(k) * exp(b_Dpoc(k)*Tmp) * POC(k)
-      ! IF(DOx <= 0.0d0) THEN !-----For Error handling
-      !   Dpoc(k) = 0.0d0
-      ! ENDIF
+      IF(DOx <= 0.0d0) THEN !-----For Error handling
+        Dpoc(k) = 0.0d0
+      ENDIF
       Dpoc(k) = MAX( Dpoc(k), 0.0d0 )  !!! Error handling
-      Dpoc(k) = MIN( Dpoc(k), 0.1d0*POC(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POC concentration in a timestep
-      Dpoc(k) = MIN( Dpoc(k), 0.1d0*DOx/dt )     !!! yt_edit Error handling decomposition should not consume over 10% DO concentration in a time step
 
 !     === Mass balance ===
 
@@ -862,14 +841,12 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Dpon(k) = 0.0d0
       ENDIF
       Dpon(k) = MAX( Dpon(k), 0.0d0 )  !!! Error handling
-      Dpon(k) = MIN( Dpon(k), 0.1d0*PON(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% PON concentration in a timestep
 
       Dpop(k) = k_Dpop(k) * exp(b_Dpop(k)*Tmp) * POP(k)
       IF(DOx <= 0.0d0) THEN !-----For Error handling
         Dpop(k) = 0.0d0
       ENDIF
       Dpop(k) = MAX( Dpop(k), 0.0d0 )  !!! Error handling
-      Dpop(k) = MIN( Dpop(k), 0.1d0*POP(k)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POP concentration in a timestep
 
 !     === Mass balance ===
 
@@ -890,7 +867,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
           Dp2doc(m,k) = 0.0d0
         ENDIF
         Dp2doc(m,k) = MAX( Dp2doc(m,k), 0.0d0 )  !!! Error handling
-        Dp2doc(m,k) = MIN( Dp2doc(m,k), 0.1d0*POC(m)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POC concentration in a timestep
 
 !     === Mass balance ===
 
@@ -906,14 +882,12 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
           Dp2don(m,k) = 0.0d0
         ENDIF
         Dp2don(m,k) = MAX( Dp2don(m,k), 0.0d0 )  !!! Error handling
-        Dp2don(m,k) = MIN( Dp2don(m,k), 0.1d0*PON(m)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% PON concentration in a timestep
 
         Dp2dop(m,k) = k_Dp2dop(m,k) * exp(b_Dp2dop(m,k)*Tmp) * MAX(POP(m),0.0d0)
         IF(DOx <= 0.0d0) THEN !-----For Error handling
           Dp2dop(m,k) = 0.0d0
         ENDIF
         Dp2dop(m,k) = MAX( Dp2dop(m,k), 0.0d0 )  !!! Error handling
-        Dp2dop(m,k) = MIN( Dp2dop(m,k), 0.1d0*POP(m)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POP concentration in a timestep
 
 !     === Mass balance ===
 
@@ -930,7 +904,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 
     Dcpoc2dtr = k_Dcpoc2dtr * exp(b_Dcpoc2dtr*Tmp) * POC(iCPOM)
     Dcpoc2dtr = MAX( Dcpoc2dtr, 0.0d0 )  !!! Error handling
-    Dcpoc2dtr = MIN( Dcpoc2dtr, 0.1d0*POC(iCPOM)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POC(iCPOM) concentration in a timestep
 
   !     === Mass balance ===
   
@@ -943,22 +916,16 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 #if defined NUTRIENTS
     Dcpon2dtr = k_Dcpon2dtr * exp(b_Dcpon2dtr*Tmp) * PON(iCPOM)
     Dcpon2dtr = MAX( Dcpon2dtr, 0.0d0 )  !!! Error handling
-    Dcpon2dtr = MIN( Dcpon2dtr, 0.1d0*PON(iCPOM)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% PON(iCPOM) concentration in a timestep
 
     Dcpop2dtr = k_Dcpop2dtr * exp(b_Dcpop2dtr*Tmp) * POP(iCPOM)
     Dcpop2dtr = MAX( Dcpop2dtr, 0.0d0 )  !!! Error handling
-    Dcpop2dtr = MIN( Dcpop2dtr, 0.1d0*POP(iCPOM)/dt )  !!! yt_edit Error handling decomposition should not exceed 10% POP(iCPOM) concentration in a timestep
   
   !     === Mass balance ===
   
-    ! dPON_dt(iCPOM) = dPON_dt(iCPOM) - Dcpon2dtr
-    ! dPOP_dt(iDtr ) = dPOP_dt(iDtr ) + Dcpop2dtr
-    dPON_dt(iCPOM) = dPON_dt(iCPOM) - Dcpon2dtr ! yt_edit above is missing equations???
-    dPON_dt(iDtr ) = dPON_dt(iDtr ) + Dcpon2dtr ! yt_edit above is missing equations???
-    dPOP_dt(iCPOM) = dPOP_dt(iCPOM) - Dcpop2dtr ! yt_edit above is missing equations???
-    dPOP_dt(iDtr ) = dPOP_dt(iDtr ) + Dcpop2dtr ! yt_edit above is missing equations???
-    
-  
+    dPON_dt(iCPOM) = dPON_dt(iCPOM) - Dcpon2dtr
+    dPON_dt(iDtr ) = dPON_dt(iDtr ) + Dcpon2dtr
+    dPOP_dt(iCPOM) = dPOP_dt(iCPOM) - Dcpop2dtr
+    dPOP_dt(iDtr ) = dPOP_dt(iDtr ) + Dcpop2dtr
 #endif
 
   
@@ -970,9 +937,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
         Nit = 0.0d0
     ENDIF
     Nit = MAX( Nit, 0.0d0 )  !!! Error handling
-    Nit = MIN( Nit, 0.1d0*NH4/dt )  !!! yt_edit Error handling nitrification should not exceed 10% NH4 concentration in a timestep
-    Nit = MIN( Nit, 0.1d0*DOx/dt/2.0d0 )  !!! yt_edit Error handling nitrification should not exceed 10% DOx concentration in a timestep
-
 
 !     === Mass balance ===
 
@@ -995,8 +959,6 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
       Dissol = 0.0d0
     END IF
     Dissol = MAX( Dissol, 0.0d0 )  !!! Error handling
-    Dissol = MIN( Dissol, 0.1d0*PIC(iCaCO3)/dt )  !!! yt_edit Error handling  carbonate dissolution should not exceed 10% PIC(iCaCO3) in a timestep
-
 
 !     === Mass balance ===
 

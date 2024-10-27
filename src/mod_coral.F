@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2022 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -832,6 +832,7 @@ CONTAINS
     CALL zooxanthellae             &
 !     input parameters
       ( ng, n, i, j                & ! ng: nested grid number; n: coral compartment; i,j: position
+      , date                       & ! Date (days since x or elapsed days)
       , dt                         & ! Time step (sec)
       , PFDsurf                    & ! Photon flux density (umol m-2 s-1)
       , Tamb                       & ! Temperature (oC)

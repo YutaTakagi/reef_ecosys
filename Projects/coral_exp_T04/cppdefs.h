@@ -24,9 +24,9 @@
 # endif
 
 # define CORAL_POLYP  /* USE coral module */
-# define SEAGRASS     /* USE seagrass module */
-# define MACROALGAE        /* USE algae module  */
-# define SEDIMENT_ECOSYS        /* USE sedecosys module  */
+/*# define SEAGRASS*/     /* USE seagrass module */
+/*# define MACROALGAE*/        /* USE algae module  */
+/*# define SEDIMENT_ECOSYS*/        /* USE sedecosys module  */
 # if defined SEDIMENT_ECOSYS
 #  define SEDIMENT_EMPIRICAL     /* USE empirical sediment module  */
 # endif
