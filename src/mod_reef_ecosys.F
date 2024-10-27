@@ -1257,6 +1257,10 @@ END SUBROUTINE allocate_reef_ecosys
 
     PFDbott=PFD  !!! Photon flux density at sea bottom
 
+#if defined ECOSYS_TESTMODE && defined INPUT_BOTTOM_PFD
+    PFDbott = PFDsurf !!! Photon flux density at sea bottom
+#endif
+
 #if defined ORGANIC_MATTER && !defined ECOSYS_TESTMODE
 !-----------------------------------------------------------------------
 ! Vertical advection (sinking/flaoting) of POM and PIM

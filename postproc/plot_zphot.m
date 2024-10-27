@@ -1,6 +1,7 @@
 % === Copyright (c) 2017 Takashi NAKAMURA  =====
 
-zph1_file = '../Projects/coral/output/eco5-zphot1_his.csv';
+% zph1_file = '../Projects/coral/output/eco5-zphot1_his.csv';
+zph1_file = '../Projects/coral_exp_T04/output/Pre_2w-zphot1_his.csv';
 
 xmin=0; xmax=7;
 PFDmax =2000;
@@ -40,13 +41,13 @@ axis([xmin xmax  0 PFDmax])
 yyaxis left
 hold on
 plot(zh1.time, zh1.Fv_Fm,'b');
-plot(zh1.time, zh1.Ra,'-r');
-plot(zh1.time, zh1.Repair,'-g');
+plot(zh1.time, zh1.kr,'-r');
+plot(zh1.time, zh1.s_ab,'-g');
 ax = gca; ax.YColor = 'k';
 axis([xmin xmax  0 1.0])
 ylabel('Fv/Fm, Rubisco act., reapir')
 ax = gca; ax.YColor = 'k';
-legend('Fv/Fm','Ra','Repair','E', 'Location','southoutside','Orientation','horizontal')
+legend('Fv/Fm','kr','s_ab','E', 'Location','southoutside','Orientation','horizontal')
 
 hold off
 subplot(4,2,3);
@@ -140,10 +141,10 @@ axis([xmin xmax  0 PFDmax])
 yyaxis left
 hold on
 plot(zh1.time, zh1.kr,'b');
-plot(zh1.time, zh1.ko,'-r');
+plot(zh1.time, zh1.Chl,'-r');
 axis([xmin xmax  0 5e3])
 ylabel('k (s^-^1)')
 ax = gca; ax.YColor = 'k';
-legend('kr','ko','E', 'Location','southoutside','Location','southoutside','Orientation','horizontal')
+legend('kr','Chl','E', 'Location','southoutside','Location','southoutside','Orientation','horizontal')
 
 
