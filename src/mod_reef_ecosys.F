@@ -1836,7 +1836,13 @@ END SUBROUTINE allocate_reef_ecosys
 !------------------------------------------------------------------------
 ! Print section
     
-    IF(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
+    IF( date*86400.0d0 >= dsec ) THEN
+      if(dsec == 0.0d0) then
+        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+      else
+        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+      endif
+      
 # ifdef CORAL_POLYP 
       cff1=0.01d0*p_coral(1)*P2R(1)*3600.0d0  ! cff1: convert [nmol cm-2 s-1] to [mmol m-2 h-1]
       cff2=0.01d0*p_coral(2)*P2R(2)*3600.0d0  ! cff1: convert [nmol cm-2 s-1] to [mmol m-2 h-1]

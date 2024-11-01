@@ -142,6 +142,7 @@ CONTAINS
 
 #if defined REEF_FLOW_TESTMODE
     real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
+    real(8) :: dsec = 0.d0 !sec
 #endif
 
     d_o = el_o + REEF(ng)%Drc(i,j)
@@ -191,8 +192,13 @@ CONTAINS
 !------------------------------------------------------------------------
 ! Print section
 
-    IF(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
-      
+    IF( date*86400.0d0 >= dsec ) THEN
+      if(dsec == 0.0d0) then
+        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+      else
+        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+      endif
+    
       write(45,'(*(g0:,", "))') date   &
       , Hs_o, Ts, d_o, d_i                          & 
       , el_o, REEF(ng)%el(i,j)                      &

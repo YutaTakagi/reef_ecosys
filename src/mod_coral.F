@@ -640,6 +640,8 @@ CONTAINS
 !  Output
     real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
     real(8), parameter :: AVERAGE_INTERVAL = 1.0d0    ! Average interval (day)
+    real(8), save :: dsec = 0.d0 !sec
+    real(8), save :: dday = 0.d0 !day
     real(8), save :: S_PFD_dt(Ncl)     = [ 0.d0, 0.d0 ]
     real(8), save :: S_Gn_dt(Ncl)      = [ 0.d0, 0.d0 ]
     real(8), save :: S_Pg_dt(Ncl)      = [ 0.d0, 0.d0 ]
@@ -1412,8 +1414,13 @@ CONTAINS
     d11Barg = d11B_BOH4_frompHd11BT(pHcal, 39.5d0, TKamb, Samb)
 # endif
 
-    IF(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
-      
+    IF( date*86400.0d0 >= dsec ) THEN
+      if(dsec == 0.0d0) then
+        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+      else
+        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+      endif
+       
       write(10+n,'(*(g0:,", "))') date, PFD                                      &
        , CORAL(ng)%Pg(n,i,j), CORAL(ng)%R (n,i,j)                                &
        , CORAL(ng)%Pg(n,i,j)-CORAL(ng)%R (n,i,j)                                 &
@@ -1472,7 +1479,13 @@ CONTAINS
     S_d11BargxGn_dt(n)=S_d11BargxGn_dt(n)+d11Barg*CORAL(ng)%G (n,i,j)*dt
 # endif
 
-    IF(mod(int(date*86400.0d0), int(AVERAGE_INTERVAL*86400.0d0))==0) THEN
+!    IF(mod(int(date*86400.0d0), int(AVERAGE_INTERVAL*86400.0d0))==0) THEN
+    IF( date >= dday ) THEN   
+      if(dday == 0.0d0) then
+        dday=date+AVERAGE_INTERVAL
+      else
+        dday=dday+AVERAGE_INTERVAL
+      endif
 
       write(20+n,'(*(g0:,", "))') date    &
        , S_PFD_dt(n)*1.d-6                &   ! Photon flux density (mol m-2 d-1)
@@ -1626,7 +1639,6 @@ CONTAINS
 
 !----- Chl dynamics constants ---------------------------
     real(8), parameter :: QCzr_max  = 20.0d0  ! Target QCr value (pmol cell-1)  (Asssumed)
-    real(8), parameter :: uchl_max = 1.0d-4  ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
 
 # if defined CORAL_NUTRIENTS
     real(8), parameter :: QN0 = 1.1d0  ! (pmolN/cell)  calculated from C:N:P = 116:16:1
@@ -1669,6 +1681,7 @@ CONTAINS
 # if defined CORAL_TESTMODE
 !  Output
     real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
+    real(8), save :: dsec = 0.d0 !sec
 # endif
 
 !----- Reserve C pool (pmol cell-1) ---------------------------
@@ -1835,8 +1848,10 @@ CONTAINS
 
 # if defined CORAL_TESTMODE
 
-    IF(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
-      
+!    IF(mod(int(date*86400.0d0*100.0d0), int(OUTPUT_INTERVAL*60.0d0*100.0d0))==0) THEN
+    IF( date*86400.0d0 >= dsec ) THEN
+      dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+
       write(30+n,'(*(g0:,", "))')                                        &
          date, PFDsurf                                                   &
        , ZOOX(ng)%Pg(n,i,j), ZOOX(ng)%R(n,i,j)                           &
@@ -1951,6 +1966,7 @@ CONTAINS
     real(8), parameter :: kqad = 1.0d-5    ! rate constant for QAid degradation
     real(8), parameter :: kqap = 1.0d-11    ! rate constant for QAa production
     real(8), parameter :: QCzrm = 50.0d0   ! Threashold reserv QC value for Chl production 
+    real(8), parameter :: uchl_max = 1.0d-4  ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
 !---------------------------------------------------------------------
     real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
     real(8) :: QAa       ! Active RCII (pmol RCII cell-1)
@@ -1972,10 +1988,12 @@ CONTAINS
     real(8) :: I2e       
     real(8) :: K_QAi, K_QAid
     real(8) :: F_QAd, F_QAp
+    real(8) :: dChl_dt   ! Chl concentration (pg/cell/s)
 
 # if defined CORAL_TESTMODE
 !  Output
     real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
+    real(8), save :: dsec = 0.d0 !sec
     real(8) :: FvFm       
     real(8) :: YII
     real(8) :: KF       
@@ -2048,9 +2066,8 @@ CONTAINS
 !===== Chl dynamics calculation ==============================================
 !===== Chl concentration (pg/cell) ================================================
 !    ----- Chl dynamics parameters
-    !    dChl_dt = uchl_max * (1.0d0 - QCzr/QCzr_max)
-!        dChl_dt = kchl * (0.5d0-QAit/QAt)
-!    dChl_dt = -3.0d-6*ROS + 3.0d-5
+!    dChl_dt = uchl_max * (1.0d0 - QCzr/QCzr_max)
+    dChl_dt = dChl_dt - 3.0d-6*ROS + 3.0d-5
 
 ! ----- QAid degradation rate (pmol RCII cell-1 s-1) -------
     F_QAd = kqad * ZOOX(ng)%QAid(n,i,j)
@@ -2102,21 +2119,27 @@ CONTAINS
     ZOOX(ng)%QAo(n,i,j)=QAa-ZOOX(ng)%QAr(n,i,j)
 
 !----- Chl concentration (pg cell-1) -----------------
-    ZOOX(ng)%Chl(n,i,j) =  QAt/1.2d-6   ! factor Chl -> QAt: 1.2d-6 ~1.7d-6 (Suggett et al. 2008)
+!    ZOOX(ng)%Chl(n,i,j) =  QAt/1.2d-6   ! factor Chl -> QAt: 1.2d-6 ~1.7d-6 (Suggett et al. 2008)
 
 !-----Chl concentration (pg cell-1 s-1) -----------------
-!    ZOOX(ng)%Chl(n,i,j)=ZOOX(ng)%Chl(n,i,j)   &
-!                  +(                          &
-!                     dChl_dt                  &
-!                   )*dt
-!    ZOOX(ng)%Chl(n,i,j)=max(ZOOX(ng)%Chl(n,i,j),1.0d-1) !!!Error handring
+    ZOOX(ng)%Chl(n,i,j)=ZOOX(ng)%Chl(n,i,j)   &
+                  +(                          &
+                     dChl_dt                  &
+                   )*dt
+    ZOOX(ng)%Chl(n,i,j)=max(ZOOX(ng)%Chl(n,i,j),1.0d-1) !!!Error handring
 
 !------------------------------------------------------------------------
 ! Print section (for debug)
 
 # if defined CORAL_TESTMODE
 
-    IF(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
+    IF( date*86400.0d0 >= dsec ) THEN
+      if(dsec == 0.0d0) then
+        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+      else
+        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+      endif
+
       KF = s_0/s_ab - 1.0d0
       FvFm = (QAa/QAt)/(KF+(QAa/QAt))
       YII  = (ZOOX(ng)%QAo(n,i,j)/QAt)/(KF+(ZOOX(ng)%QAo(n,i,j)/QAt))

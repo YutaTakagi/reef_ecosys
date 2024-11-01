@@ -1284,6 +1284,7 @@ CONTAINS
 !!  Output ------------------------------------------------------------------
 # if defined SEDIMENT_TESTMODE
     real(8), parameter :: OUTPUT_INTERVAL = 1440.0d0 !*365     ! Output interval (min)
+    real(8), save :: dsec = 0.d0 !sec
     real(8) :: pHamb 
     ! real(8) :: redoxlevel(Nsed)    ! for debug / 1:O2, 2:NO3, 3:MnO2, 4:FeOOH, 5:SO4
 # endif
@@ -3096,8 +3097,13 @@ CONTAINS
 !!!  Print section
 ! ***************************** !
 # if defined SEDIMENT_TESTMODE
-    time = time +dt  ! sec
-    if(mod(int(date*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
+    IF( date*86400.0d0 >= dsec ) THEN
+        if(dsec == 0.0d0) then
+          dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+        else
+          dsec=dsec+OUTPUT_INTERVAL*60.0d0
+        endif
+        
         write(58,*) date, O2amb, SEDECO(ng)%O2(i,j,:)
         write(80,*) date, DICamb, SEDECO(ng)%DIC(i,j,:)
         write(81,*) date, N2amb, SEDECO(ng)%N2(i,j,:)

@@ -38,7 +38,6 @@ PROGRAM main
   integer, parameter :: Ngrids = 1
 
   integer :: i,j,k,id, Nid
-  integer :: istep, iprint
   integer :: nheat
   
   integer :: ipcl =1       ! Step of the protocol for setting 5 (Incubation chamber condition simulated Nakamura & Nakamori (2009) experiments)
@@ -106,10 +105,7 @@ PROGRAM main
 !  call Coral_Size2Cover
 
   time=time0
-
-  istep=0
-  iprint=0
-      
+    
 !----- Write data labels -------------------------
   CALL write_env_lavel(10)        
 #if defined CORAL_TESTMODE
@@ -134,7 +130,7 @@ PROGRAM main
 
 !----- Main loop -------------------------------------------
 
-  do istep=1, int(24.*60.*60./dt * Tmax)  +1
+  DO
 
 !------ Set environmental parameters ----------------------------
 
@@ -545,17 +541,26 @@ PROGRAM main
 
 !------- Print section --------------------------------------
 
-    IF(mod(int(time*86400.0d0), int(OUTPUT_INTERVAL*60.0d0))==0) THEN
+    if( time*86400.0d0 >= dsec ) THEN
+      if(dsec == 0.0d0) then
+        dsec=time*86400.0d0+OUTPUT_INTERVAL*60.0d0
+      else
+        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+      endif
+      
       write(*,*) 'Time (day): ', time  ! Output for standard out
       CALL write_env_data(10)
 
     endif
 
+!------- Check end time -----------------------------------
+    if( time >= time0 + Tmax ) Exit
+
 !------- Update time --------------------------------------
 
     time=time+dt/86400.
 
-  enddo
+  END DO
       
 !----- End loop --------------------------------------
 
