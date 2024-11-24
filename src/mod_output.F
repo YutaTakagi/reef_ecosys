@@ -501,10 +501,9 @@ END SUBROUTINE write_crl_ave_lavel
     write(fid,'(*(g0:,", "))')                                  &
         'time','PFD','Tamb'                                     &
        ,'QAo','QAr','QAi'                                       &
-       ,'QAid','QAit'                                       &
        ,'QAt','QAa','Fv/Fm','Y(II)'                             &
        ,'J_ea','J_ep_in','J_ep','J_ee','J_ep_max'               &
-       ,'Ji2a','Ja2i', 'Ji2id', 'Jid2i','kr','s_ab','F_ROS','ROS'                 &
+       ,'Ji2a','Ja2i', 'Ji2id', 'Jid2i','kr','s_ab','F_psROS','ROS'                 &
        ,'Pg','Pgcal','Pgmax', 'F_zDIC', 'F_zDO'                 &
        ,'Chl', 'F_QAd', 'F_QAp'
      

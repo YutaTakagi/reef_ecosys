@@ -67,7 +67,9 @@ MODULE mod_coral
     real(8), pointer :: QAo(:,:,:)
     real(8), pointer :: QAr(:,:,:)
     real(8), pointer :: QAi(:,:,:)
-    real(8), pointer :: QAid(:,:,:)
+    real(8), pointer :: ROS(:,:,:)
+    real(8), pointer :: NADPH(:,:,:)
+!    real(8), pointer :: NADPt(:,:,:)
 # if defined CORAL_CARBON_ISOTOPE
 !  13C isotope
     real(8), pointer :: Q13C(:,:,:)
@@ -149,7 +151,9 @@ CONTAINS
     allocate( ZOOX(ng)%QAo(Ncl,LBi:UBi,LBj:UBj)  )
     allocate( ZOOX(ng)%QAr(Ncl,LBi:UBi,LBj:UBj)  )
     allocate( ZOOX(ng)%QAi(Ncl,LBi:UBi,LBj:UBj)  )
-    allocate( ZOOX(ng)%QAid(Ncl,LBi:UBi,LBj:UBj)  )
+    allocate( ZOOX(ng)%ROS(Ncl,LBi:UBi,LBj:UBj)  )
+    allocate( ZOOX(ng)%NADPH(Ncl,LBi:UBi,LBj:UBj)  )
+!    allocate( ZOOX(ng)%NADPt(Ncl,LBi:UBi,LBj:UBj)  )
 # if defined CORAL_CARBON_ISOTOPE
     allocate( ZOOX(ng)%Q13C(Ncl,LBi:UBi,LBj:UBj)  )
 # endif
@@ -247,12 +251,14 @@ CONTAINS
           ZOOX(ng)%QC(n,i,j)   = 70.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
 !          ZOOX(ng)%QC(n,i,j)   = 120.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
                           ! QC0= 50.0d0
-          ZOOX(ng)%Chl(n,i,j)  = 2.0d0 !2.0d0  !4.8d0  ! (pg/cell)
-          QAt = ZOOX(ng)%Chl(n,i,j)*1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
+          ZOOX(ng)%Chl(n,i,j)  = 0.7d0 ! (pg/cell) Suggett et al. 2008
+!          QAt = ZOOX(ng)%Chl(n,i,j)*1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
+          QAt = 1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
           ZOOX(ng)%QAo(n,i,j) = QAt*0.6d0 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
           ZOOX(ng)%QAr(n,i,j) = 0.0d0
-          ZOOX(ng)%QAi(n,i,j) = QAt*0.1d0
-          ZOOX(ng)%QAid(n,i,j) = QAt*0.3d0
+          ZOOX(ng)%QAi(n,i,j) = QAt*0.4d0
+          ZOOX(ng)%ROS(n,i,j) = 0.0d0
+          ZOOX(ng)%NADPH(n,i,j) = 0.0d0
 # if defined CORAL_CARBON_ISOTOPE
           ZOOX(ng)%Q13C(n,i,j) = R13C*ZOOX(ng)%QC(n,i,j)
 # endif
@@ -1669,6 +1675,7 @@ CONTAINS
     real(8) :: Rz      ! Respiration rate (pmolC cell-1 s-1) 
     real(8) :: Rzm     ! Maximum respiration rate at the present condition (pmolC cell-1 s-1) 
     real(8) :: Rzrq    ! Required respiration rate for biosynthesis (pmolC cell-1 s-1) 
+    real(8) :: F_psROS ! Flux of Reactive Oxygen Species from photosystem (pmol cell-1 s-1)
 
 # if defined CORAL_NUTRIENTS
 !----- Nutrients related parameters -------------------
@@ -1698,13 +1705,13 @@ CONTAINS
       , Tamb                 & ! Temperature (oC)
       , cCO2aqcoe            & ! CO2 concentration in the coral tissue
       , cDOcoe               & ! DO concentration in the coral tissue
-      , ROS                  & ! ROS concentration in Zooxanthellar cell
+!      , ROS                  & ! ROS concentration in Zooxanthellar cell
       , QCzr                 & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
 !        output parameters
-      , ZOOX(ng)%Pg(n,i,j)   & ! Gross photosynthetic rate (pmol cell-1 s-1)
+      , ZOOX(ng)%Pg(n,i,j)   & ! Gross photosynthetic rate (pmolC cell-1 s-1)
       , F_zDIC               & ! Flux of DIC  (pmol cell-1 s-1)
       , F_zDO                & ! Flux of DO  (pmol cell-1 s-1)
-      , F_zROS               & ! Flux of Reactive Oxygen Species (pmol cell-1 s-1)
+      , F_psROS              & ! Flux of Reactive Oxygen Species from photosystem (pmol cell-1 s-1)
       )
       
 !----- peroxynitrite (ONOO-) flux (nmol cm-2 s-1)------------------------------------
@@ -1835,14 +1842,14 @@ CONTAINS
 
 
 !-----ROS concentration (pmol/cell) -----------------
-!
-!    ZOOX(ng)%ROS(n,i,j)=ZOOX(ng)%ROS(n,i,j)               &
-!                  +(                                      &
-!                     F_zROS                                &
-!                    -F_zROS                                & !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!                   )*dt
-!    ZOOX(ng)%ROS(n,i,j)=max(ZOOX(ng)%ROS(n,i,j),1.0d-10) !!!Error handring
-!
+
+    ZOOX(ng)%ROS(n,i,j)=ZOOX(ng)%ROS(n,i,j)               &
+                  +(                                      &
+                     F_zROS                                &
+                    -F_zROS                                & !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                   )*dt
+    ZOOX(ng)%ROS(n,i,j)=max(ZOOX(ng)%ROS(n,i,j),1.0d-10) !!!Error handring
+
 !------------------------------------------------------------------------
 ! Print section (for debug)
 
@@ -1890,13 +1897,13 @@ CONTAINS
     , Tamb            & ! Temperature (oC)
     , cCO2            & ! CO2 concentration in the coral tissue
     , cDO             & ! DO concentration in the coral tissue
-    , ROS             & ! ROS concentration in the coral tissue
+!    , ROS             & ! ROS concentration in the coral tissue
     , QCzr            & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
     !   output parameters
-    , Pg              & ! Gross photosynthetic rate (pmol cell-1 s-1)
-    , F_zDIC          & ! Flux of DIC  (pmol cell-1 s-1)
-    , F_zDO           & ! Flux of DO  (pmol cell-1 s-1)
-    , F_zROS          & ! Flux of Reactive Oxygen Species (pmol cell-1 s-1)
+    , Pg              & ! Gross photosynthetic rate (pmolC cell-1 s-1)
+    , F_zDIC          & ! Flux of DIC  (pmolC cell-1 s-1)
+    , F_zDO           & ! Flux of DO  (pmolO2 cell-1 s-1)
+    , F_psROS         & ! Flux of Reactive Oxygen Species from photosystem (pmol cell-1 s-1)
     )
 !-----------------------------------------------------------------------
 
@@ -1908,11 +1915,11 @@ CONTAINS
     real(8), intent(in) :: PFDsurf
     real(8), intent(in) :: Tamb
     real(8), intent(in) :: cCO2, cDO
-    real(8), intent(in) :: ROS
+!    real(8), intent(in) :: ROS
     real(8), intent(in) :: QCzr
 !        output parameters
     real(8), intent(out) :: Pg
-    real(8), intent(out) :: F_zDIC, F_zDO, F_zROS
+    real(8), intent(out) :: F_zDIC, F_zDO, F_psROS
 
 !------------Set Constants  ----------------------------------
     real(8), parameter :: PI  = 3.14159265359d0
@@ -1946,12 +1953,10 @@ CONTAINS
 !    real(8), parameter :: di = 1.7d-4     ! Natural decay from QAa to QAi (s-1)  !!!Assumed
     real(8), parameter :: ka = 3.0d-4     ! Repair rate of QAi to QAa (s-1) estimated from Takahashi et al. (2009) !!! TBD
 !    real(8), parameter :: ka = 5.0d-11     ! Repair rate of QAi to QAa (s-1) estimated from Takahashi et al. (2009) !!! TBD
-    real(8), parameter :: kad = 5.0d-5     ! Repair rate of QAid to QAi (s-1) estimated from Takahashi et al. (2009) !!! TBD
     real(8), parameter :: kros = 0.2d0   ! 
-    real(8), parameter :: kros2 = 0.2d0   ! 
+    real(8), parameter :: kros2 = 0.2d0   !
 
-    real(8), parameter :: kid = 2.0d-6    ! Rate constant of photoinhibition (s-1 (umol m-2 s-1)-1)
-    real(8), parameter :: kil = 3.0d-6    ! Rate constant of photoinhibition (s-1 (umol m-2 s-1)-1)
+    real(8), parameter :: NADPt = 0.2d0   ! = NADPH + NADP+ (pmol cell) **** Unknown *********** 
 
 !    real(8), parameter :: Ti2a = 32.1d0   ! (oC) estimated from Takahashi et al. (2004) A. digitifera
 !    real(8), parameter :: ai2a = 0.806d0  ! (K-1) estimated from Takahashi et al. (2004) A. digitifera
@@ -1963,12 +1968,12 @@ CONTAINS
 !    real(8), parameter :: kdam = 1.0d-6 ! (uM-1 s-1) estimated from Takahashi et al. (2004) A. digitifera
 
 !    real(8), parameter :: kchl = 1.0d-5    ! rate constant for chl (pg cell-1 s-1)
-    real(8), parameter :: kqad = 1.0d-5    ! rate constant for QAid degradation
     real(8), parameter :: kqap = 1.0d-11    ! rate constant for QAa production
-    real(8), parameter :: QCzrm = 50.0d0   ! Threashold reserv QC value for Chl production 
-    real(8), parameter :: uchl_max = 1.0d-4  ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
+    real(8), parameter :: QCzrm = 50.0d0    ! Threashold reserv QC value for Chl production 
+    real(8), parameter :: uchl_max = 1.0d-4 ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
+    real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1)
 !---------------------------------------------------------------------
-    real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
+!    real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
     real(8) :: QAa       ! Active RCII (pmol RCII cell-1)
     real(8) :: QAit      ! Total inhibited RCII (pmol RCII cell-1)
     real(8) :: RubisCO   ! Active fraction of RubisCO
@@ -1986,7 +1991,7 @@ CONTAINS
     real(8) :: Jid2i, ji2id
     real(8) :: kr       
     real(8) :: I2e       
-    real(8) :: K_QAi, K_QAid
+    real(8) :: K_QAi
     real(8) :: F_QAd, F_QAp
     real(8) :: dChl_dt   ! Chl concentration (pg/cell/s)
 
@@ -2031,19 +2036,13 @@ CONTAINS
 !---- Electrons that form ROS  (pmol ROS cell-1 s-1) ---
     J_ee = max(J_ep_in-J_ep, 0.0d0)
 !   mol of e- required to make mol ROS (mol e- mol RO-1) O2 + 2e- + 2H+ -> H2O2 
-    F_zROS = f_RO*J_ee*0.5d0
-
+    F_psROS = f_RO*J_ee*0.5d0
 
 !===== Photoinhibition calculation ==============================================
 
 !----- Active RCII -----------------
 !    QAa = QAt - ZOOX(ng)%QAi(n,i,j)
     QAa  = ZOOX(ng)%QAo(n,i,j) + ZOOX(ng)%QAr(n,i,j)
-!----- Total inhibited RCII -----------------
-    QAit = ZOOX(ng)%QAi(n,i,j) + ZOOX(ng)%QAid(n,i,j)
-!-----Total RCII -----------------
-!    QAt = ZOOX(ng)%Chl(n,i,j) * 1.5d-6  ! 1.5d-6: conversion factor from chl to QAt 
-    QAt  = QAa + QAit
 
 !---- Photoinihibition rate of QAa to QAi  (pmol RCII cell-1 s-1) ---
     Ja2i = ki*PFDsurf * QAa
@@ -2054,23 +2053,11 @@ CONTAINS
 !    K_QAi = QAt*0.01d0
 !    Ji2a = ka * ZOOX(ng)%QAi(n,i,j)/(K_QAi + ZOOX(ng)%QAi(n,i,j))  !!! ROS concentration dependent repair
 
-!---- Photodamage rate of QAi to QAid  (pmol RCII cell-1 s-1) --- !!!!!!!!!!!!!!!!! Need update
-    Ji2id = kid * ROS * ZOOX(ng)%QAi(n,i,j)
-!    Ji2id = kid * PFDsurf * ZOOX(ng)%QAi(n,i,j)
-
-!---- Repair rate of QAid to QAi  (pmol RCII cell-1 s-1) --- !!!!!!!!!!!!!!!!! Need update
-!    K_QAid = QAt*0.3d0
-!    Jid2i = kil * ZOOX(ng)%QAid(n,i,j)/(K_QAid + ZOOX(ng)%QAid(n,i,j)) * exp(-kros2*ROS)
-    Jid2i = kil * ZOOX(ng)%QAid(n,i,j) * exp(-kros2*ROS)
-
 !===== Chl dynamics calculation ==============================================
 !===== Chl concentration (pg/cell) ================================================
 !    ----- Chl dynamics parameters
 !    dChl_dt = uchl_max * (1.0d0 - QCzr/QCzr_max)
-    dChl_dt = dChl_dt - 3.0d-6*ROS + 3.0d-5
-
-! ----- QAid degradation rate (pmol RCII cell-1 s-1) -------
-    F_QAd = kqad * ZOOX(ng)%QAid(n,i,j)
+    dChl_dt = - 3.0d-6*ZOOX(ng)%ROS(n,i,j) + 3.0d-5
 
 ! ----- QAa production rate (pmol RCII cell-1 s-1) -------
     F_QAp = kqap * (1.0d0-QCzr/QCzrm)
@@ -2082,26 +2069,13 @@ CONTAINS
                  +(                                     &
                     Ja2i                                & ! Active to inactive
                    -Ji2a                                & ! Repair of QAi to QAo
-                   -Ji2id                               & ! Repair of QAi to QAo
-                   +Jid2i                               & ! Repair of QAi to QAo
+!                   -Ji2id                               & ! Repair of QAi to QAo
+!                   +Jid2i                               & ! Repair of QAi to QAo
                   )*dt
 !    ZOOX(ng)%QAi(n,i,j)=max(ZOOX(ng)%QAi(n,i,j), 0.0d0) !Error handring
 
-!----- dynamics of deep damaged QAi  -----------------
-    ZOOX(ng)%QAid(n,i,j) = ZOOX(ng)%QAid(n,i,j)  &
-        +(  Ji2id                                &
-          - Jid2i                                &
-          - F_QAd                                &
-          + F_QAp                                &
-        )*dt
-!    ZOOX(ng)%QAid(n,i,j)=min(ZOOX(ng)%QAid(n,i,j), 1.0d0)
-
-!-----Total RCII (updated) -----------------
-    QAt = QAt + ( F_QAp - F_QAd )*dt
-!----- Total inhibited RCII (updated) -----------------
-    QAit = ZOOX(ng)%QAi(n,i,j) + ZOOX(ng)%QAid(n,i,j)
 !-----Active RCII (updated) -----------------
-    QAa = QAt - QAit
+    QAa = QAt - ZOOX(ng)%QAi(n,i,j)
 
 !---- electron absorption rate (s-1) 
 !   = reduction of active QA (s-1) ---
@@ -2117,9 +2091,6 @@ CONTAINS
 
 !-----Oxidizes RCII -----------------
     ZOOX(ng)%QAo(n,i,j)=QAa-ZOOX(ng)%QAr(n,i,j)
-
-!----- Chl concentration (pg cell-1) -----------------
-!    ZOOX(ng)%Chl(n,i,j) =  QAt/1.2d-6   ! factor Chl -> QAt: 1.2d-6 ~1.7d-6 (Suggett et al. 2008)
 
 !-----Chl concentration (pg cell-1 s-1) -----------------
     ZOOX(ng)%Chl(n,i,j)=ZOOX(ng)%Chl(n,i,j)   &
@@ -2147,10 +2118,9 @@ CONTAINS
       write(40+n,'(*(g0:,", "))')                                          &
          date, PFDsurf, Tamb                                               &
        , ZOOX(ng)%QAo(n,i,j), ZOOX(ng)%QAr(n,i,j), ZOOX(ng)%QAi(n,i,j)     &
-       , ZOOX(ng)%QAid(n,i,j), QAit                                        &
        , QAt, QAa, FvFm, YII                                               &
        , J_ea, J_ep_in, J_ep, J_ee, J_ep_max                               &
-       , Ji2a, Ja2i, Ji2id, Jid2i, kr, s_ab, F_zROS, ROS                   &
+       , Ji2a, Ja2i, Ji2id, Jid2i, kr, s_ab, F_psROS, ZOOX(ng)%ROS(n,i,j)  &
        , Pg, J_ep_in*e2c, J_ep_max*e2c, F_zDIC, F_zDO                      &
        , ZOOX(ng)%Chl(n,i,j), F_QAd, F_QAp
       
