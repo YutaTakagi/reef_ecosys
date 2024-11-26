@@ -1975,7 +1975,7 @@ CONTAINS
 !---------------------------------------------------------------------
 !    real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
     real(8) :: QAa       ! Active RCII (pmol RCII cell-1)
-    real(8) :: QAit      ! Total inhibited RCII (pmol RCII cell-1)
+!    real(8) :: QAit      ! Total inhibited RCII (pmol RCII cell-1)
     real(8) :: RubisCO   ! Active fraction of RubisCO
     real(8) :: Vc, Vo, ftemp, TK   
     real(8) :: Gamma
@@ -2082,7 +2082,7 @@ CONTAINS
 !    s_ab = s_0*0.83d0*exp(-kros*ROS)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !    s_ab = s_0*0.83d0
 !    s_ab = s_0*0.65d0
-    s_ab = s_0*0.80d0*exp(-kros*QAit/QAt)
+    s_ab = s_0*0.80d0*exp(-kros*ZOOX(ng)%QAi(n,i,j)/QAt)
 
     kr = s_ab * phi * PFDsurf
 

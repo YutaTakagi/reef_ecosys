@@ -1,11 +1,4 @@
 
-/*#define USE_HEAT*/
-/*#define LONGWAVE_IN*/
-#define INPUT_BOTTOM_PFD
-
-/*#define REEF_FLOW*/
-
-
 /*----- CPP defines for coral module ----------------*/
 /***  Biological model options. (Original CPP flags) ***/
 #define REEF_ECOSYS
@@ -24,11 +17,11 @@
 # endif
 
 # define CORAL_POLYP  /* USE coral module */
-# define SEAGRASS     /* USE seagrass module */
-# define MACROALGAE        /* USE algae module  */
-# define SEDIMENT_ECOSYS        /* USE sedecosys module  */
+/*# define SEAGRASS*/     /* USE seagrass module */
+/*# define MACROALGAE*/        /* USE algae module  */
+/*# define SEDIMENT_ECOSYS*/        /* USE sedecosys module  */
 # if defined SEDIMENT_ECOSYS
-#  define SEDIMENT_EMPIRICAL     /* USE empirical sediment module  */
+/*#  define SEDIMENT_EMPIRICAL*/     /* USE empirical sediment module  */
 # endif
 
 # if defined ORGANIC_MATTER
@@ -61,6 +54,13 @@
 /*** Box model option ***/
 
 #define ECOSYS_TESTMODE
+
+/*#define USE_HEAT*/
+/*#define LONGWAVE_IN*/
+#define INPUT_BOTTOM_PFD
+
+/*#define REEF_FLOW*/
+
 /*#define ANA_SWRAD_LIGHT_DARK*/
 /*#define ANA_SWRAD_TAKAHASHI_ET_AL_2004*/
 #define ANA_SWRAD_ZILLMAN
