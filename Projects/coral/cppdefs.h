@@ -57,7 +57,7 @@
 
 /*#define USE_HEAT*/
 /*#define LONGWAVE_IN*/
-#define INPUT_BOTTOM_PFD
+/*#define INPUT_BOTTOM_PFD*/
 
 /*#define REEF_FLOW*/
 
