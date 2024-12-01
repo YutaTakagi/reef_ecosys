@@ -236,7 +236,7 @@ CONTAINS
 # endif
 #endif
 #if defined CORAL_ZOOXANTHELLAE
-          CORAL(ng)%ROS(n,i,j) = 0.0d0
+          CORAL(ng)%ROS(n,i,j) = 2.08 !0.0d0
 #endif
 #if defined CORAL_SIZE_DYNAMICS
           CORAL(ng)%growth(n,i,j) = 0.0d0
@@ -248,18 +248,18 @@ CONTAINS
           ZOOX(ng)%Pg(n,i,j)=0.d0
           ZOOX(ng)%R (n,i,j)=0.d0
           ZOOX(ng)%dens(n,i,j) = 1.0d6 ! (cell/cm2)
-          ZOOX(ng)%QC(n,i,j)   = 70.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
+          ZOOX(ng)%QC(n,i,j)   = 77.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
 !          ZOOX(ng)%QC(n,i,j)   = 120.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
                           ! QC0= 50.0d0
-          ZOOX(ng)%Chl(n,i,j)  = 4.0d0 ! (pg/cell) Suggett et al. 2008
+          ZOOX(ng)%Chl(n,i,j)  = 3.5 ! 2.0d0 ! (pg/cell) Suggett et al. 2008
 !          QAt = ZOOX(ng)%Chl(n,i,j)*1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
           QAt = 1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
           ZOOX(ng)%QAo(n,i,j) = QAt*0.6d0 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
           ZOOX(ng)%QAr(n,i,j) = 0.0d0
           ZOOX(ng)%QAi(n,i,j) = QAt*0.4d0
-          ZOOX(ng)%SOx(n,i,j) = 0.0d0 ! Superoxide (O2-)
-          ZOOX(ng)%NADPHn(n,i,j) = 0.0d0 ! normalized NADPH (no dim.) NADPH/(NADPH + NADP+) 
-          ZOOX(ng)%RuBPn(n,i,j) = 0.0d0  ! normalized RuBP  (no dim.) RuBP/(0.5*PGA + RuBP) 
+          ZOOX(ng)%SOx(n,i,j) = 0.5 !0.0d0 ! Superoxide (O2-)
+          ZOOX(ng)%NADPHn(n,i,j) = 0.085 !0.0d0 ! normalized NADPH (no dim.) NADPH/(NADPH + NADP+) 
+          ZOOX(ng)%RuBPn(n,i,j) = 0.091 !0.0d0  ! normalized RuBP  (no dim.) RuBP/(0.5*PGA + RuBP) 
 # if defined CORAL_CARBON_ISOTOPE
           ZOOX(ng)%Q13C(n,i,j) = R13C*ZOOX(ng)%QC(n,i,j)
 # endif
@@ -496,9 +496,9 @@ CONTAINS
     real(8), parameter :: CAT(Ncl)     = [ 5.0d-11, 5.0d-11 ]   ! Catalase concentration (M): !!!!!!! Tuning
     real(8), parameter :: k_dam(Ncl)   = [ 0.0d-5, 0.0d-5 ]   ! Reaction rate constant (s-1): !!!!!!! Tuning
     real(8), parameter :: a_dam(Ncl)   = [ 2.0d3,  2.0d3  ]   ! Constant ((nmol cm-2 s-1) -1): !!!!!!! Tuning
-    real(8), parameter :: k_Zelm(Ncl)  = [ 1.0d-8,  1.0d-8 ]   ! Reaction rate constant (cell cm-2 s-1): !!!!!!! Tuning
+    real(8), parameter :: k_Zelm(Ncl)  = [ 7.0d-9,  7.0d-9 ]   ! Reaction rate constant (cell cm-2 s-1): !!!!!!! Tuning
 !    real(8), parameter :: F_cROS(Ncl)  = [ 3.0d-1, 3.0d-1 ]   ! ROS production rate by coral (nmol cm-2 s-1): !!!!!!! Tuning
-    real(8), parameter :: a_cROS(Ncl)  = [ 1.0d-1, 1.0d-1 ]   ! ROS production rate by coral (nmol cm-2 s-1): !!!!!!! Tuning
+    real(8), parameter :: a_cROS(Ncl)  = [ 1.0d-2, 1.0d-2 ]   ! ROS production rate by coral (nmol cm-2 s-1): !!!!!!! Tuning
 #endif
 #if defined CORAL_CARBON_ISOTOPE
 !----- for carbon isotope ------------------------
@@ -1631,18 +1631,18 @@ CONTAINS
     real(8), parameter :: V_zoox = 5.0d-10   ! Volume of zooxanthellae (cm3/cells) ~300 um3 (Fujise et al. 2018)
                              ! ~500 um3 =5.e-10 cm3 (e.g. Jone 1997; Jones and Yellowlees 1997)
 !----- Respitration constants ---------------------------
-    real(8), parameter :: Rzmax  = 1.0d-5  ! Maximum respiration rate (pmol cell-1 s-1)
+    real(8), parameter :: Rzmax  = 5.0d-6  ! Maximum respiration rate (pmol cell-1 s-1)
                                            ! ~0.1 (pmol cell-1 h-1) = 2.8d-5 (pmol cell-1 s-1) (Suggett et al., 2008)
-    real(8), parameter :: K_QCzr = 30.0d0   ! (pmolC cell-1) (Asssumed)
+    real(8), parameter :: K_QCzr = 50.0d0   ! (pmolC cell-1) (Asssumed)
     real(8), parameter :: K_DO   = 5.d0    ! ca. 10 (umolO2 kg-1) Shick et al. (1990) *Tuned value
 
     real(8), parameter :: p2r   = 0.5d0    ! molC respiration/(molC protain) required respiration rate for 1 molC biosynthesis
-    real(8), parameter :: C_dec = 5.0d-6   ! (pmol cell-1 s-1) Decay rate 
+    real(8), parameter :: C_dec = 1.0d-6   ! (pmol cell-1 s-1) Decay rate 
 
 !----- C translocation constants ---------------------------
     real(8), parameter :: QC0 =  50.0d0    ! (pmolC/cell)  Minimal cell quota  ! 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
     real(8), parameter :: QCm = 120.0d0    ! (pmolC/cell)  Maximum cell quota  ! 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
-    real(8), parameter :: u_z2c = 2.0d-6   ! (s-1)  Cell-quota specific carbon translocation rate from zoox to host (Assumed)
+    real(8), parameter :: u_z2c = 1.0d-6   ! (s-1)  Cell-quota specific carbon translocation rate from zoox to host (Assumed)
     real(8), parameter :: u_c2z = 5.0d-7   ! (pmolC cell-1 (umol cm-2)-1 s-1)  Cell-quota specific carbon translocation rate from host to zoox (Assumed)
 
 !----- Chl dynamics constants ---------------------------
@@ -1974,7 +1974,7 @@ CONTAINS
     real(8), parameter :: ka = 3.0d-4     ! Repair rate of QAi to QAa (s-1) estimated from Takahashi et al. (2009) !!! TBD
 !    real(8), parameter :: ka = 5.0d-11     ! Repair rate of QAi to QAa (s-1) estimated from Takahashi et al. (2009) !!! TBD
     real(8), parameter :: kros = 0.2d0   ! 
-    real(8), parameter :: kros2 = 0.2d0   !
+    real(8), parameter :: kros2 = 1.0d0   !
 
     real(8), parameter :: Vsoxmax = 1.0d-5   ! maximum superoxide detox rate (pmol cell-1 s-1)  !!! Tuning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     real(8), parameter :: Ksox = 1.0d0      ! Half saturation constant (pmo; cell-1) !!! Tuning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2070,7 +2070,7 @@ CONTAINS
 !---- Repair rate of QAi to QAo  (pmol RCII cell-1 s-1) --- !!!!!!!!!!!!!!!!! Need update
 !    Ji2a = ka * QAi * exp(-kros2*ROS)  !!! ROS concentration dependent repair
 !    Ji2a = ka * QAi * exp(-kros2*ROS) * (J_ep_in*1.0d4)  !!! ROS concentration dependent repair
-    Ji2a = ka * QAi * exp(-kros2*ROS) * tanh(PFDsurf/5.0d0)  !!! ROS concentration dependent repair
+    Ji2a = ka * QAi * exp(-kros2*ROS) * tanh(PFDsurf/50.0d0)  !!! ROS concentration dependent repair
 
 ! ----- QAa production rate (pmol RCII cell-1 s-1) -------
     F_QAp = kqap * (1.0d0-QCzr/QCzrm)
@@ -2101,7 +2101,7 @@ CONTAINS
 !===== Chl dynamics calculation ==============================================
 !    dChl_dt = uchl_max * (1.0d0 - QCzr/QCzr_max)
 !    dChl_dt = - 3.0d-6*ROS + 3.0d-5
-    dChl_dt = 1.0d-6*(4.0d0-ROS)
+    dChl_dt = 1.0d-6*(3.0d0-ROS)
 !-----Chl concentration (pg cell-1) -----------------
     Chl = Chl + dChl_dt *dt
     Chl = max(Chl,0.0d0) !!!Error handring

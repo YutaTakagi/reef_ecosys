@@ -12,5 +12,8 @@ mkdir -p output
 #./ecosys_test.exe < coral_01.in
 ./ecosys_test.exe < coral_bl_T25.in
 ./ecosys_test.exe < coral_bl_T33.in
-./ecosys_test.exe < coral_bl_T14.in
+./ecosys_test.exe < coral_bl_T13.in
+#./ecosys_test.exe < coral_bl_T17.in
+#./ecosys_test.exe < coral_bl_T21.in
+#./ecosys_test.exe < coral_bl_T29.in
 #
