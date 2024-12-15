@@ -176,12 +176,13 @@ CONTAINS
 !!!  set initial conditions for coral polyp model (Nakamura et al. 2013)
 !!! **********************************************************************
 
-  SUBROUTINE initialize_coral(ng, LBi, UBi, LBj, UBj)
+  SUBROUTINE initialize_coral(ng, LBi, UBi, LBj, UBj, start_of_new_run)
     USE mod_geochem
     
     implicit none
 ! input parameters
     integer, intent(in) :: ng, LBi, UBi, LBj, UBj
+    logical, intent(in) :: start_of_new_run               ! TRUE = initialize coral, seagass, macroalgae, sediment from start; FALSE = continue from previous run
     real(8)  R13C
     real(8)  QAt
     integer i,j,n
@@ -190,91 +191,104 @@ CONTAINS
     do j=LBj,UBj
       do i=LBi,UBi
         do n=1,Ncl
-
 !      coral internal conditions
           CORAL(ng)%Pg(n,i,j)=0.d0
           CORAL(ng)%R (n,i,j)=0.d0
           CORAL(ng)%G (n,i,j)=0.d0
-
-          CORAL(ng)%TAcal (n,i,j)=2500.d0
-          CORAL(ng)%TAcoe (n,i,j)=2150.d0
-          CORAL(ng)%DICcal (n,i,j)=2000.d0
-          CORAL(ng)%DICcoe (n,i,j)=1950.d0
-          CORAL(ng)%DOcoe (n,i,j)=120.d0 !(umol/L)
-!          CORAL(ng)%QC (n,i,j)=15.d0 !450 ug/cm2 = 15 umol cm-2 -> 5.e6 umol kg-1 
-          CORAL(ng)%QC (n,i,j)=300.0d0 !290.d0 ! (umolC/cm2) Tanaka et al. 2018
-                        ! QC0=250.0d0
-#if defined CORAL_NONE_CO2_EQ
-          CORAL(ng)%cCO2aqcal(n,i,j)= 9.d0
-          CORAL(ng)%cCO2aqcoe(n,i,j)=33.d0
-#endif
-
-#if defined CORAL_CARBON_ISOTOPE
-# if defined CARBON_TRACE
-          CORAL(ng)%Q13C (n,i,j) = 0.0d0
-          CORAL(ng)%DI13Ccoe (n,i,j) = 0.0d0
-          CORAL(ng)%DI13Ccal (n,i,j) = 0.0d0
-#  if defined CORAL_NONE_CO2_EQ
-          CORAL(ng)%c13CO2aqcal(n,i,j) = 0.0d0
-          CORAL(ng)%c13CO2aqcoe(n,i,j) = 0.0d0
-#  endif
-# else
-          R13C=R13C_fromd13C(-17.d0)
-          CORAL(ng)%Q13C (n,i,j)=R13C*CORAL(ng)%QC(n,i,j)
-          R13C=R13C_fromd13C(0.d0)
-          CORAL(ng)%DI13Ccoe (n,i,j)=R13C*CORAL(ng)%DICcoe (n,i,j)
-          R13C=R13C_fromd13C(0.d0)
-          CORAL(ng)%DI13Ccal (n,i,j)=R13C*CORAL(ng)%DICcal (n,i,j)
-
-#  if defined CORAL_NONE_CO2_EQ
-          R13C=R13C_fromd13C(-8.d0)
-          CORAL(ng)%c13CO2aqcal(n,i,j)=R13C*CORAL(ng)%cCO2aqcal(n,i,j)
-
-          R13C=R13C_fromd13C(-8.d0)
-          CORAL(ng)%c13CO2aqcoe(n,i,j)=R13C*CORAL(ng)%cCO2aqcoe(n,i,j)
-#  endif
-# endif
-#endif
-#if defined CORAL_ZOOXANTHELLAE
-          CORAL(ng)%ROS(n,i,j) = 2.08 !0.0d0
-#endif
 #if defined CORAL_SIZE_DYNAMICS
           CORAL(ng)%growth(n,i,j) = 0.0d0
           CORAL(ng)%mort(n,i,j) = 0.0d0
-# endif
-
-
+#endif
 #if defined CORAL_ZOOXANTHELLAE
           ZOOX(ng)%Pg(n,i,j)=0.d0
           ZOOX(ng)%R (n,i,j)=0.d0
-          ZOOX(ng)%dens(n,i,j) = 1.0d6 ! (cell/cm2)
-          ZOOX(ng)%QC(n,i,j)   = 77.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
-!          ZOOX(ng)%QC(n,i,j)   = 120.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
-                          ! QC0= 50.0d0
-          ZOOX(ng)%Chl(n,i,j)  = 3.5 ! 2.0d0 ! (pg/cell) Suggett et al. 2008
-!          QAt = ZOOX(ng)%Chl(n,i,j)*1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
-          QAt = 1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
-          ZOOX(ng)%QAo(n,i,j) = QAt*0.6d0 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
-          ZOOX(ng)%QAr(n,i,j) = 0.0d0
-          ZOOX(ng)%QAi(n,i,j) = QAt*0.4d0
-          ZOOX(ng)%SOx(n,i,j) = 0.5 !0.0d0 ! Superoxide (O2-)
-          ZOOX(ng)%NADPHn(n,i,j) = 0.085 !0.0d0 ! normalized NADPH (no dim.) NADPH/(NADPH + NADP+) 
-          ZOOX(ng)%RuBPn(n,i,j) = 0.091 !0.0d0  ! normalized RuBP  (no dim.) RuBP/(0.5*PGA + RuBP) 
-# if defined CORAL_CARBON_ISOTOPE
-          ZOOX(ng)%Q13C(n,i,j) = R13C*ZOOX(ng)%QC(n,i,j)
-# endif
-# if defined CORAL_NUTRIENTS
-          ZOOX(ng)%NO3(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
-!          ZOOX(ng)%NO2(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
-          ZOOX(ng)%NH4(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
-          ZOOX(ng)%PO4(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
-          ZOOX(ng)%QN(n,i,j)  = 1.1d0  ! (pmolN/cell)  calculated from C:N:P = 116:16:1
-          ZOOX(ng)%QP(n,i,j)  = 0.07d0 ! (pmolP/cell)
-# endif
 #endif
         enddo
       enddo
     enddo
+
+! analytical start
+    if( start_of_new_run ) then
+      do j=LBj,UBj
+        do i=LBi,UBi
+          do n=1,Ncl
+
+!      coral internal conditions
+            CORAL(ng)%TAcal (n,i,j)=2500.d0
+            CORAL(ng)%TAcoe (n,i,j)=2150.d0
+            CORAL(ng)%DICcal (n,i,j)=2000.d0
+            CORAL(ng)%DICcoe (n,i,j)=1950.d0
+            CORAL(ng)%DOcoe (n,i,j)=120.d0 !(umol/L)
+!            CORAL(ng)%QC (n,i,j)=15.d0 !450 ug/cm2 = 15 umol cm-2 -> 5.e6 umol kg-1 
+            CORAL(ng)%QC (n,i,j)=300.0d0 !290.d0 ! (umolC/cm2) Tanaka et al. 2018
+                          ! QC0=250.0d0
+#if defined CORAL_NONE_CO2_EQ
+            CORAL(ng)%cCO2aqcal(n,i,j)= 9.d0
+            CORAL(ng)%cCO2aqcoe(n,i,j)=33.d0
+#endif
+
+#if defined CORAL_CARBON_ISOTOPE
+# if defined CARBON_TRACE
+            CORAL(ng)%Q13C (n,i,j) = 0.0d0
+            CORAL(ng)%DI13Ccoe (n,i,j) = 0.0d0
+            CORAL(ng)%DI13Ccal (n,i,j) = 0.0d0
+#  if defined CORAL_NONE_CO2_EQ
+            CORAL(ng)%c13CO2aqcal(n,i,j) = 0.0d0
+            CORAL(ng)%c13CO2aqcoe(n,i,j) = 0.0d0
+#  endif
+# else
+            R13C=R13C_fromd13C(-17.d0)
+            CORAL(ng)%Q13C (n,i,j)=R13C*CORAL(ng)%QC(n,i,j)
+            R13C=R13C_fromd13C(0.d0)
+            CORAL(ng)%DI13Ccoe (n,i,j)=R13C*CORAL(ng)%DICcoe (n,i,j)
+            R13C=R13C_fromd13C(0.d0)
+            CORAL(ng)%DI13Ccal (n,i,j)=R13C*CORAL(ng)%DICcal (n,i,j)
+
+#  if defined CORAL_NONE_CO2_EQ
+            R13C=R13C_fromd13C(-8.d0)
+            CORAL(ng)%c13CO2aqcal(n,i,j)=R13C*CORAL(ng)%cCO2aqcal(n,i,j)
+
+            R13C=R13C_fromd13C(-8.d0)
+            CORAL(ng)%c13CO2aqcoe(n,i,j)=R13C*CORAL(ng)%cCO2aqcoe(n,i,j)
+#  endif
+# endif
+#endif
+#if defined CORAL_ZOOXANTHELLAE
+            CORAL(ng)%ROS(n,i,j) = 2.08 !0.0d0
+#endif
+
+#if defined CORAL_ZOOXANTHELLAE
+            ZOOX(ng)%Pg(n,i,j)=0.d0
+            ZOOX(ng)%R (n,i,j)=0.d0
+            ZOOX(ng)%dens(n,i,j) = 1.0d6 ! (cell/cm2)
+            ZOOX(ng)%QC(n,i,j)   = 77.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
+!            ZOOX(ng)%QC(n,i,j)   = 120.0d0  ! (pmolC/cell) 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
+                            ! QC0= 50.0d0
+            ZOOX(ng)%Chl(n,i,j)  = 3.5 ! 2.0d0 ! (pg/cell) Suggett et al. 2008
+!            QAt = ZOOX(ng)%Chl(n,i,j)*1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
+            QAt = 1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
+            ZOOX(ng)%QAo(n,i,j) = QAt*0.6d0 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
+            ZOOX(ng)%QAr(n,i,j) = 0.0d0
+            ZOOX(ng)%QAi(n,i,j) = QAt*0.4d0
+            ZOOX(ng)%SOx(n,i,j) = 0.5 !0.0d0 ! Superoxide (O2-)
+            ZOOX(ng)%NADPHn(n,i,j) = 0.085 !0.0d0 ! normalized NADPH (no dim.) NADPH/(NADPH + NADP+) 
+            ZOOX(ng)%RuBPn(n,i,j) = 0.091 !0.0d0  ! normalized RuBP  (no dim.) RuBP/(0.5*PGA + RuBP) 
+# if defined CORAL_CARBON_ISOTOPE
+            ZOOX(ng)%Q13C(n,i,j) = R13C*ZOOX(ng)%QC(n,i,j)
+# endif
+# if defined CORAL_NUTRIENTS
+            ZOOX(ng)%NO3(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
+!            ZOOX(ng)%NO2(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
+            ZOOX(ng)%NH4(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
+            ZOOX(ng)%PO4(n,i,j) = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!!!!
+            ZOOX(ng)%QN(n,i,j)  = 1.1d0  ! (pmolN/cell)  calculated from C:N:P = 116:16:1
+            ZOOX(ng)%QP(n,i,j)  = 0.07d0 ! (pmolP/cell)
+# endif
+#endif
+          enddo
+        enddo
+      enddo
+    endif
 
     RETURN
 

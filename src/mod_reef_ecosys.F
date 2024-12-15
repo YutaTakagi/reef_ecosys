@@ -134,7 +134,7 @@ END SUBROUTINE allocate_reef_ecosys
     write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() start_of_new_run =', start_of_new_run
 
 #ifdef CORAL_POLYP
-    CALL initialize_coral(ng, LBi, UBi, LBj, UBj)
+    CALL initialize_coral(ng, LBi, UBi, LBj, UBj, start_of_new_run)
     write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished coral init'
 #endif
 #ifdef SEAGRASS
@@ -392,7 +392,7 @@ END SUBROUTINE allocate_reef_ecosys
     real(8), intent(inout) :: p_sgrass(Nsg)   ! yt_edit fix me! make coverage writeable
 #endif
 #ifdef MACROALGAE
-    real(8), intent(in) :: p_algae    
+    real(8), intent(in) :: p_algae(Nag)    
 #endif
 #ifdef SEDIMENT_ECOSYS
     real(8), intent(in) :: p_sand      
@@ -1582,50 +1582,51 @@ END SUBROUTINE allocate_reef_ecosys
 ! Compute algae model.
 !-----------------------------------------------------------------------
 !
-    IF(p_algae .gt. 0.0d0) THEN
-      CALL macroalgae            &
-!       input parameters
-        ( ng, 1, i, j    &   ! ng: nested grid number; n: seagrass compartment; i,j: position
-        , PFDbott        &   ! Photon flux density (umol m-2 s-1)
-        , rho_sw(1)      &   ! Density of seawater (g cm-3)
-        , DIC(1)         &   ! DIC (umol kg-1)
-        , DOx(1)         &   ! DO  (umol L-1)
+    DO icl=1,Nag    
+      IF(p_algae(icl) .gt. 0.0d0) THEN
+        CALL macroalgae    &
+!         input parameters
+          ( ng, icl, i, j  &   ! ng: nested grid number; n: macroalgae compartment; i,j: position
+          , PFDbott        &   ! Photon flux density (umol m-2 s-1)
+          , rho_sw(1)      &   ! Density of seawater (g cm-3)
+          , DIC(1)         &   ! DIC (umol kg-1)
+          , DOx(1)         &   ! DO  (umol L-1)
 # if defined NUTRIENTS         
-        , NH4(1)         &   ! NH4 concentration (umol L-1)
+          , NH4(1)         &   ! NH4 concentration (umol L-1)
 # endif
 # if defined CARBON_ISOTOPE
-        , DI13C(1)       &   ! 13C of DIC (umol kg-1)
+          , DI13C(1)       &   ! 13C of DIC (umol kg-1)
 # endif
 !       output parameters
-        , Flux_DIC       &   ! DIC uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_DO        &   ! DO  uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+          , Flux_DIC       &   ! DIC uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+          , Flux_DO        &   ! DO  uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
 # if defined NUTRIENTS         
-        , Flux_NO3       &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_NH4       &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
-        , Flux_PO4       &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+          , Flux_NO3       &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+          , Flux_NH4       &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+          , Flux_PO4       &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
 # endif
 # if defined CARBON_ISOTOPE
-        , Flux_DI13C     &   ! DI13C uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
+          , Flux_DI13C     &   ! DI13C uptake rate (mmol m-2 s-1)  * direction of water column to coral is positive
 # endif
-        )
+          )
 
       ! 1 mmol m-2 s-1, 1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
       ! cff: convert [mmol m-2 s-1] to [umol L-1 s-1]
 
-      cff = 1.0d0/dz(1) * p_algae
+        cff = 1.0d0/dz(1) * p_algae(icl)
 
-      dDIC_dt(1) = dDIC_dt(1) - Flux_DIC * cff/rho_sw(1)
-      dDOx_dt(1) = dDOx_dt(1) - Flux_DO  * cff
+        dDIC_dt(1) = dDIC_dt(1) - Flux_DIC * cff/rho_sw(1)
+        dDOx_dt(1) = dDOx_dt(1) - Flux_DO  * cff
 # if defined NUTRIENTS
-      dNO3_dt(1) = dNO3_dt(1) - Flux_NO3 * cff
-      dNH4_dt(1) = dNH4_dt(1) - Flux_NH4 * cff
-      dPO4_dt(1) = dPO4_dt(1) - Flux_PO4 * cff
+        dNO3_dt(1) = dNO3_dt(1) - Flux_NO3 * cff
+        dNH4_dt(1) = dNH4_dt(1) - Flux_NH4 * cff
+        dPO4_dt(1) = dPO4_dt(1) - Flux_PO4 * cff
 # endif
 # if defined CARBON_ISOTOPE
-      dDI13C_dt(1) = dDI13C_dt(1) - Flux_DI13C * cff/rho_sw(1)
+        dDI13C_dt(1) = dDI13C_dt(1) - Flux_DI13C * cff/rho_sw(1)
 # endif
-
-    END IF            
+      END IF            
+    END DO
 #endif
 
 
@@ -1848,10 +1849,10 @@ END SUBROUTINE allocate_reef_ecosys
       cff2=0.01d0*p_coral(2)*P2R(2)*3600.0d0  ! cff1: convert [nmol cm-2 s-1] to [mmol m-2 h-1]
 # endif
 # ifdef SEAGRASS
-      cff3 = p_sgrass*3600.0d0        ! cff2: convert [mmol m-2 s-1] to [mmol m-2 h-1]
+      cff3 = p_sgrass(1)*3600.0d0        ! cff2: convert [mmol m-2 s-1] to [mmol m-2 h-1]
 # endif
 # ifdef MACROALGAE
-      cff4 = p_algae *3600.0d0        ! cff3: convert [mmol m-2 s-1] to [mmol m-2 h-1]
+      cff4 = p_algae(1) *3600.0d0        ! cff3: convert [mmol m-2 s-1] to [mmol m-2 h-1]
 # endif
 # if defined SEDIMENT_ECOSYS
 #  if defined  SEDIMENT_EMPIRIXCAL

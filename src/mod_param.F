@@ -205,8 +205,8 @@ MODULE mod_param
   real(8), allocatable :: Wcal(:,:,:)
   
   real(8), allocatable :: p_coral(:,:,:)
-  real(8), allocatable :: p_sgrass(:,:)
-  real(8), allocatable :: p_algae(:,:)
+  real(8), allocatable :: p_sgrass(:,:,:)
+  real(8), allocatable :: p_algae(:,:,:)
   real(8), allocatable :: p_sand(:,:)
 
 contains
@@ -410,10 +410,10 @@ contains
    allocate( Warg(LBi:UBi, LBj:UBj, N) )
    allocate( Wcal(LBi:UBi, LBj:UBj, N) )
    
-   allocate( p_coral (2,LBi:UBi, LBj:UBj) , &
-             p_sgrass(LBi:UBi, LBj:UBj) , &
-             p_sand  (LBi:UBi, LBj:UBj) , &
-             p_algae (LBi:UBi, LBj:UBj)   )   
+   allocate( p_coral (2,LBi:UBi, LBj:UBj) , &  !!! To be updated... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+             p_sgrass(1,LBi:UBi, LBj:UBj) , &  !!! To be updated... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+             p_sand  (LBi:UBi, LBj:UBj) ,   &
+             p_algae (1,LBi:UBi, LBj:UBj)   )  !!! To be updated... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 
 
 !-----------------------------------------------------------------------
@@ -620,8 +620,8 @@ contains
         p_coral(2,i,j) = p_coral2_0
         p_sand(i,j)  = p_sand_0
 #endif
-        p_algae(i,j) = p_algae_0
-        p_sgrass(i,j)= p_sgrass_0
+        p_algae(1,i,j) = p_algae_0
+        p_sgrass(1,i,j)= p_sgrass_0
         
         
       enddo
