@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2025 Takashi NAKAMURA  =====
 !!!      modified by Shinya AMANO, Faisal AMRI, Jorge SUAREZ
 
 #include "cppdefs.h"
@@ -12,25 +12,26 @@ MODULE mod_foodweb
 
   implicit none
 
-  integer, parameter :: Ndom = 2     ! Number of Dissolved Organic Matter types
-  integer, parameter :: iLbl = 1     !  1: Labile DOM
-  integer, parameter :: iRfr = 2     !  2: Refractory DOM
+  integer, parameter :: Ndom   = 2    ! Number of Dissolved Organic Matter types
+  integer, parameter ::  iLDOM = 1    !  1: Labile DOM
+  integer, parameter ::  iRDOM = 2    !  2: Refractory DOM
 
-  integer, parameter :: Npom  = 2    ! Number of Particulate Organic Matter types
-  integer, parameter :: iDtr  = 1    !  1: Detritus
-  integer, parameter :: iCPOM = 2    !  2: Coarse POM (leaf litter, etc.)
+  integer, parameter :: Npom   = 3    ! Number of Particulate Organic Matter types
+  integer, parameter ::  iLPOM = 1    !  1: Labile POM
+  integer, parameter ::  iRPOM = 2    !  2: Refractory POM
+  integer, parameter ::  iCPOM = 3    !  3: Coarse POM (leaf litter, etc.)
 
-  integer, parameter :: Nphy  = 4    ! Number of Phytoplankton types
-  integer, parameter :: iDnfl = 1    !  1: Dinoflagellate
-  integer, parameter :: iDtm  = 2    !  2: Diatom
-  integer, parameter :: iCcl  = 3    !  3: Coccolithophorids
-  integer, parameter :: iCya  = 4    !  4: Cyanobacteria
+  integer, parameter :: Nphy   = 4    ! Number of Phytoplankton types
+  integer, parameter ::  iDnfl = 1    !  1: Dinoflagellate
+  integer, parameter ::  iDtm  = 2    !  2: Diatom
+  integer, parameter ::  iCcl  = 3    !  3: Coccolithophorids
+  integer, parameter ::  iCya  = 4    !  4: Cyanobacteria
    
-  integer, parameter :: Nzoo = 1     ! Number of Zooplankton types
-  integer, parameter :: iGzoo = 1    !  1: General Zooplankton
+  integer, parameter :: Nzoo   = 1    ! Number of Zooplankton types
+  integer, parameter ::  iGzoo = 1    !  1: General Zooplankton
 
-  integer, parameter :: Npim   = 1   ! Number of Particulate Inorganic Matter types
-  integer, parameter :: iCaCO3 = 1   !  1: Coccolith (CaCO3)
+  integer, parameter :: Npim    = 1   ! Number of Particulate Inorganic Matter types
+  integer, parameter ::  iCaCO3 = 1   !  1: Coccolith (CaCO3)
 
 !---- POM sinking parameters
   real(8), parameter :: rho_POM(Npom) = [ 1.1d0,  0.99d0 ]  ! ***** POM density [g/cm3] 
@@ -581,18 +582,18 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 #if defined CARBON_ISOTOPE
       dDI13C_dt = dDI13C_dt - Ep(k)*a_phot*rDI13C
 #endif
-      dDOC_dt(iLbl) = dDOC_dt(iLbl) + Ep(k)*rLDOMphy  !!!!!!**************
-      dDOC_dt(iRfr) = dDOC_dt(iRfr) + Ep(k)*(1.0d0-rLDOMphy)  !!!!!!**************
+      dDOC_dt(iLDOM) = dDOC_dt(iLDOM) + Ep(k)*rLDOMphy  !!!!!!**************
+      dDOC_dt(iRDOM) = dDOC_dt(iRDOM) + Ep(k)*(1.0d0-rLDOMphy)  !!!!!!**************
 #if defined CARBON_ISOTOPE
-!      dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Ep(k)*rPHY13C(k)
-      dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Ep(k)*rLDOMphy*a_phot*rDI13C
-      dDO13C_dt(iRfr) = dDO13C_dt(iRfr) + Ep(k)*(1.0d0-rLDOMphy)*a_phot*rDI13C
+!      dDO13C_dt(iLDOM) = dDO13C_dt(iLDOM) + Ep(k)*rPHY13C(k)
+      dDO13C_dt(iLDOM) = dDO13C_dt(iLDOM) + Ep(k)*rLDOMphy*a_phot*rDI13C
+      dDO13C_dt(iRDOM) = dDO13C_dt(iRDOM) + Ep(k)*(1.0d0-rLDOMphy)*a_phot*rDI13C
 #endif
 #if defined NUTRIENTS
-!      dDON_dt(iLbl) = dDON_dt(iLbl) + Ep(k)*rLDOMphy/rCNp(k)  !!!!!!**************
-!      dDOP_dt(iLbl) = dDOP_dt(iLbl) + Ep(k)*rLDOMphy/rCPp(k)  !!!!!!**************
-!      dDON_dt(iRfr) = dDON_dt(iRfr) + Ep(k)*(1.0d0-rLDOMphy)/rCNp(k)  !!!!!!**************
-!      dDOP_dt(iRfr) = dDOP_dt(iRfr) + Ep(k)*(1.0d0-rLDOMphy)/rCPp(k)  !!!!!!**************
+!      dDON_dt(iLDOM) = dDON_dt(iLDOM) + Ep(k)*rLDOMphy/rCNp(k)  !!!!!!**************
+!      dDOP_dt(iLDOM) = dDOP_dt(iLDOM) + Ep(k)*rLDOMphy/rCPp(k)  !!!!!!**************
+!      dDON_dt(iRDOM) = dDON_dt(iRDOM) + Ep(k)*(1.0d0-rLDOMphy)/rCNp(k)  !!!!!!**************
+!      dDOP_dt(iRDOM) = dDOP_dt(iRDOM) + Ep(k)*(1.0d0-rLDOMphy)/rCPp(k)  !!!!!!**************
 #endif
 
 !----- Respiration rate (umolC L-1 s-1) -----------------
@@ -628,19 +629,19 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 !     === Mass balance ===
 
       dPHY_dt(k) = dPHY_dt(k) - Mp(k)
-      dPOC_dt(iDtr) = dPOC_dt(iDtr) + Mp(k)
+      dPOC_dt(iLPOM) = dPOC_dt(iLPOM) + Mp(k)
       dPIC_dt(iCaCO3) = dPIC_dt(iCaCO3) + Mp(k)*rCCp(k)
 #if defined FOODWEB_TESTMODE
       dDeadPHY_dt(k) = dDeadPHY_dt(k) + Mp(k)
 #endif
 #if defined CARBON_ISOTOPE
       dPHY13C_dt(k) = dPHY13C_dt(k) - Mp(k)*rPHY13C(k)
-      dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Mp(k)*rPHY13C(k)
+      dPO13C_dt(iLPOM) = dPO13C_dt(iLPOM) + Mp(k)*rPHY13C(k)
       dPI13C_dt = dPI13C_dt + Mp(k)*rCCp(k)*a_calc/a_phot*rPHY13C(k)  !!!!!!********** Need check
 #endif
 #if defined NUTRIENTS
-      dPON_dt(iDtr) = dPON_dt(iDtr) + Mp(k)/rCNp(k)  !!!!!!**************
-      dPOP_dt(iDtr) = dPOP_dt(iDtr) + Mp(k)/rCPp(k)  !!!!!!**************
+      dPON_dt(iLPOM) = dPON_dt(iLPOM) + Mp(k)/rCNp(k)  !!!!!!**************
+      dPOP_dt(iLPOM) = dPOP_dt(iLPOM) + Mp(k)/rCPp(k)  !!!!!!**************
 #endif
     END DO
 
@@ -662,22 +663,22 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 
         dPHY_dt(m) = dPHY_dt(m) - Gp2z(m,k)
         dZOO_dt(k) = dZOO_dt(k) + Gp2z(m,k)*e_Gp2z(m,k)
-        dPOC_dt(iDtr) = dPOC_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))
+        dPOC_dt(iLPOM) = dPOC_dt(iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))
         dPIC_dt(iCaCO3) = dPIC_dt(iCaCO3) + Gp2z(m,k)*rCCp(m)
 #if defined CARBON_ISOTOPE
         dPHY13C_dt(m) = dPHY13C_dt(m) - Gp2z(m,k)*rPHY13C(m)
         dZOO13C_dt(k) = dZOO13C_dt(k) + Gp2z(m,k)*e_Gp2z(m,k)*a_grz*rPHY13C(m)
-        dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*a_grz)*rPHY13C(m)  !!!!****Need check
+        dPO13C_dt(iLPOM) = dPO13C_dt(iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*a_grz)*rPHY13C(m)  !!!!****Need check
 #endif
 #if defined NUTRIENTS
-        dPON_dt(iDtr) = dPON_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNp(m)
-        dPOP_dt(iDtr) = dPOP_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCPp(m)
+        dPON_dt(iLPOM) = dPON_dt(iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNp(m)
+        dPOP_dt(iLPOM) = dPOP_dt(iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCPp(m)
 #endif
       END DO
 
 !!!------- Microbial loop (implicitly assumed) ---------------
 
-!----- Grazing rate of DOC(iLbl) by ZOO (umolC L-1 s-1) -----------------
+!----- Grazing rate of DOC(iLDOM) by ZOO (umolC L-1 s-1) -----------------
 
       DO m=1, Ndom
         cf1 = DOC(m)
@@ -690,17 +691,17 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 !     === Mass balance ===
         dZOO_dt(k) = dZOO_dt(k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)
         dDOC_dt(m) = dDOC_dt(m) - Gdoc2z(m,k)
-        dDOC_dt(iLbl) = dDOC_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))
+        dDOC_dt(iLDOM) = dDOC_dt(iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))
 #if defined CARBON_ISOTOPE
         dZOO13C_dt(k) = dZOO13C_dt(k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)*a_grz*rDO13C(m)
         dDO13C_dt(m) = dDO13C_dt(m) - Gdoc2z(m,k)*rDO13C(m)
-        dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k)*a_grz)*rDO13C(m)
+        dDO13C_dt(iLDOM) = dDO13C_dt(iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k)*a_grz)*rDO13C(m)
 #endif
 #if defined NUTRIENTS
         dDON_dt(m) = dDON_dt(m) - Gdoc2z(m,k)/rCNz(k)
-        dDON_dt(iLbl) = dDON_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCNz(k)
+        dDON_dt(iLDOM) = dDON_dt(iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCNz(k)
         dDOP_dt(m) = dDOP_dt(m) - Gdoc2z(m,k)/rCPz(k)
-        dDOP_dt(iLbl) = dDOP_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCPz(k)
+        dDOP_dt(iLDOM) = dDOP_dt(iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCPz(k)
 #endif
       END DO
 
@@ -717,17 +718,17 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 !     === Mass balance ===
         dZOO_dt(k) = dZOO_dt(k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)
         dPOC_dt(m) = dPOC_dt(m) - Gpoc2z(m,k)
-        dPOC_dt(iDtr) = dPOC_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))
+        dPOC_dt(iLPOM) = dPOC_dt(iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))
 #if defined CARBON_ISOTOPE
         dZOO13C_dt(k) = dZOO13C_dt(k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)*a_grz*rPO13C(m)
         dPO13C_dt(m) = dPO13C_dt(m) - Gpoc2z(m,k)*rPO13C(m)  !!!!****Need check
-        dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k)*a_grz)*rPO13C(m)  !!!!****Need check
+        dPO13C_dt(iLPOM) = dPO13C_dt(iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k)*a_grz)*rPO13C(m)  !!!!****Need check
 #endif
 #if defined NUTRIENTS
         dPON_dt(m) = dPON_dt(m) - Gpoc2z(m,k)/rCNz(k)
-        dPON_dt(iDtr) = dPON_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCNz(k)
+        dPON_dt(iLPOM) = dPON_dt(iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCNz(k)
         dPOP_dt(m) = dPOP_dt(m) - Gpoc2z(m,k)/rCPz(k)
-        dPOP_dt(iDtr) = dPOP_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCPz(k)
+        dPOP_dt(iLPOM) = dPOP_dt(iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCPz(k)
 #endif
       END DO
   
@@ -762,14 +763,14 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
 !     === Mass balance ===
 
       dZOO_dt(k) = dZOO_dt(k) - Mz(k)
-      dPOC_dt(iDtr) = dPOC_dt(iDtr) + Mz(k)
+      dPOC_dt(iLPOM) = dPOC_dt(iLPOM) + Mz(k)
 #if defined CARBON_ISOTOPE
       dZOO13C_dt(k) = dZOO13C_dt(k) - Mz(k)*rZOO13C(k)
-      dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Mz(k)*rZOO13C(k)
+      dPO13C_dt(iLPOM) = dPO13C_dt(iLPOM) + Mz(k)*rZOO13C(k)
 #endif
 #if defined NUTRIENTS
-      dPON_dt(iDtr) = dPON_dt(iDtr) + Mz(k)/rCNz(k)
-      dPOP_dt(iDtr) = dPOP_dt(iDtr) + Mz(k)/rCPz(k)
+      dPON_dt(iLPOM) = dPON_dt(iLPOM) + Mz(k)/rCNz(k)
+      dPOP_dt(iLPOM) = dPOP_dt(iLPOM) + Mz(k)/rCPz(k)
 #endif
     END DO
 
@@ -908,10 +909,10 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
   !     === Mass balance ===
   
     dPOC_dt(iCPOM) = dPOC_dt(iCPOM) - Dcpoc2dtr
-    dPOC_dt(iDtr ) = dPOC_dt(iDtr ) + Dcpoc2dtr
+    dPOC_dt(iLPOM) = dPOC_dt(iLPOM) + Dcpoc2dtr
 #if defined CARBON_ISOTOPE
     dPO13C_dt(iCPOM) = dPO13C_dt(iCPOM) - Dcpoc2dtr*rPO13C(iCPOM)
-    dPO13C_dt(iDtr ) = dPO13C_dt(iDtr ) + Dcpoc2dtr*rPO13C(iCPOM)
+    dPO13C_dt(iLPOM) = dPO13C_dt(iLPOM) + Dcpoc2dtr*rPO13C(iCPOM)
 #endif               
 #if defined NUTRIENTS
     Dcpon2dtr = k_Dcpon2dtr * exp(b_Dcpon2dtr*Tmp) * PON(iCPOM)
@@ -923,9 +924,9 @@ real(8), parameter :: Kp_PO4(Nphy) = [5.0d-1, 5.0d-2, 6.0d-3, 1.5d-1]      ! (µ
   !     === Mass balance ===
   
     dPON_dt(iCPOM) = dPON_dt(iCPOM) - Dcpon2dtr
-    dPON_dt(iDtr ) = dPON_dt(iDtr ) + Dcpon2dtr
+    dPON_dt(iLPOM ) = dPON_dt(iLPOM ) + Dcpon2dtr
     dPOP_dt(iCPOM) = dPOP_dt(iCPOM) - Dcpop2dtr
-    dPOP_dt(iDtr ) = dPOP_dt(iDtr ) + Dcpop2dtr
+    dPOP_dt(iLPOM ) = dPOP_dt(iLPOM ) + Dcpop2dtr
 #endif
 
   

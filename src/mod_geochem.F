@@ -1,9 +1,27 @@
 
-!!!=== Copyright (c) 2012-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2025 Takashi NAKAMURA  =====
 
 module mod_geochem
 
   implicit none
+! ------ Number of Isotope species -----
+  integer, parameter :: N_Csp = 1  ! Number of Carbon species/isotopes
+  integer, parameter ::  iCt  = 1  ! Total carbon (12C+13C)
+  integer, parameter ::  iC13 = 2  ! 13C
+  integer, parameter ::  iD47 = 3  ! Clumpt isotope (47d)
+
+  integer, parameter :: N_Nsp = 1  ! Number of Nitrogen species/isotopes
+  integer, parameter ::  iNt  = 1  ! Total nitrogen (14N+15N)
+  integer, parameter ::  iN15 = 2  ! 15N
+
+  integer, parameter :: N_Psp = 1  ! Number of Phosphorous species
+  integer, parameter ::  iPt  = 1  ! Total phosphrous
+  integer, parameter ::  iP1  = 2  ! phosphrous tracer2
+
+  integer, parameter :: N_Ssp = 1  ! Number of Sulfur species/isotopes
+  integer, parameter ::  iSt  = 1  ! Total Sulfur (32S+34S)
+  integer, parameter ::  iS34 = 2  ! 34S
+
 ! ------ Isotope related parameter -----
   real(8), parameter :: R13C_VPDB = 0.011056d0/0.988944d0
   real(8), parameter :: R11B_SRM951 = 80.173d0/19.827d0  !NIST SRM 951 boric acid standard
@@ -1551,234 +1569,6 @@ contains
     return
   end function aB_Palmer1987
 
-
-!!!***********************************************************************
-!!!   Sediment biogeochemical parameters
-!!!*********************************************************************** 
-  !     Added by Masa Muto (2023)
-
-  ! ----For all of module which is newer than mod_sedecosys_MM3.F ---------!
-  ! ----For all of mod_sedecosys_test().F  ---------!
-
-  !!--- Diffusion coefficient in sediment --- !!
-  real(8) function Dsed(Dw,poro)  
-    implicit none
-    real(8), intent(in) :: Dw   ! diffusion coefficient in pure seawater
-    real(8), intent(in) :: poro ! porosity
-    Dsed = Dw / (1d0+3d0*(1d0-poro))
-    return
-  end function Dsed
-
-  !! Ficks law (diffusion)
-  ! General
-  real(8) function Ficks(D,C1,C2,dz)
-    implicit none
-    real(8), intent(in) :: D
-    real(8), intent(in) :: C1
-    real(8), intent(in) :: C2
-    real(8), intent(in) :: dz
-    Ficks =  D * (C1 - C2)/dz
-    return
-  end function Ficks
-  ! Dissolved compounds
-  real(8) function Ficks_sedd(D,C1,C2,dz,poro) ! for solutes
-    implicit none
-    real(8), intent(in) :: D
-    real(8), intent(in) :: C1
-    real(8), intent(in) :: C2
-    real(8), intent(in) :: dz
-    real(8), intent(in) :: poro
-    Ficks_sedd = poro * D * (C1 - C2)/dz
-    return
-  end function Ficks_sedd
-  ! Particle compounds
-  real(8) function Ficks_sedp(D,C1,C2,dz,poro,rho_s) ! for solids
-    implicit none
-    real(8), intent(in) :: D
-    real(8), intent(in) :: C1
-    real(8), intent(in) :: C2
-    real(8), intent(in) :: dz
-    real(8), intent(in) :: poro
-    real(8), intent(in) :: rho_s
-    Ficks_sedp = rho_s * (1d0-poro) * D * (C1 - C2)/dz
-    return
-  end function Ficks_sedp
-
-
-  !! --- Burial Flux calculation --- !!
-  ! Dissolved compounds
-  real(8) function FCd(poro,u,C)
-    implicit none
-    real(8), intent(in) :: poro ! porosity
-    real(8), intent(in) :: u    ! deposition rate
-    real(8), intent(in) :: C    ! compound concentration
-    FCd = poro * u * C
-    return
-  end function FCd
-! Particle compounds
-  real(8) function FCp(poro,u,C,rho_s)
-    implicit none
-    real(8), intent(in) :: poro
-    real(8), intent(in) :: u
-    real(8), intent(in) :: C
-    real(8), intent(in) :: rho_s ! soil density
-    FCp = rho_s * (1d0-poro) * u * C
-    return
-  end function FCp
-
-
-  !! --- Advection Flux calculation --- !!
-  ! Dissolved compounds
-  real(8) function FCa(poro1,poro2,u,C1,C2) ! (nmol cm-2 s-1)
-    implicit none
-    real(8), intent(in) :: poro1 ! [cm_w3/cm_s3]  porosity of layer above
-    real(8), intent(in) :: poro2 ! [cm_w3/cm_s3]  porosity of layer below
-    real(8), intent(in) :: u     ! [cm s-1]       advection velocity (advection downwards is positive)
-    real(8), intent(in) :: C1    ! [umol L_w-1]   compound concentration of layer above
-    real(8), intent(in) :: C2    ! [umol L_w-1]   compound concentration of layer below (µmol L-1 = nmol cm-3)
-    if (u >= 0) then
-    ! [nmol/cm_s2 s] = [cm_w3/cm_s3] [cm_s/s] [nmol/cm_w3]
-      Fca            = poro1         * u      * C1
-    else
-      Fca            = poro2         * u      * C2
-    endif
-    return
-  end function FCa
-
-
-  !! --- Reaction rate --- !!
-  ! reaction with solute * solute
-  real(8) function Vdd(k,poro,Cd1,Cd2)
-    implicit none
-    real(8), intent(in) :: k
-    real(8), intent(in) :: poro
-    real(8), intent(in) :: Cd1
-    real(8), intent(in) :: Cd2
-    Vdd = k * poro * Cd1 * Cd2
-    return
-  end function Vdd
-  ! reaction with solid * solute
-  real(8) function Vsd(k,poro,Cs1,Cd1,rho_s)
-    implicit none
-    real(8), intent(in) :: k
-    real(8), intent(in) :: poro
-    real(8), intent(in) :: Cs1
-    real(8), intent(in) :: Cd1
-    real(8), intent(in) :: rho_s
-    Vsd = k * rho_s * (1d0 - poro) * Cs1 * Cd1
-    return
-  end function Vsd
-  ! reaction with solid * solid
-  real(8) function Vss(k,poro,Cs1,Cs2,rho_s)
-    implicit none
-    real(8), intent(in) :: k
-    real(8), intent(in) :: poro
-    real(8), intent(in) :: Cs1
-    real(8), intent(in) :: Cs2
-    real(8), intent(in) :: rho_s
-    Vss = k * ((rho_s * (1d0 - poro))**2) * Cs1 * Cs2
-    return
-  end function Vss
-
-  !! Mass balance calculation in sediment column
-  !! solutes (dissolved)
-  real(8) function massbalance_sed_d(C,FTin,FTout,R,dz,poro,dt,misc_sources)
-    implicit none
-    real(8),intent(in) :: C             ! concentration                   (µmol L-1 = nmol cm-3)
-    real(8),intent(in) :: FTin          ! total flux (IN)                 (nmol cm-2 s-1)
-    real(8),intent(in) :: FTout         ! total flux (OUT)                (nmol cm-2 s-1)
-    real(8),intent(in) :: R             ! Net prodution and consumption   (nmol cm-3 s-1)
-    real(8),intent(in) :: dz            ! layer thickness                 (cm)
-    real(8),intent(in) :: poro          ! porosity                        (cm_w3 cm_s-3)
-    real(8),intent(in) :: dt            ! time step                       (s)
-    real(8),intent(in) :: misc_sources  ! other sources (like seagrass)   (µmol L-1 s-1)
-    real(8) :: Ccal
-
-       Ccal      =       C       +   ((FTin - FTout) / dz    +        R         )/   poro        *  dt + misc_sources * dt
-!  [nmol cm_w-3] = [nmol cm_w-3]   ([nmol cm_s-2 s-1]/(cm_s) + [nmol cm_s-3 s-1])/[cm_w3 cm_s-3] * [s] + [nmol g-1 s-1] [s]
-    Ccal = max(Ccal,0.0d0)
-    ! Ccal = min(Ccal,3.0d4)
-    ! Ccal = min(Ccal,1.0d4)
-    ! massbalance_sed_d = min(Ccal,1.0d4)
-    massbalance_sed_d = Ccal
-
-    return
-  end function massbalance_sed_d
-
-  !! solids (particulate)
-  real(8) function massbalance_sed_p(C,FTin,FTout,R,dz,poro,dt,rho_s,misc_sources)
-    implicit none
-    real(8),intent(in) :: C             ! concentration                  (nmol g-1)
-    real(8),intent(in) :: FTin          ! total flux  (IN)               (nmol cm-2 s-1)
-    real(8),intent(in) :: FTout         ! total flux  (OUT)              (nmol cm-2 s-1)
-    real(8),intent(in) :: R             ! Net prodution and consumption  (nmol cm-3 s-1)
-    real(8),intent(in) :: dz            ! layer thickness                (cm)
-    real(8),intent(in) :: poro          ! porosity                       (cm_w3 cm_s-3)
-    real(8),intent(in) :: dt            ! time step                      (s)
-    real(8),intent(in) :: rho_s         ! soil(wet) density              (g cm_w-3)
-    real(8),intent(in) :: misc_sources  ! other sources (like seagrass)  (nmol g-1 s-1)
-    real(8) :: Ccal
-
-       Ccal     =      C    +    ( (FTin -FTout)  /dz  +       R        )/(rho_s      *  (1d0 - poro) ) * dt  + misc_sources * dt
-  ! [nmol g-1]      [nmol g-1] + ([nmol cm-2 s-1]/[cm] + [nmol cm-3 s-1])/([g cm_w-3] * [cm_w3 cm_s-3]) * [s] + [nmol g-1 s-1] [s]
-    Ccal = max(Ccal,0.0d0)
-    ! Ccal = min(Ccal,1.0d4)
-    ! Ccal = min(Ccal,1.0d7)
-    ! massbalance_sed_p = min(Ccal,1.0d4)
-    massbalance_sed_p = Ccal
-
-    return
-  end function massbalance_sed_p
-
-
-  ! ------------For mod_sedecosys_MM2.F --------------!
-  !! almost out of use
-  !---O2---!
-  real(8) function DiffsedO2(temp,poro) !Diffuison coefficient of O2 (cm2 s-1)
-    implicit none
-    real(8), intent(in) :: temp   !temperature
-    real(8), intent(in) :: poro   !porosity
-
-    DiffsedO2 = (11.7d0 + 0.334d0*temp + 0.00505d0*temp**2.0d0) / (1.0d0+3.0d0*(1.0d0- poro)) *10d-6 
-    return
-  end function DiffsedO2
-  !---NO3---!
-  real(8) function DiffsedNO3(temp,poro) !Diffusion coefficient of NO3 (cm2 s-1)
-    implicit none
-    real(8), intent(in) :: temp   !temperature
-    real(8), intent(in) :: poro   !porosity
-
-    DiffsedNO3 = (9.72d0 + 0.365d0*temp) / (1.0d0+3.0d0*(1.0d0- poro)) *10d-6  
-    return
-  end function DiffsedNO3
-  !---NH4---!
-  real(8) function DiffsedNH4(temp,poro) !Diffusion coefficient of NH4 (cm2 s-1)
-    implicit none
-    real(8), intent(in) :: temp   !temperature
-    real(8), intent(in) :: poro   !porosity
-
-    DiffsedNH4 = (9.76d0 + 0.398d0*temp) / (1.0d0+3.0d0*(1.0d0- poro)) *10d-6 
-    return
-  end function DiffsedNH4
-  !---PO4---!
-  real(8) function DiffsedPO4(temp,poro) !Diffusion coefficient of PO4 (cm2 s-1)
-    implicit none
-    real(8), intent(in) :: temp   !temperature
-    real(8), intent(in) :: poro   !porosity
-
-    DiffsedPO4 = (9.76d0 + 0.398d0*temp) / (1.0d0+3.0d0*(1.0d0- poro)) *10d-6 
-    return
-  end function DiffsedPO4
-  !---Mn2+---!
-
-  !---Fe2+---! 
-
-  !---SO4---!
-
-  !---H2S---!
-
-
-!!!*********************************************************************
 !!!***********************************************************************
 !!!   Empirical vertical profiles of biogeochemical parameters
 !!!*********************************************************************** 

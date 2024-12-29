@@ -25,6 +25,9 @@ PROGRAM main
 #if defined REEF_FLOW
   USE mod_reef_flow
 #endif
+#if defined SEDIMENT_ECOSYS
+  USE mod_sedecosys
+#endif
 
   implicit none
   
@@ -58,16 +61,27 @@ PROGRAM main
   integer :: in_file(12)
   real(8) :: Tmax, time0
   integer :: nSetting
+#ifdef SEDIMENT_ECOSYS
+!  integer :: Nsed
+#endif
   logical :: start_of_new_run = .true.
 
   namelist/input_info/in_file
   namelist/ecosys_config/Tmax, time0
   namelist/ecosys_config/nSetting
+  namelist/ecosys_config/Nsed
+#ifdef SEDIMENT_ECOSYS
+!  namelist/sedecosys_config/Nsed
+#endif
 
   read (5, nml=input_info)
   rewind(5)
   read (5, nml=ecosys_config)
   rewind(5)
+#ifdef SEDIMENT_ECOSYS
+!  read (5, nml=sedecosys_config)
+!  rewind(5)
+#endif
   
 !----- Open output files -------------------------
 

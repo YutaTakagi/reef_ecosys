@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2025 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -1710,7 +1710,7 @@ END SUBROUTINE allocate_reef_ecosys
           , TA(1)*rho_sw(1) &   ! TA: Total alkalinity (umol L-1)
           , DOx(1)          &   ! DOx: Dissolved oxygen (umol L-1)
           , DIC(1)*rho_sw(1)&   ! DIC: Dissolved inorganic carbon (µmol L-1)   ! DIC(umol kg-1) * rho(kg L-1) = (umol L-1)
-          , 0.0d0           &   ! N2: Dissolved Nitrogen(µmol L-1)
+!          , 0.0d0           &   ! N2: Dissolved Nitrogen(µmol L-1)
 #  if defined ORGANIC_MATTER
           , POC(1,iDtr)     &   ! POC: Particulate organic carbon (DOC: umol L-1)
 #  endif
@@ -1764,7 +1764,7 @@ END SUBROUTINE allocate_reef_ecosys
           , Flux_TA        &   ! Total Alkalinity flux (??? cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_DO        &   ! DO  flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_DIC       &   ! DIC flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-          , Flux_N2        &   ! N2 flux
+!          , Flux_N2        &   ! N2 flux
 #  if defined ORGANIC_MATTER
           , Flux_sedPOC     &   ! POC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
 #  endif
@@ -1880,9 +1880,9 @@ END SUBROUTINE allocate_reef_ecosys
         , (ALGAE(1)%Pg(1,1,1)-ALGAE(1)%R (1,1,1))*cff4            &
 # endif
 # ifdef SEDIMENT_ECOSYS
-        , SEDECO(1)%Pg(1,1)*cff5, SEDECO(1)%R (1,1)*cff5          &
-        , (SEDECO(1)%Pg(1,1)-SEDECO(1)%R (1,1))*cff5              &
-        , SEDECO(1)%G (1,1)*cff5                                  &
+!        , SEDECO(1)%Pg(1,1)*cff5, SEDECO(1)%R (1,1)*cff5          &
+!        , (SEDECO(1)%Pg(1,1)-SEDECO(1)%R (1,1))*cff5              &
+!        , SEDECO(1)%G (1,1)*cff5                                  &
 # endif
         , dDIC_dt(1),dTA_dt(1), dDOx_dt(1)                        &
 # if defined ORGANIC_MATTER

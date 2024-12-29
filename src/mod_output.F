@@ -1,5 +1,6 @@
 
 !!!=== Copyright (c) 2017-2024 Takashi NAKAMURA  =====
+!!!  edited by Masa Muto 2023
 
 !--------------------------------------------------------------------------------
 !
@@ -212,29 +213,59 @@ END SUBROUTINE files_open
     close(45)
 #endif
 #if defined SEDIMENT_TESTMODE
-    close(56)
-    close(57)
+    ! close(56)
+    ! close(57)
     close(58)
-    close(59)
-    close(60)
+    ! close(59)
+    ! close(60)
     close(61)
-    close(62)
+    ! close(62)
     close(63)
     close(64)
     close(65)
     close(66)
-    close(67)
-    close(68)
-    close(69)
-    close(70)
-    close(71)
-    close(72)
-    close(73)
-    close(74)
-    close(75)
-    close(76)
-    close(78)
-    close(79)
+    ! close(67)
+    ! close(68)
+    ! close(69)
+    ! close(70)
+    ! close(71)
+    ! close(72)
+    ! close(73)
+    ! close(74)
+    ! close(75)
+    ! close(76)
+    ! close(78)
+    ! close(79)
+    close(80)
+    close(81)
+    close(82)
+    close(83)
+    close(84)
+    close(85)
+    close(86)
+    close(87)
+    close(88)
+    close(89)
+    close(90)
+    close(91)
+    ! close(92)
+    close(93)
+    close(94)
+    ! close(95)
+    close(96)
+    close(97)
+    close(98)
+    close(99)
+    close(100)
+    close(101)
+    close(102)
+    close(103)
+    close(104)
+    close(105)
+    close(106)
+    close(107)
+    close(108)
+
 #endif
 
     RETURN
@@ -537,7 +568,7 @@ END SUBROUTINE write_crl_ave_lavel
         ,'algae_Pg' , 'algae_R' , 'algae_Pn'                 &
 # endif
 # ifdef SEDIMENT_ECOSYS
-        ,'sedeco_Pg', 'sedeco_R', 'sedeco_Pn', 'sedeco_G'    &
+!        ,'sedeco_Pg', 'sedeco_R', 'sedeco_Pn', 'sedeco_G'    &
 # endif
         ,'dDIC_dt','dTA_dt','dDO_dt'                         &
 # if defined ORGANIC_MATTER
@@ -560,6 +591,30 @@ END SUBROUTINE write_crl_ave_lavel
 
   END SUBROUTINE write_ecosys_his_lavel
 #endif
-      
+#if defined SEDIMENT_TESTMODE
+! **********************************************************************
+!  Write lavel of coral internal conditions
+! **********************************************************************
+  SUBROUTINE write_sedeco_lavel(fid)
+  
+    ! USE mod_param
+    
+    implicit none
+    
+    integer, intent(in) :: fid
+    
+    ! write(fid,'(*(g0:,", "))') 'time', 'Temp', 'Salt' , 'O2'                         &
+    !     ,'Dw_O2','Ds_O2','Fd_O2','Fb_O2','Fc_O2','FT_O2','v1','R_O2'
+
+    ! write(fid,'(*(g0:,", "))') 'time', 'Temp', 'Salt' , 'DOCf'                         &
+    !     ,'Dw_DOCf','Ds_DOCf','Fd_DOCf','Fb_DOCf','Fc_DOCf','FT_DOCf','vdomf','R_DOCf'
+
+    write(fid,'(*(g0:,", "))') 'time', 'Temp', 'vOM','v1', 'v2', 'v3', 'v4', 'v5'
+
+    RETURN
+
+  END SUBROUTINE write_sedeco_lavel
+#endif
+
 END MODULE mod_output
 
