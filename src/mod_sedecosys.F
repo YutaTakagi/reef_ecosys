@@ -76,24 +76,19 @@ MODULE mod_sedecosys
     real(8), pointer :: O2 (:,:,:)    !! Dissolved Oxygen    (µmol l-1)
     real(8), pointer :: DIC(:,:,:,:)    !! Carbon dyoxide      (µmol l-1)
 !    real(8), pointer :: N2 (:,:,:)    !! Nitrogen            (µmol l-1)
-
 ! Organic matters
-# if defined ORGANIC_MATTER
     real(8), pointer :: DOC(:,:,:,:,:)    !! Dissolved organic carbon   (µmol l-1)
     real(8), pointer :: POC(:,:,:,:,:)    !! Particulate organic carbon (nmol g-1)
-# endif
 
 !  Nutrients dynamics
 # if defined NUTRIENTS
     real(8), pointer :: NO3(:,:,:,:)     !! Nitrate     (µmol l-1)
     real(8), pointer :: NH4(:,:,:,:)     !! Ammonium    (µmol l-1)
     real(8), pointer :: PO4(:,:,:,:)     !! Phosphate   (µmol l-1)
-#  if defined ORGANIC_MATTER
     real(8), pointer :: DON(:,:,:,:,:)     !! Dissolved organic nitrogen  (µmol l-1)
     real(8), pointer :: PON(:,:,:,:,:)     !! Particulate organic nitrogen (nmol g-1)
     real(8), pointer :: DOP(:,:,:,:,:)     !! Dissolved organic phosphorus  (µmol l-1)
     real(8), pointer :: POP(:,:,:,:,:)     !! Particulate organic phosphorus (nmol g-1)
-#  endif
 # endif
 
 ! Sulfur dynamics
@@ -115,18 +110,18 @@ MODULE mod_sedecosys
 !!! yuta_seagrass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>YT:Add
 # if defined SEAGRASS
 #  if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
-    real(8), pointer :: sg_dDIC_dt(:,:,:,:) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
+    real(8), pointer :: sg_dDIC_dt(:,:,:,:,:) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
     real(8), pointer :: sg_dO2_dt (:,:,:,:) ! (umol L-1 s-1) change in DO due to flux from seagrass (positive means seagrass to sediment)
 #  endif
 #  if defined SEAGRASS_ROOT_NUTRIENT_UPTAKE
-    real(8), pointer :: sg_dNO3_dt(:,:,:,:) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
-    real(8), pointer :: sg_dNH4_dt(:,:,:,:) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
-    real(8), pointer :: sg_dPO4_dt(:,:,:,:) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
+    real(8), pointer :: sg_dNO3_dt(:,:,:,:,:) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
+    real(8), pointer :: sg_dNH4_dt(:,:,:,:,:) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
+    real(8), pointer :: sg_dPO4_dt(:,:,:,:,:) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
 #  endif
 #  if defined SEAGRASS_ROOT_POM
-    real(8), pointer :: sg_dPOC_dt(:,:,:,:) ! (umol L-1 s-1) change in POC due to root death in sediment (positive means seagrass to sediment)
-    real(8), pointer :: sg_dPON_dt(:,:,:,:) ! (umol L-1 s-1) change in PON due to root death in sediment (positive means seagrass to sediment)
-    real(8), pointer :: sg_dPOP_dt(:,:,:,:) ! (umol L-1 s-1) change in POP due to root death in sediment (positive means seagrass to sediment)
+    real(8), pointer :: sg_dPOC_dt(:,:,:,:,:) ! (umol L-1 s-1) change in POC due to root death in sediment (positive means seagrass to sediment)
+    real(8), pointer :: sg_dPON_dt(:,:,:,:,:) ! (umol L-1 s-1) change in PON due to root death in sediment (positive means seagrass to sediment)
+    real(8), pointer :: sg_dPOP_dt(:,:,:,:,:) ! (umol L-1 s-1) change in POP due to root death in sediment (positive means seagrass to sediment)
 #  endif
 # endif
 !!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<YT:Add
@@ -173,23 +168,18 @@ CONTAINS
     allocate( SEDECO(ng)%TA  (0:Nsed,LBi:UBi,LBj:UBj) )  
     allocate( SEDECO(ng)%O2  (0:Nsed,LBi:UBi,LBj:UBj) )
     allocate( SEDECO(ng)%DIC (0:N_Csp,Nsed,LBi:UBi,LBj:UBj) )
-!    allocate( SEDECO(ng)%N2  (Nsed,LBi:UBi,LBj:UBj) )
     !! Organic Matter(Carbon)
-# if defined ORGANIC_MATTER
     allocate( SEDECO(ng)%DOC(N_Csp,Ndom  ,0:Nsed,LBi:UBi,LBj:UBj) )
     allocate( SEDECO(ng)%POC(N_Csp,Npom-1,0:Nsed,LBi:UBi,LBj:UBj) )
-# endif
     !! Nutrient dynamics
 # if defined NUTRIENTS
     allocate( SEDECO(ng)%NO3(N_Nsp,0:Nsed,LBi:UBi,LBj:UBj) )
     allocate( SEDECO(ng)%NH4(N_Nsp,0:Nsed,LBi:UBi,LBj:UBj) )
     allocate( SEDECO(ng)%PO4(N_Psp,0:Nsed,LBi:UBi,LBj:UBj) )
-#  if defined ORGANIC_MATTER
     allocate( SEDECO(ng)%DON(N_Nsp,Ndom,0:Nsed,LBi:UBi,LBj:UBj) )
     allocate( SEDECO(ng)%PON(N_Nsp,Npom-1,0:Nsed,LBi:UBi,LBj:UBj) )
     allocate( SEDECO(ng)%DOP(N_Psp,Ndom,0:Nsed,LBi:UBi,LBj:UBj) )
     allocate( SEDECO(ng)%POP(N_Psp,Npom-1,0:Nsed,LBi:UBi,LBj:UBj) )
-#  endif
 # endif     
     !! Sulfur dynamics
 # if defined SULFATE
@@ -315,18 +305,15 @@ CONTAINS
       SEDECO(ng)%O2 (:,:,:)  = 0.0d0        !DO  (µmol L-1)
       SEDECO(ng)%DIC(iCt ,:,:,:)  = 2000.0d0        !DIC  (µmol L-1)
       ! OM
-#  if defined ORGANIC_MATTER
       SEDECO(ng)%DOC(iCt,iLDOM,:,:,:)  = 0.0d0       !DOCf  (µmol L-1) 
       SEDECO(ng)%DOC(iCt,iRDOM,:,:,:)  = 2000.0d0       !DOCs  (µmol L-1) 
       SEDECO(ng)%POC(iCt,iLPOM,:,:,:)  = 0.0d0       !POCf  (nmol g-1) 
       SEDECO(ng)%POC(iCt,iRPOM,:,:,:)  = 1000.0d0      !POCs  (nmol g-1)
-#  endif
         ! Nutrient dynamics
 #  if defined NUTRIENTS
       SEDECO(ng)%NO3(iNt,:,:,:) = 5.0d0        !NO3  (µmol L-1) 
       SEDECO(ng)%NH4(iNt,:,:,:) = 50.0d0        !NH4  (µmol L-1) 
       SEDECO(ng)%PO4(iPt,:,:,:) = 10.0d0        !PO4  (µmol L-1) 
-#  if defined ORGANIC_MATTER                 
       SEDECO(ng)%DON(iNt,iLDOM,:,:,:) = SEDECO(ng)%DOC(iCt,iLDOM,:,:,:) / rCNph   !DON  (µmol L-1) 
       SEDECO(ng)%DON(iNt,iRDOM,:,:,:) = SEDECO(ng)%DOC(iCt,iRDOM,:,:,:) / rCNph   !DON  (µmol L-1) 
       SEDECO(ng)%PON(iNt,iLPOM,:,:,:) = SEDECO(ng)%POC(iCt,iLPOM,:,:,:) / rCNph   !PON  (µmol L-1) 
@@ -336,12 +323,11 @@ CONTAINS
       SEDECO(ng)%POP(iPt,iLPOM,:,:,:) = SEDECO(ng)%POC(iCt,iLPOM,:,:,:) / rCPph   !POP  (µmol L-1) 
       SEDECO(ng)%POP(iPt,iRPOM,:,:,:) = SEDECO(ng)%POC(iCt,iRPOM,:,:,:) / rCPph   !POP  (µmol L-1) 
 #  endif
-#  endif
         ! Sulfur dynamics
 #  if defined SULFATE
       SEDECO(ng)%Mn2(:,:,:) = 60.0d0    !Mn2  (µmol L-1) 
       SEDECO(ng)%MnO2(:,:,1:10) = 1.0d4   !MnO2  (nmol g-1) 
-      SEDECO(ng)%MnO2(:,:,11:Nsed(ng)) = 0.0d0   !MnO2  (nmol g-1) 
+      SEDECO(ng)%MnO2(:,:,11:Nsed) = 0.0d0   !MnO2  (nmol g-1) 
 
       SEDECO(ng)%Fe2 (:,:,:) = 0.0d0          !Fe2  (µmol L-1) 
       SEDECO(ng)%FeS (iSt,:,:,:) = 0.0d0          !FeS  (nmol g-1) 
@@ -464,23 +450,18 @@ CONTAINS
     , TAamb          &   ! TA: Total Alkalinity (kg L-1)
     , O2amb          &   ! O2: Dissolved oxygen (umol L-1)
     , DICamb         &   ! DIC: carbon dioxide  (µmol L-1)
-!    , N2amb          &   ! N2: Nitrogen         (µmol L-1)
-# if defined ORGANIC_MATTER
     , DOCamb         &   ! DOC: Dissolved organic carbon (µmol L-1)
     , POCamb         &   ! POC: Particulate organic carbon (nmol g-1)
-# endif
 # if defined NUTRIENTS
     , NO3amb         &   ! NO3: NO3 (umol L-1)
     , NH4amb         &   ! NH4: NH4 (umol L-1)
     , PO4amb         &   ! PO4: PO4 (umol L-1)
-#  if defined ORGANIC_MATTER
     , DONamb         &   ! DOC: Dissolved organic nitrogen (µmol L-1)
     , DOPamb         &   ! DOC: Dissolved organic phosporius (µmol L-1)
     , PONamb         &   ! PON: Particulate organic nitrogen (PON: umol L-1)
     , POPamb         &   ! POP: Particulate organic phosporius (POP: umol L-1)
-#  endif
 # endif
-# if defined SEDIMENT
+# if defined SEDECO_BURIAL
     , Fdep_sed       &  ! Sedimentation rate (cm s-1)
 # endif
 # if defined SULFATE
@@ -491,14 +472,12 @@ CONTAINS
     , Fdep_MnO2      &  ! MnO2 deposition flux (nmol cm-2 s-1)
     , Fdep_FeOOH     &  ! FeOOH depositoin flux (nmol cm-2 s-1)
 # endif
-# if defined ORGANIC_MATTER
     , Fdep_POC       &   ! POC deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-#  if defined NUTRIENTS
+# if defined NUTRIENTS
     , Fdep_PON       &   ! PON deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
     , Fdep_POP       &   ! POP deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-#  endif
 # endif
-# if defined SEDECO_ADVECTION
+# if defined SEDECO_SGD
     , sgd_flux          &   ! sumbarine groundwater discharge rate (cm s-1)  This flux is assumed to be the same throughout the sediment ecosystem layers (no compression/expansion) So volume flux doesn't change but concentrations of tracers do
     , sgd_Tmp_in        &   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
     , sgd_Sal_in        &   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
@@ -517,26 +496,22 @@ CONTAINS
     , Flux_TA        &   ! Total Alkalinity flux (???? cm-2 s-1)  * direction of water column to sediment is positive
     , Flux_DO        &   ! DO  flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
     , Flux_DIC       &   ! DIC flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-# if defined ORGANIC_MATTER
     , Flux_POC       &   ! POC(f,s,n) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-# endif
 # if defined NUTRIENTS
     , Flux_NO3       &   ! NO3 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
     , Flux_NH4       &   ! NH4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
     , Flux_PO4       &   ! PO4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-#  if defined ORGANIC_MATTER
     , Flux_PON       &   ! PON(f,s,n) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
     , Flux_POP       &   ! POP(f,s,n) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-#  endif
 # endif
 # if defined SULFATE
     , Flux_Mn2       &   ! Mn2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
-    , Flux_MnO2      &   ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
+!    , Flux_MnO2      &   ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
 
     , Flux_Fe2       &   ! Fe2 flux    (nmol cm-2 s-1) * direction of water column to sediment is positive
     ! , Flux_FeS       &   ! FeS flux    (nmol cm-2 s-1) * direction of water column to sediment is positive  ! yt_edit diffusion is not modeled so flux is zero
     ! , Flux_FeS2      &   ! FeS2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive  ! yt_edit diffusion is not modeled so flux is zero
-    , Flux_FeOOH     &   ! FeOOH flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
+    ! , Flux_FeOOH     &   ! FeOOH flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
     ! , Flux_FeOOH_PO4 &   ! FeOOH=PO43 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive  ! yt_edit diffusion is not modeled so flux is zero
 
     , Flux_H2S       &   ! H2S flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
@@ -564,21 +539,20 @@ CONTAINS
     real(8), intent(in) :: O2amb
     real(8), intent(in) :: DICamb(N_Csp)
     !! Organic matters (Carbon)
-# if defined ORGANIC_MATTER
     real(8), intent(in) :: DOCamb(N_Csp,Ndom)
     real(8), intent(in) :: POCamb(N_Csp,Npom-1)
-# endif
     !! Nutrient
 # if defined NUTRIENTS
     real(8), intent(in) :: NO3amb(N_Nsp)   
     real(8), intent(in) :: NH4amb(N_Nsp)   
     real(8), intent(in) :: PO4amb(N_Psp)   
-#  if defined ORGANIC_MATTER
     real(8), intent(in) :: DONamb(N_Nsp,Ndom)
     real(8), intent(in) :: DOPamb(N_Psp,Ndom)
     real(8), intent(in) :: PONamb(N_Nsp,Npom-1)
     real(8), intent(in) :: POPamb(N_Psp,Npom-1)
-#  endif
+# endif
+# if defined SEDECO_BURIAL
+    real(8), intent(in) :: Fdep_sed
 # endif
     !! Sulfate
 # if defined SULFATE
@@ -591,25 +565,23 @@ CONTAINS
     real(8), intent(in) :: Fdep_FeOOH
 # endif
 
-# if defined ORGANIC_MATTER
     real(8), intent(in) :: Fdep_POC(N_Csp,Npom-1)   
-#  if defined NUTRIENTS
+# if defined NUTRIENTS
     real(8), intent(in) :: Fdep_PON(N_Nsp,Npom-1)   
     real(8), intent(in) :: Fdep_POP(N_Psp,Npom-1)   
-#  endif
 # endif
 
-# if defined SEDECO_ADVECTION
+# if defined SEDECO_SGD
     real(8), intent(in) :: sgd_flux     ! Submarine Groundwater Discharge (SDG) volume flux (cm s-1)
     real(8), intent(in) :: sgd_Tmp_in   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
     real(8), intent(in) :: sgd_Sal_in   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
-    real(8), intent(in) :: sgd_DIC_in   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (umol L-1)
+    real(8), intent(in) :: sgd_DIC_in(N_Csp)   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (umol L-1)
     real(8), intent(in) :: sgd_TA_in    ! SGD concentration coming in through bottom: TA : Total alkalinity (umol L-1)
     real(8), intent(in) :: sgd_DOx_in   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
 #  if defined NUTRIENTS            
-    real(8), intent(in) :: sgd_NO3_in   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
-    real(8), intent(in) :: sgd_NH4_in   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
-    real(8), intent(in) :: sgd_PO4_in   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+    real(8), intent(in) :: sgd_NO3_in(N_Nsp)   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+    real(8), intent(in) :: sgd_NH4_in(N_Nsp)   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+    real(8), intent(in) :: sgd_PO4_in(N_Psp)   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
 #  endif
 # endif
 
@@ -620,26 +592,22 @@ CONTAINS
 
     real(8), intent(out) :: Flux_DO
     real(8), intent(out) :: Flux_DIC(N_Csp)
-# if defined ORGANIC_MATTER
     real(8), intent(out) :: Flux_POC(N_Csp,Npom-1)
-# endif
 # if defined NUTRIENTS
     real(8), intent(out) :: Flux_NO3(N_Nsp)
     real(8), intent(out) :: Flux_NH4(N_Nsp)
     real(8), intent(out) :: Flux_PO4(N_Psp)
-#  if defined ORGANIC_MATTER
     real(8), intent(out) :: Flux_PON(N_Nsp,Npom-1)
     real(8), intent(out) :: Flux_POP(N_Psp,Npom-1)
-#  endif
 # endif
 # if defined SULFATE
     real(8), intent(out) :: Flux_Mn2
-    real(8), intent(out) :: Flux_MnO2
+    ! real(8), intent(out) :: Flux_MnO2
 
     real(8), intent(out) :: Flux_Fe2
     ! real(8), intent(out) :: Flux_FeS (N_Ssp)
     ! real(8), intent(out) :: Flux_FeS2(N_Ssp)
-    real(8), intent(out) :: Flux_FeOOH
+    ! real(8), intent(out) :: Flux_FeOOH
     ! real(8), intent(out) :: Flux_FeOOH_PO4(N_Psp)
 
     real(8), intent(out) :: Flux_H2S(N_Ssp)
@@ -655,42 +623,38 @@ CONTAINS
     real(8) :: rhos_d(Nsed)    ! soil density (g cm_s-3)
     
 !! -- Diffusion coefficient -----------------------------------------
-    real(8) :: D_Tmp(Nsed) = 0.0d0
-    real(8) :: D_Sal(Nsed) = 0.0d0
-    real(8) :: D_O2 (Nsed) = 0.0d0
-    real(8) :: D_TA (Nsed) = 0.0d0
-    real(8) :: D_DIC(N_Csp,Nsed) = 0.0d0
-# if defined ORGANIC_MATTER
-    real(8) :: D_DOM(Ndom,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-!    real(8) :: D_DOC(N_Csp,Ndom,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-!    real(8) :: D_POC(N_Csp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory, 3:non-degratable
-# endif
+    real(8) :: D_Tmp(Nsed)
+    real(8) :: D_Sal(Nsed)
+    real(8) :: D_O2 (Nsed)
+    real(8) :: D_TA (Nsed)
+    real(8) :: D_DIC(N_Csp,Nsed)
+    real(8) :: D_DOM(Ndom,Nsed)    ! 1:labile, 2:refractory
+!    real(8) :: D_DOC(N_Csp,Ndom,Nsed)    ! 1:labile, 2:refractory
+!    real(8) :: D_POC(N_Csp,Npom-1,Nsed)    ! 1:labile, 2:refractory, 3:non-degratable
 # if defined NUTRIENTS
-    real(8) :: D_NO3(N_Nsp,Nsed) = 0.0d0
-    real(8) :: D_NH4(N_Nsp,Nsed) = 0.0d0
-    real(8) :: D_PO4(N_Psp,Nsed) = 0.0d0
-#  if defined ORGANIC_MATTER
-!    real(8) :: D_DON(N_Nsp,Ndom,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-!    real(8) :: D_PON(N_Nsp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory, 3:non-degratable
-!    real(8) :: D_DOP(N_Psp,Ndom,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-!    real(8) :: D_POP(N_Psp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory, 3:non-degratable
-#  endif
+    real(8) :: D_NO3(N_Nsp,Nsed)
+    real(8) :: D_NH4(N_Nsp,Nsed)
+    real(8) :: D_PO4(N_Psp,Nsed)
+!    real(8) :: D_DON(N_Nsp,Ndom,Nsed)    ! 1:labile, 2:refractory
+!    real(8) :: D_PON(N_Nsp,Npom-1,Nsed)    ! 1:labile, 2:refractory, 3:non-degratable
+!    real(8) :: D_DOP(N_Psp,Ndom,Nsed)    ! 1:labile, 2:refractory
+!    real(8) :: D_POP(N_Psp,Npom-1,Nsed)    ! 1:labile, 2:refractory, 3:non-degratable
 # endif
 # if defined SULFATE
-    real(8) :: D_Mn2(Nsed) = 0.0d0
-    real(8) :: D_MnO2(Nsed) = 0.0d0
-    real(8) :: D_Fe2 (N_Ssp,Nsed) = 0.0d0
-    real(8) :: D_FeS (N_Ssp,Nsed) = 0.0d0
-    real(8) :: D_FeS2(N_Ssp,Nsed) = 0.0d0
-    real(8) :: D_FeOOH(Nsed) = 0.0d0
-    real(8) :: D_FeOOH_PO4(N_Psp,Nsed) = 0.0d0
-    real(8) :: D_H2S(N_Ssp,Nsed) = 0.0d0
-    real(8) :: D_S0 (N_Ssp,Nsed) = 0.0d0
-    real(8) :: D_SO4(N_Ssp,Nsed) = 0.0d0
+    real(8) :: D_Mn2(Nsed)
+    real(8) :: D_MnO2(Nsed)
+    real(8) :: D_Fe2 (Nsed)
+    real(8) :: D_FeS (N_Ssp,Nsed)
+    real(8) :: D_FeS2(N_Ssp,Nsed)
+    real(8) :: D_FeOOH(Nsed)
+    real(8) :: D_FeOOH_PO4(N_Psp,Nsed)
+    real(8) :: D_H2S(N_Ssp,Nsed)
+    real(8) :: D_S0 (N_Ssp,Nsed)
+    real(8) :: D_SO4(N_Ssp,Nsed)
 # endif
     !! Biodifuusivity　(cm2 s-1)
-    real(8) :: DBd(Nsed) = 0.0d0    !(cm2 s-1)
-    real(8) :: DBp(Nsed) = 0.0d0    !(cm2 s-1)
+    real(8) :: DBd(Nsed)    !(cm2 s-1)
+    real(8) :: DBp(Nsed)    !(cm2 s-1)
 
     !! Adsorption constant K (cm3 g-1)
     real(8),parameter :: Kad_NO3 = 5.4d0   !(cm3 g-1)
@@ -706,42 +670,38 @@ CONTAINS
     ! real(8),parameter :: u = 0.5d0 / (365d0*24d0*60d0*60d0) ! (cm/sec) ! Mochida 2023
 # endif
 
-    real(8) :: Fw_Tmp(Nsed) = 0.0d0
-    real(8) :: Fw_Sal(Nsed) = 0.0d0
-    real(8) :: Fw_O2 (Nsed) = 0.0d0
-    real(8) :: Fw_TA (Nsed) = 0.0d0
-    real(8) :: Fw_DIC(N_Csp,Nsed) = 0.0d0
-# if defined ORGANIC_MATTER
-    real(8) :: Fw_DOC(N_Csp,Ndom,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-    real(8) :: Fw_POC(N_Csp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory, 3:non-degratable
-# endif
+    real(8) :: Fw_Tmp(Nsed)
+    real(8) :: Fw_Sal(Nsed)
+    real(8) :: Fw_O2 (Nsed)
+    real(8) :: Fw_TA (Nsed)
+    real(8) :: Fw_DIC(N_Csp,Nsed)
+    real(8) :: Fw_DOC(N_Csp,Ndom,Nsed)    ! 1:labile, 2:refractory
+    real(8) :: Fw_POC(N_Csp,Npom-1,Nsed)    ! 1:labile, 2:refractory, 3:non-degratable
 # if defined NUTRIENTS
-    real(8) :: Fw_NO3(N_Nsp,Nsed) = 0.0d0
-    real(8) :: Fw_NH4(N_Nsp,Nsed) = 0.0d0
-    real(8) :: Fw_PO4(N_Psp,Nsed) = 0.0d0
-#  if defined ORGANIC_MATTER
-    real(8) :: Fw_DON(N_Nsp,Ndom,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-    real(8) :: Fw_PON(N_Nsp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory, 3:non-degratable
-    real(8) :: Fw_DOP(N_Psp,Ndom,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-    real(8) :: Fw_POP(N_Psp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory, 3:non-degratable
-#  endif
+    real(8) :: Fw_NO3(N_Nsp,Nsed)
+    real(8) :: Fw_NH4(N_Nsp,Nsed)
+    real(8) :: Fw_PO4(N_Psp,Nsed)
+    real(8) :: Fw_DON(N_Nsp,Ndom,Nsed)    ! 1:labile, 2:refractory
+    real(8) :: Fw_PON(N_Nsp,Npom-1,Nsed)    ! 1:labile, 2:refractory, 3:non-degratable
+    real(8) :: Fw_DOP(N_Psp,Ndom,Nsed)    ! 1:labile, 2:refractory
+    real(8) :: Fw_POP(N_Psp,Npom-1,Nsed)    ! 1:labile, 2:refractory, 3:non-degratable
 # endif
 # if defined SULFATE
-    real(8) :: Fw_Mn2(Nsed) = 0.0d0
-    real(8) :: Fw_MnO2(Nsed) = 0.0d0
-    real(8) :: Fw_Fe2 (N_Ssp,Nsed) = 0.0d0
-    real(8) :: Fw_FeS (N_Ssp,Nsed) = 0.0d0
-    real(8) :: Fw_FeS2(N_Ssp,Nsed) = 0.0d0
-    real(8) :: Fw_FeOOH(Nsed) = 0.0d0
-    real(8) :: Fw_FeOOH_PO4(N_Psp,Nsed) = 0.0d0
-    real(8) :: Fw_H2S(N_Ssp,Nsed) = 0.0d0
-    real(8) :: Fw_S0 (N_Ssp,Nsed) = 0.0d0
-    real(8) :: Fw_SO4(N_Ssp,Nsed) = 0.0d0
+    real(8) :: Fw_Mn2(Nsed)
+    real(8) :: Fw_MnO2(Nsed)
+    real(8) :: Fw_Fe2 (Nsed)
+    real(8) :: Fw_FeS (N_Ssp,Nsed)
+    real(8) :: Fw_FeS2(N_Ssp,Nsed)
+    real(8) :: Fw_FeOOH(Nsed)
+    real(8) :: Fw_FeOOH_PO4(N_Psp,Nsed)
+    real(8) :: Fw_H2S(N_Ssp,Nsed)
+    real(8) :: Fw_S0 (N_Ssp,Nsed)
+    real(8) :: Fw_SO4(N_Ssp,Nsed)
 # endif
 
     !! Advection velocity
-    real(8) :: Wd(Nsed) = 0.0d0    ! Solutes advection velocity (cm s-1)
-    real(8) :: Wp(Nsed) = 0.0d0    ! Solids advection velocity (cm s-1)
+    real(8) :: Wd(Nsed)    ! Solutes advection velocity (cm s-1)
+    real(8) :: Wp(Nsed)    ! Solids advection velocity (cm s-1)
 
 !! -- Reaction parameters -----------------------------------------
 !!!! ============================================================== !!!
@@ -884,37 +844,54 @@ CONTAINS
 !! Net Production and Consumption  -------------------------------------------
     !! unit: (µmol L-1 s-1 = nmol cm-3 s-1)
     !! unit: (nmol g-1 s-1)
-    real(8) :: R_O2 (Nsed) = 0.0d0
-    real(8) :: R_TA (Nsed) = 0.0d0
-    real(8) :: R_DIC(N_Csp,Nsed) = 0.0d0
-# if defined ORGANIC_MATTER
-    real(8) :: R_DOC(N_Csp,Ndom,Nsed) = 0.0d0      ! 1:labile, 2:refractory
-    real(8) :: R_POC(N_Csp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-# endif
+    real(8) :: R_O2 (Nsed)
+    real(8) :: R_TA (Nsed)
+    real(8) :: R_DIC(N_Csp,Nsed)
+    real(8) :: R_DOC(N_Csp,Ndom,Nsed)      ! 1:labile, 2:refractory
+    real(8) :: R_POC(N_Csp,Npom-1,Nsed)    ! 1:labile, 2:refractory
 # if defined NUTRIENTS
-    real(8) :: R_NO3(N_Nsp,Nsed) = 0.0d0
-    real(8) :: R_NH4(N_Nsp,Nsed) = 0.0d0
-    real(8) :: R_PO4(N_Psp,Nsed) = 0.0d0
-#  if defined ORGANIC_MATTER
-    real(8) :: R_DON(N_Nsp,Ndom,Nsed) = 0.0d0      ! 1:labile, 2:refractory 
-    real(8) :: R_PON(N_Nsp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-    real(8) :: R_DOP(N_Psp,Ndom,Nsed) = 0.0d0      ! 1:labile, 2:refractory 
-    real(8) :: R_POP(N_Psp,Npom-1,Nsed) = 0.0d0    ! 1:labile, 2:refractory
-#  endif
+    real(8) :: R_NO3(N_Nsp,Nsed)
+    real(8) :: R_NH4(N_Nsp,Nsed)
+    real(8) :: R_PO4(N_Psp,Nsed)
+    real(8) :: R_DON(N_Nsp,Ndom,Nsed)      ! 1:labile, 2:refractory 
+    real(8) :: R_PON(N_Nsp,Npom-1,Nsed)    ! 1:labile, 2:refractory
+    real(8) :: R_DOP(N_Psp,Ndom,Nsed)      ! 1:labile, 2:refractory 
+    real(8) :: R_POP(N_Psp,Npom-1,Nsed)    ! 1:labile, 2:refractory
 # endif
 # if defined SULFATE
-    real(8) :: R_Mn2 (Nsed) = 0.0d0
-    real(8) :: R_MnO2(Nsed) = 0.0d0
-    real(8) :: R_Fe2 (Nsed) = 0.0d0
-    real(8) :: R_FeS (Nsed) = 0.0d0
-    real(8) :: R_FeS2(N_Ssp,Nsed) = 0.0d0
-    real(8) :: R_FeOOH(Nsed) = 0.0d0
-    real(8) :: R_FeOOH_PO4(N_Psp,Nsed) = 0.0d0
-    real(8) :: R_H2S(N_Ssp,Nsed) = 0.0d0
-    real(8) :: R_S0 (N_Ssp,Nsed) = 0.0d0
-    real(8) :: R_SO4(N_Ssp,Nsed) = 0.0d0
+    real(8) :: R_Mn2 (Nsed)
+    real(8) :: R_MnO2(Nsed)
+    real(8) :: R_Fe2 (Nsed)
+    real(8) :: R_FeS (N_Ssp,Nsed)
+    real(8) :: R_FeS2(N_Ssp,Nsed)
+    real(8) :: R_FeOOH(Nsed)
+    real(8) :: R_FeOOH_PO4(N_Psp,Nsed)
+    real(8) :: R_H2S(N_Ssp,Nsed)
+    real(8) :: R_S0 (N_Ssp,Nsed)
+    real(8) :: R_SO4(N_Ssp,Nsed)
 # endif
     real(8) :: cff, cff2, cff3, cfdd, cfsd, cfss
+
+    real(8) :: rDIC(N_Csp)
+    real(8) :: rDOC(N_Csp,Ndom)      ! 1:labile, 2:refractory
+    real(8) :: rPOC(N_Csp,Npom-1)    ! 1:labile, 2:refractory
+# if defined NUTRIENTS
+    real(8) :: rNO3(N_Nsp)
+    real(8) :: rNH4(N_Nsp)
+    real(8) :: rPO4(N_Psp)
+    real(8) :: rDON(N_Nsp,Ndom)      ! 1:labile, 2:refractory 
+    real(8) :: rPON(N_Nsp,Npom-1)    ! 1:labile, 2:refractory
+    real(8) :: rDOP(N_Psp,Ndom)      ! 1:labile, 2:refractory 
+    real(8) :: rPOP(N_Psp,Npom-1)    ! 1:labile, 2:refractory
+# endif
+# if defined SULFATE
+    real(8) :: rFeS (N_Ssp)
+    real(8) :: rFeS2(N_Ssp)
+    real(8) :: rFeOOH_PO4(N_Psp)
+    real(8) :: rH2S(N_Ssp)
+    real(8) :: rS0 (N_Ssp)
+    real(8) :: rSO4(N_Ssp)
+# endif
 
 !!  Output ------------------------------------------------------------------
 # if defined SEDIMENT_TESTMODE
@@ -941,20 +918,16 @@ CONTAINS
     SEDECO(ng)%TA (0,i,j)  = TAamb          ! TA: Total Alkalinity (kg L-1)
     SEDECO(ng)%O2 (0,i,j)  = O2amb          ! O2: Dissolved oxygen (umol L-1)
     SEDECO(ng)%DIC(:,0,i,j)= DICamb(:)    ! DIC: carbon dioxide  (µmol L-1)
-# if defined ORGANIC_MATTER
     SEDECO(ng)%DOC(:,:,0,i,j) = DOCamb(:,:)   ! DOC: Dissolved organic carbon (µmol L-1)
     SEDECO(ng)%POC(:,:,0,i,j) = POCamb(:,:)   ! POC: Particulate organic carbon (nmol g-1)
-# endif
 # if defined NUTRIENTS
     SEDECO(ng)%NO3(:,0,i,j) = NO3amb(:)         ! NO3: NO3 (umol L-1)
     SEDECO(ng)%NH4(:,0,i,j) = NH4amb(:)         ! NH4: NH4 (umol L-1)
     SEDECO(ng)%PO4(:,0,i,j) = PO4amb(:)         ! PO4: PO4 (umol L-1)
-#  if defined ORGANIC_MATTER
     SEDECO(ng)%DON(:,:,0,i,j) = DONamb(:,:)   ! DOC: Dissolved organic nitrogen (µmol L-1)
     SEDECO(ng)%DOP(:,:,0,i,j) = DOPamb(:,:)   ! DOC: Dissolved organic phosporius (µmol L-1)
     SEDECO(ng)%PON(:,:,0,i,j) = PONamb(:,:)   ! PON: Particulate organic nitrogen (PON: umol L-1)
     SEDECO(ng)%POP(:,:,0,i,j) = POPamb(:,:)   ! POP: Particulate organic phosporius (POP: umol L-1)
-#  endif
 # endif
 # if defined SULFATE
     SEDECO(ng)%Mn2(0,i,j) = Mn2amb         ! Mn2 (µmol L-1)
@@ -969,27 +942,23 @@ CONTAINS
 ! ********************************************************************* !
 !   Set bottom boundary values
 ! ********************************************************************* !
-# if defined SGD_ON
+# if defined SEDECO_SGD
 ! ???????????????????? To be updateed ?????????????????????????????????????????????????????????????????????????????????
     SEDECO(ng)%Tmp(Nsed,i,j)  = sgd_Tmp_in           ! Tmp: Temperature (oC)
     SEDECO(ng)%Sal(Nsed,i,j)  = sgd_Sal_in           ! Sal: Salinity (PSU)
     SEDECO(ng)%TA (Nsed,i,j)  = sgd_TA_in          ! TA: Total Alkalinity (kg L-1)
     SEDECO(ng)%O2 (Nsed,i,j)  = sgd_DOx_in          ! O2: Dissolved oxygen (umol L-1)
     SEDECO(ng)%DIC(:,Nsed,i,j)  = sgd_DIC_in(:)    ! DIC: carbon dioxide  (µmol L-1)
-#  if defined ORGANIC_MATTER
     SEDECO(ng)%DOC(:,:,Nsed,i,j) = DOCamb(:,:)   ! DOC: Dissolved organic carbon (µmol L-1)
     SEDECO(ng)%POC(:,:,Nsed,i,j) = POCamb(:,:)   ! POC: Particulate organic carbon (nmol g-1)
-#  endif
 #  if defined NUTRIENTS
     SEDECO(ng)%NO3(:,Nsed,i,j) = sgd_NO3_in(:)         ! NO3: NO3 (umol L-1)
     SEDECO(ng)%NH4(:,Nsed,i,j) = sgd_NH4_in(:)         ! NH4: NH4 (umol L-1)
     SEDECO(ng)%PO4(:,Nsed,i,j) = sgd_PO4_in(:)         ! PO4: PO4 (umol L-1)
-#   if defined ORGANIC_MATTER
     SEDECO(ng)%DON(:,:,Nsed,i,j) = DONamb(:,:)   ! DOC: Dissolved organic nitrogen (µmol L-1)
     SEDECO(ng)%DOP(:,:,Nsed,i,j) = DOPamb(:,:)   ! DOC: Dissolved organic phosporius (µmol L-1)
     SEDECO(ng)%PON(:,:,Nsed,i,j) = PONamb(:,:)   ! PON: Particulate organic nitrogen (PON: umol L-1)
     SEDECO(ng)%POP(:,:,Nsed,i,j) = POPamb(:,:)   ! POP: Particulate organic phosporius (POP: umol L-1)
-#   endif
 #  endif
 #  if defined SULFATE
     SEDECO(ng)%Mn2(Nsed,i,j) = Mn2amb         ! Mn2 (µmol L-1)
@@ -1008,20 +977,16 @@ CONTAINS
     SEDECO(ng)%TA (Nsed,i,j)  = SEDECO(ng)%TA (Nsed-1,i,j) ! TA: Total Alkalinity (kg L-1)
     SEDECO(ng)%O2 (Nsed,i,j)  = SEDECO(ng)%O2 (Nsed-1,i,j) ! O2: Dissolved oxygen (umol L-1)
     SEDECO(ng)%DIC(:,Nsed,i,j)= SEDECO(ng)%DIC(:,Nsed-1,i,j)    ! DIC: carbon dioxide  (µmol L-1)
-#  if defined ORGANIC_MATTER
     SEDECO(ng)%DOC(:,:,Nsed,i,j) = SEDECO(ng)%DOC(:,:,Nsed-1,i,j)   ! DOC: Dissolved organic carbon (µmol L-1)
     SEDECO(ng)%POC(:,:,Nsed,i,j) = SEDECO(ng)%POC(:,:,Nsed-1,i,j)   ! POC: Particulate organic carbon (nmol g-1)
-#  endif
 #  if defined NUTRIENTS
     SEDECO(ng)%NO3(:,Nsed,i,j) = SEDECO(ng)%NO3(:,Nsed-1,i,j)    ! NO3: NO3 (umol L-1)
     SEDECO(ng)%NH4(:,Nsed,i,j) = SEDECO(ng)%NH4(:,Nsed-1,i,j)    ! NH4: NH4 (umol L-1)
     SEDECO(ng)%PO4(:,Nsed,i,j) = SEDECO(ng)%PO4(:,Nsed-1,i,j)    ! PO4: PO4 (umol L-1)
-#   if defined ORGANIC_MATTER
     SEDECO(ng)%DON(:,:,Nsed,i,j) = SEDECO(ng)%DON(:,:,Nsed-1,i,j)  ! DOC: Dissolved organic nitrogen (µmol L-1)
     SEDECO(ng)%DOP(:,:,Nsed,i,j) = SEDECO(ng)%DOP(:,:,Nsed-1,i,j)  ! DOC: Dissolved organic phosporius (µmol L-1)
     SEDECO(ng)%PON(:,:,Nsed,i,j) = SEDECO(ng)%PON(:,:,Nsed-1,i,j)  ! PON: Particulate organic nitrogen (PON: umol L-1)
     SEDECO(ng)%POP(:,:,Nsed,i,j) = SEDECO(ng)%POP(:,:,Nsed-1,i,j)  ! POP: Particulate organic phosporius (POP: umol L-1)
-#   endif
 #  endif
 #  if defined SULFATE
     SEDECO(ng)%Mn2 (Nsed,i,j) = SEDECO(ng)%Mn2 (Nsed-1,i,j)    ! Mn2 (µmol L-1)
@@ -1045,10 +1010,8 @@ CONTAINS
       D_O2 (k) = (11.7d0 + 0.344d0*SEDECO(ng)%Tmp(k,i,j) + 0.00505d0*SEDECO(ng)%Tmp(k,i,j)**2d0) *(1.0d-6)
       D_DIC(iCt ,k) = (9.39d0 + 0.267d0*SEDECO(ng)%Tmp(k,i,j) + 0.0041d0 *SEDECO(ng)%Tmp(k,i,j)**2d0) *(1.0d-6) 
 !      D_DIC(iC13,k) = (9.39d0 + 0.267d0*SEDECO(ng)%Tmp(k,i,j) + 0.0041d0 *SEDECO(ng)%Tmp(k,i,j)**2d0) *(1.0d-6) 
-# if defined ORGANIC_MATTER
       D_DOM(iLDOM,k) = (9.76d0 + 0.398d0*SEDECO(ng)%Tmp(k,i,j)) *(1.0d-7) ! DOMf: DOCf DONf DOPf ??????????????????
       D_DOM(iRDOM,k) = (9.76d0 + 0.398d0*SEDECO(ng)%Tmp(k,i,j)) *(1.0d-9) ! DOMs: DOCs DONs DOPs ??????????????????
-# endif
 # if defined NUTRIENTS
       D_NO3(iNt ,k)  = (9.72d0 + 0.365d0*SEDECO(ng)%Tmp(k,i,j))  *(1.0d-6)
       D_NH4(iNt ,k)  = (9.76d0 + 0.398d0*SEDECO(ng)%Tmp(k,i,j))  *(1.0d-6)
@@ -1090,11 +1053,9 @@ CONTAINS
       DO isp=1,N_Csp
         D_DIC(isp,k) = cff*D_DIC(isp,k) + DBd(k)
       ENDDO
-# if defined ORGANIC_MATTER
       DO m = 1,Ndom
         D_DOM(m,k) = cff*D_DOM(m,k) + DBd(k) ! DOMf: DOCf DONf DOPf
       ENDDO
-# endif
 # if defined NUTRIENTS
       DO isp=1,N_Nsp
         D_NO3(isp,k)  = cff*D_NO3(isp,k) + DBd(k)
@@ -1129,19 +1090,18 @@ CONTAINS
       ENDDO
 # if defined NUTRIENTS
       DO isp = 1,N_Nsp
-        Fw_NO3(isp,k) = Ficks(D_NO3(k),SEDECO(ng)%NO3(k-1,i,j),SEDECO(ng)%NO3(k,i,j),SEDECO(ng)%dzw(k))
-        Fw_NH4(isp,k) = Ficks(D_NH4(k),SEDECO(ng)%NH4(k-1,i,j),SEDECO(ng)%NH4(k,i,j),SEDECO(ng)%dzw(k))
+        Fw_NO3(isp,k) = Ficks(D_NO3(isp,k),SEDECO(ng)%NO3(isp,k-1,i,j),SEDECO(ng)%NO3(isp,k,i,j),SEDECO(ng)%dzw(k))
+        Fw_NH4(isp,k) = Ficks(D_NH4(isp,k),SEDECO(ng)%NH4(isp,k-1,i,j),SEDECO(ng)%NH4(isp,k,i,j),SEDECO(ng)%dzw(k))
       ENDDO
       DO isp = 1,N_Psp
-        Fw_PO4(isp,k) = Ficks(D_PO4(k),SEDECO(ng)%PO4(k-1,i,j),SEDECO(ng)%PO4(k,i,j),SEDECO(ng)%dzw(k))
+        Fw_PO4(isp,k) = Ficks(D_PO4(isp,k),SEDECO(ng)%PO4(isp,k-1,i,j),SEDECO(ng)%PO4(isp,k,i,j),SEDECO(ng)%dzw(k))
       ENDDO
 # endif
-# if defined ORGANIC_MATTER
       DO m = 1,Ndom
         DO isp = 1,N_Csp
           Fw_DOC(isp,m,k) = Ficks(D_DOM(m,k),SEDECO(ng)%DOC(isp,m,k-1,i,j),SEDECO(ng)%DOC(isp,m,k,i,j),SEDECO(ng)%dzw(k))
         ENDDO
-#  if defined NUTRIENTS
+# if defined NUTRIENTS
         DO isp = 1,N_Nsp
           Fw_DON(isp,m,k) = Ficks(D_DOM(m,k),SEDECO(ng)%DON(isp,m,k-1,i,j),SEDECO(ng)%DON(isp,m,k,i,j),SEDECO(ng)%dzw(k)) ! DONf
         ENDDO
@@ -1149,7 +1109,6 @@ CONTAINS
           Fw_DOP(isp,m,k) = Ficks(D_DOM(m,k),SEDECO(ng)%DOP(isp,m,k-1,i,j),SEDECO(ng)%DOP(isp,m,k,i,j),SEDECO(ng)%dzw(k)) ! DONf
         ENDDO
       ENDDO
-#  endif
 # endif
 # if defined SULFATE
       Fw_Mn2(k)   = Ficks(D_Mn2(k),SEDECO(ng)%Mn2(k-1,i,j),SEDECO(ng)%Mn2(k,i,j),SEDECO(ng)%dzw(k))
@@ -1160,12 +1119,11 @@ CONTAINS
       ENDDO
 # endif
 ! --- Solids -----
-# if defined ORGANIC_MATTER
       DO m = 1,Npom-1
         DO isp = 1,N_Csp
           Fw_POC(isp,m,k) = Ficks(DBp(k),SEDECO(ng)%POC(isp,m,k-1,i,j),SEDECO(ng)%POC(isp,m,k,i,j),SEDECO(ng)%dzw(k))
         ENDDO
-#  if defined NUTRIENTS
+# if defined NUTRIENTS
         DO isp = 1,N_Nsp
           Fw_PON(isp,m,k) = Ficks(DBp(k),SEDECO(ng)%PON(isp,m,k-1,i,j),SEDECO(ng)%PON(isp,m,k,i,j),SEDECO(ng)%dzw(k))
         ENDDO
@@ -1173,56 +1131,34 @@ CONTAINS
           Fw_POP(isp,m,k) = Ficks(DBp(k),SEDECO(ng)%POP(isp,m,k-1,i,j),SEDECO(ng)%POP(isp,m,k,i,j),SEDECO(ng)%dzw(k))
         ENDDO
       ENDDO
-#  endif
 # endif
 # if defined SULFATE
       Fw_MnO2(k)  = Ficks(DBp(k),SEDECO(ng)%MnO2(k-1,i,j),SEDECO(ng)%MnO2(k,i,j),SEDECO(ng)%dzw(k))
       Fw_FeOOH(k) = Ficks(DBp(k),SEDECO(ng)%FeOOH(k-1,i,j),SEDECO(ng)%FeOOH(k,i,j),SEDECO(ng)%dzw(k))
       DO isp = 1,N_Psp
-        Fw_FeOOH_PO4(k) &
+        Fw_FeOOH_PO4(isp,k) &
           = Ficks(DBp(k),SEDECO(ng)%FeOOH_PO4(isp,k-1,i,j),SEDECO(ng)%FeOOH_PO4(isp,k,i,j),SEDECO(ng)%dzw(k))
       ENDDO
       DO isp=1,N_Ssp
-        Fw_FeS(k)  = Ficks(DBp(k),SEDECO(ng)%FeS (isp,k-1,i,j),SEDECO(ng)%FeS (isp,k,i,j),SEDECO(ng)%dzw(k))
-        Fw_FeS2(k) = Ficks(DBp(k),SEDECO(ng)%FeS2(isp,k-1,i,j),SEDECO(ng)%FeS2(isp,k,i,j),SEDECO(ng)%dzw(k))
-        Fw_S0(k)   = Ficks(DBp(k),SEDECO(ng)%S0  (isp,k-1,i,j),SEDECO(ng)%S0  (isp,k,i,j),SEDECO(ng)%dzw(k))
+        Fw_FeS(isp,k)  = Ficks(DBp(k),SEDECO(ng)%FeS (isp,k-1,i,j),SEDECO(ng)%FeS (isp,k,i,j),SEDECO(ng)%dzw(k))
+        Fw_FeS2(isp,k) = Ficks(DBp(k),SEDECO(ng)%FeS2(isp,k-1,i,j),SEDECO(ng)%FeS2(isp,k,i,j),SEDECO(ng)%dzw(k))
+        Fw_S0(isp,k)   = Ficks(DBp(k),SEDECO(ng)%S0  (isp,k-1,i,j),SEDECO(ng)%S0  (isp,k,i,j),SEDECO(ng)%dzw(k))
       ENDDO
 # endif
     ENDDO
-
-!!! (3) Adsorption (nmol cm-2 s-1) ------------------------------------------
-!# if defined adsorption
-!    DO k = 2,Nsed
-!#  if defined NUTRIENTS
-!      Fb_NO3(k)   = Fb_NO3(k) + Ficks_sedp(DBp(k) * Kad_NO3,SEDECO(ng)%NO3(k,i,j-1), &
-!                                          SEDECO(ng)%NO3(k,i,j),dz(k),SEDECO(ng)%poro(k,i,j),rhos_d(k))
-!      Fb_NH4(k)   = Fb_NH4(k) + Ficks_sedp(DBp(k) * Kad_NH4,SEDECO(ng)%NH4(k,i,j-1), &
-!                                          SEDECO(ng)%NH4(k,i,j),dz(k),SEDECO(ng)%poro(k,i,j),rhos_d(k))
-!      Fb_PO4(k)   = Fb_PO4(k) + Ficks_sedp(DBp(k) * Kad_PO4,SEDECO(ng)%PO4(k,i,j-1), &
-!                                          SEDECO(ng)%PO4(k,i,j),dz(k),SEDECO(ng)%poro(k,i,j),rhos_d(k))
-!#  endif
-!#  if defined SULFATE
-!      Fb_Mn2(k)   = Fb_Mn2(k) + Ficks_sedp(DBp(k) * Kad_Mn2,SEDECO(ng)%Mn2(k,i,j-1), & 
-!                                          SEDECO(ng)%Mn2(k,i,j),dz(k),SEDECO(ng)%poro(k,i,j),rhos_d(k))
-!      Fb_Fe2(k)   = Fb_Fe2(k) + Ficks_sedp(DBp(k) * Kad_Fe2,SEDECO(ng)%Fe2(k,i,j-1),& 
-!                                          SEDECO(ng)%Fe2(k,i,j),dz(k),SEDECO(ng)%poro(k,i,j),rhos_d(k))
-!#  endif
-!    ENDDO
-!# endif
-
 
 
 ! ********************************************************************* !
 !     Advection term
 ! ********************************************************************* !
-# if defined SEDECO_BURIAL || defined SGD_ON
+# if defined SEDECO_BURIAL || defined SEDECO_SGD
 !! --- Advection velocity in sediment column (cm s-1) -----
     DO k = 1,Nsed
 #  if defined SEDECO_BURIAL
       Wd(k) = Wd(k) + Fdep_sed * SEDECO(ng)%poro(k,i,j)
       Wp(k) = Wd(k) + Fdep_sed * rhos_d(k)*(1.0d0-SEDECO(ng)%poro(k,i,j))
 #  endif
-#  if defined SGD_ON
+#  if defined SEDECO_SGD
       Wd(k)=Wd(k)-sgd_flux * SEDECO(ng)%poro(k,i,j)
 #  endif
     ENDDO
@@ -1236,50 +1172,47 @@ CONTAINS
       Fw_O2 (k) = Fw_O2 (k) + AdvUp(Wd(k),SEDECO(ng)%O2 (k-1,i,j),SEDECO(ng)%O2 (k,i,j))
       Fw_TA (k) = Fw_TA (k) + AdvUp(Wd(k),SEDECO(ng)%TA (k-1,i,j),SEDECO(ng)%TA (k,i,j))
       DO isp = 1,N_Csp
-        Fw_DIC(isp,k) = Fw_DIC(isp,k) + AdvUp(Wd(isp,k),SEDECO(ng)%DIC(isp,k-1,i,j),SEDECO(ng)%DIC(isp,k,i,j))
+        Fw_DIC(isp,k) = Fw_DIC(isp,k) + AdvUp(Wd(k),SEDECO(ng)%DIC(isp,k-1,i,j),SEDECO(ng)%DIC(isp,k,i,j))
       ENDDO
 #  if defined NUTRIENTS
       DO isp = 1,N_Nsp
-        Fw_NO3(isp,k) = Fw_NO3(isp,k) + AdvUp(Wd(k),SEDECO(ng)%NO3(k-1,i,j),SEDECO(ng)%NO3(k,i,j))
-        Fw_NH4(isp,k) = Fw_NH4(isp,k) + AdvUp(Wd(k),SEDECO(ng)%NH4(k-1,i,j),SEDECO(ng)%NH4(k,i,j))
+        Fw_NO3(isp,k) = Fw_NO3(isp,k) + AdvUp(Wd(k),SEDECO(ng)%NO3(isp,k-1,i,j),SEDECO(ng)%NO3(isp,k,i,j))
+        Fw_NH4(isp,k) = Fw_NH4(isp,k) + AdvUp(Wd(k),SEDECO(ng)%NH4(isp,k-1,i,j),SEDECO(ng)%NH4(isp,k,i,j))
       ENDDO
       DO isp = 1,N_Psp
-        Fw_PO4(isp,k) = Fw_PO4(isp,k) + AdvUp(Wd(k),SEDECO(ng)%PO4(k-1,i,j),SEDECO(ng)%PO4(k,i,j))
+        Fw_PO4(isp,k) = Fw_PO4(isp,k) + AdvUp(Wd(k),SEDECO(ng)%PO4(isp,k-1,i,j),SEDECO(ng)%PO4(isp,k,i,j))
       ENDDO
 #  endif
-#  if defined ORGANIC_MATTER
       DO m = 1,Ndom
         DO isp = 1,N_Csp
-          Fw_DOC(isp,m,k) = Fw_DOC(isp,m,k) + AdvUp(Wd(m,k),SEDECO(ng)%DOC(isp,m,k-1,i,j),SEDECO(ng)%DOC(isp,m,k,i,j))
+          Fw_DOC(isp,m,k) = Fw_DOC(isp,m,k) + AdvUp(Wd(k),SEDECO(ng)%DOC(isp,m,k-1,i,j),SEDECO(ng)%DOC(isp,m,k,i,j))
         ENDDO
-#   if defined NUTRIENTS
+#  if defined NUTRIENTS
         DO isp = 1,N_Nsp
-          Fw_DON(isp,m,k) = Fw_DON(isp,m,k) + AdvUp(Wd(m,k),SEDECO(ng)%DON(isp,m,k-1,i,j),SEDECO(ng)%DON(isp,m,k,i,j)) ! DONf
+          Fw_DON(isp,m,k) = Fw_DON(isp,m,k) + AdvUp(Wd(k),SEDECO(ng)%DON(isp,m,k-1,i,j),SEDECO(ng)%DON(isp,m,k,i,j)) ! DONf
         ENDDO
         DO isp = 1,N_Psp
-          Fw_DOP(isp,m,k) = Fw_DOP(isp,m,k) + AdvUp(Wd(m,k),SEDECO(ng)%DOP(isp,m,k-1,i,j),SEDECO(ng)%DOP(isp,m,k,i,j)) ! DONf
+          Fw_DOP(isp,m,k) = Fw_DOP(isp,m,k) + AdvUp(Wd(k),SEDECO(ng)%DOP(isp,m,k-1,i,j),SEDECO(ng)%DOP(isp,m,k,i,j)) ! DONf
         ENDDO
       ENDDO
-#   endif
 #  endif
 #  if defined SULFATE
       Fw_Mn2(k) = Fw_Mn2(k) + AdvUp(Wd(k),SEDECO(ng)%Mn2(k-1,i,j),SEDECO(ng)%Mn2(k,i,j))
       Fw_Fe2(k) = Fw_Fe2(k) + AdvUp(Wd(k),SEDECO(ng)%Fe2(k-1,i,j),SEDECO(ng)%Fe2(k,i,j))
       DO isp=1,N_Ssp
-        Fw_H2S(isp,k) = Fw_H2S(isp,k) + AdvUp(Wd(isp,k),SEDECO(ng)%H2S(isp,k-1,i,j),SEDECO(ng)%H2S(isp,k,i,j))
-        Fw_SO4(isp,k) = Fw_SO4(isp,k) + AdvUp(Wd(isp,k),SEDECO(ng)%SO4(isp,k-1,i,j),SEDECO(ng)%SO4(isp,k,i,j))
+        Fw_H2S(isp,k) = Fw_H2S(isp,k) + AdvUp(Wd(k),SEDECO(ng)%H2S(isp,k-1,i,j),SEDECO(ng)%H2S(isp,k,i,j))
+        Fw_SO4(isp,k) = Fw_SO4(isp,k) + AdvUp(Wd(k),SEDECO(ng)%SO4(isp,k-1,i,j),SEDECO(ng)%SO4(isp,k,i,j))
       ENDDO
 #  endif
     ENDDO
 
 ! --- Solids, Flux in sediment column  ----
     DO k = 2,Nsed
-#  if defined ORGANIC_MATTER
       DO m = 1,Npom-1
         DO isp = 1,N_Csp
           Fw_POC(isp,m,k) = Fw_POC(isp,m,k) + AdvUp(Wp(k),SEDECO(ng)%POC(isp,m,k-1,i,j),SEDECO(ng)%POC(isp,m,k,i,j))
         ENDDO
-#   if defined NUTRIENTS
+#  if defined NUTRIENTS
         DO isp = 1,N_Nsp
           Fw_PON(isp,m,k) = Fw_PON(isp,m,k) + AdvUp(Wp(k),SEDECO(ng)%PON(isp,m,k-1,i,j),SEDECO(ng)%PON(isp,m,k,i,j))
         ENDDO
@@ -1287,18 +1220,18 @@ CONTAINS
           Fw_POP(isp,m,k) = Fw_POP(isp,m,k) + AdvUp(Wp(k),SEDECO(ng)%POP(isp,m,k-1,i,j),SEDECO(ng)%POP(isp,m,k,i,j))
         ENDDO
       ENDDO
-#   endif
 #  endif
 #  if defined SULFATE
       Fw_MnO2(k)  = Fw_MnO2(k) + AdvUp(Wp(k),SEDECO(ng)%MnO2(k-1,i,j),SEDECO(ng)%MnO2(k,i,j))
       Fw_FeOOH(k) = Fw_FeOOH(k)+ AdvUp(Wp(k),SEDECO(ng)%FeOOH(k-1,i,j),SEDECO(ng)%FeOOH(k,i,j))
       DO isp = 1,N_Psp
-        Fw_FeOOH_PO4(k) = 
-          ENDDO
+        Fw_FeOOH_PO4(isp,k) = Fw_FeOOH_PO4(isp,k)     &
+                  + AdvUp(Wp(k),SEDECO(ng)%FeOOH_PO4(isp,k-1,i,j),SEDECO(ng)%FeOOH_PO4(isp,k,i,j))
+      ENDDO
       DO isp=1,N_Ssp
-        Fw_FeS(k)  = Fw_FeS(k) + AdvUp(Wp(k),SEDECO(ng)%FeS (isp,k-1,i,j),SEDECO(ng)%FeS (isp,k,i,j))
-        Fw_FeS2(k) = Fw_FeS2(k)+ AdvUp(Wp(k),SEDECO(ng)%FeS2(isp,k-1,i,j),SEDECO(ng)%FeS2(isp,k,i,j))
-        Fw_S0(k)   = Fw_S0(k)  + AdvUp(Wp(k),SEDECO(ng)%S0  (isp,k-1,i,j),SEDECO(ng)%S0  (isp,k,i,j))
+        Fw_FeS(isp,k)  = Fw_FeS(isp,k) + AdvUp(Wp(k),SEDECO(ng)%FeS (isp,k-1,i,j),SEDECO(ng)%FeS (isp,k,i,j))
+        Fw_FeS2(isp,k) = Fw_FeS2(isp,k)+ AdvUp(Wp(k),SEDECO(ng)%FeS2(isp,k-1,i,j),SEDECO(ng)%FeS2(isp,k,i,j))
+        Fw_S0(isp,k)   = Fw_S0(isp,k)  + AdvUp(Wp(k),SEDECO(ng)%S0  (isp,k-1,i,j),SEDECO(ng)%S0  (isp,k,i,j))
       ENDDO
 #  endif
     ENDDO
@@ -1307,12 +1240,11 @@ CONTAINS
 ! ********************************************************************* !
 !    Set settling Flux (solids)
 ! ********************************************************************* !
-#  if defined ORGANIC_MATTER
     DO m = 1,Npom-1
       DO isp = 1,N_Csp
         Fw_POC(isp,m,1) = Fdep_POC(isp,m)
       ENDDO
-#   if defined NUTRIENTS
+#  if defined NUTRIENTS
       DO isp = 1,N_Nsp
         Fw_PON(isp,m,1) = Fdep_PON(isp,m)
       ENDDO
@@ -1320,26 +1252,105 @@ CONTAINS
         Fw_POP(isp,m,1) = Fdep_POP(isp,m)
       ENDDO
     ENDDO
-#   endif
 #  endif
 #  if defined SULFATE
     Fw_MnO2(1)  = Fdep_MnO2
     Fw_FeOOH(1) = Fdep_FeOOH
     DO isp = 1,N_Psp
-      Fw_FeOOH_PO4(1) = 0.0d0  !???????????????????????????????????
+      Fw_FeOOH_PO4(isp,1) = 0.0d0  !???????????????????????????????????
     ENDDO
     DO isp=1,N_Ssp
-      Fw_FeS(1)  = 0.0d0  !???????????????????????????????????
-      Fw_FeS2(1) = 0.0d0  !???????????????????????????????????
-      Fw_S0(1)   = 0.0d0  !???????????????????????????????????
+      Fw_FeS(isp,1)  = 0.0d0  !???????????????????????????????????
+      Fw_FeS2(isp,1) = 0.0d0  !???????????????????????????????????
+      Fw_S0(isp,1)   = 0.0d0  !???????????????????????????????????
     ENDDO
 #  endif
 
 ! ********************************************************************* !
 !    Reaction term
 ! ********************************************************************* !
+! Initialize reaction term (R_*) values
+    R_O2 (:) = 0.0d0    
+    R_TA (:) = 0.0d0    
+    R_DIC(:,:) = 0.0d0    
+    R_DOC(:,:,:) = 0.0d0
+    R_POC(:,:,:) = 0.0d0
+# if defined NUTRIENTS
+    R_NO3(:,:) = 0.0d0    
+    R_NH4(:,:) = 0.0d0    
+    R_PO4(:,:) = 0.0d0    
+    R_DON(:,:,:) = 0.0d0
+    R_PON(:,:,:) = 0.0d0
+    R_DOP(:,:,:) = 0.0d0
+    R_POP(:,:,:) = 0.0d0
+# endif
+# if defined SULFATE
+    R_Mn2 (:) = 0.0d0    
+    R_MnO2(:) = 0.0d0    
+    R_Fe2 (:) = 0.0d0    
+    R_FeS (:,:) = 0.0d0    
+    R_FeS2(:,:) = 0.0d0    
+    R_FeOOH(:) = 0.0d0    
+    R_FeOOH_PO4(:,:) = 0.0d0    
+    R_H2S(:,:) = 0.0d0    
+    R_S0 (:,:) = 0.0d0    
+    R_SO4(:,:) = 0.0d0    
+# endif
 
-    DO k = 1,Nsed
+    DO k = 1,Nsed-1
+    
+    !! Isotope ratio calculation -- !!
+    !  DO isp=1,N_Csp
+    !    rDIC(isp)
+    !  ENDDO
+# if defined NUTRIENTS
+      DO isp=1,N_Nsp
+        rNO3(isp) = Iso_ratio( SEDECO(ng)%NO3(isp,k,i,j), SEDECO(ng)%NO3(iNt,k,i,j) )
+        rNH4(isp) = Iso_ratio( SEDECO(ng)%NH4(isp,k,i,j), SEDECO(ng)%NH4(iNt,k,i,j) )
+      ENDDO
+      DO isp=1,N_Psp
+        rPO4(isp) = Iso_ratio( SEDECO(ng)%PO4(isp,k,i,j), SEDECO(ng)%PO4(iPt,k,i,j) )
+      ENDDO
+# endif
+      DO m = 1,Ndom
+        DO isp=1,N_Csp
+          rDOC(isp,m) = Iso_ratio( SEDECO(ng)%DOC(isp,m,k,i,j), SEDECO(ng)%DOC(iCt,m,k,i,j) )  
+        ENDDO
+# if defined NUTRIENTS
+        DO isp=1,N_Nsp
+          rDON(isp,m) = Iso_ratio( SEDECO(ng)%DON(isp,m,k,i,j), SEDECO(ng)%DON(iNt,m,k,i,j) )   
+        ENDDO
+        DO isp=1,N_Psp
+          rDOP(isp,m) = Iso_ratio( SEDECO(ng)%DOP(isp,m,k,i,j), SEDECO(ng)%DOP(iPt,m,k,i,j) )
+        ENDDO
+# endif
+      ENDDO   
+      DO m = 1,Npom-1
+        DO isp=1,N_Csp
+          rPOC(isp,m) = Iso_ratio( SEDECO(ng)%POC(isp,m,k,i,j), SEDECO(ng)%POC(iCt,m,k,i,j) ) 
+        ENDDO
+# if defined NUTRIENTS
+        DO isp=1,N_Nsp
+          rPON(isp,m) = Iso_ratio( SEDECO(ng)%PON(isp,m,k,i,j), SEDECO(ng)%PON(iNt,m,k,i,j) )   
+        ENDDO
+        DO isp=1,N_Psp
+          rPOP(isp,m) = Iso_ratio( SEDECO(ng)%POP(isp,m,k,i,j), SEDECO(ng)%POP(iPt,m,k,i,j) )
+        ENDDO
+# endif
+      ENDDO   
+# if defined SULFATE
+      DO isp=1,N_Psp
+        rFeOOH_PO4(isp) = Iso_ratio( SEDECO(ng)%FeOOH_PO4(isp,k,i,j), SEDECO(ng)%FeOOH_PO4(iPt,k,i,j) )
+      ENDDO
+      DO isp=1,N_Ssp
+        rFeS(isp) = Iso_ratio( SEDECO(ng)%FeS(isp,k,i,j), SEDECO(ng)%FeS(iSt,k,i,j) )
+        rFeS2(isp) = Iso_ratio( SEDECO(ng)%FeS2(isp,k,i,j), SEDECO(ng)%FeS2(iSt,k,i,j) )
+        rH2S(isp) = Iso_ratio( SEDECO(ng)%H2S(isp,k,i,j), SEDECO(ng)%H2S(iSt,k,i,j) )
+        rS0 (isp) = Iso_ratio( SEDECO(ng)%S0(isp,k,i,j), SEDECO(ng)%S0(iSt,k,i,j) )
+        rSO4(isp) = Iso_ratio( SEDECO(ng)%SO4(isp,k,i,j), SEDECO(ng)%SO4(iSt,k,i,j) )
+      ENDDO
+# endif
+
     !! Reaction rate constants depending on temperature
       cff = Q10_sec**((SEDECO(ng)%Tmp(k,i,j)-9d0)/10d0)
       k6_Q10  = k6  * cff     ! (Fossing2004)
@@ -1426,7 +1437,7 @@ CONTAINS
         r4 = 1.0d0-r1-r2-r3
         r5 = 0.0d0       
         ! redoxlevel(k) = 4d0 !!for debug
-      else if(SEDECO(ng)%SO4(k,i,j) > SO4lim) then      !! -- Sulfate reduction   (SO4)   (µmol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
+      else if(SEDECO(ng)%SO4(iSt,k,i,j) > SO4lim) then      !! -- Sulfate reduction   (SO4)   (µmol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
         r1 = SEDECO(ng)%O2(k,i,j)/O2lim
         r2 =(1.0d0-r1)                          &
             *SEDECO(ng)%NO3(iNt,k,i,j)/NO3lim
@@ -1473,34 +1484,29 @@ CONTAINS
         v5p = r5*cff
 
         DO isp=1,N_Csp
-          cff = SEDECO(ng)%POC(isp,m,k,i,j)/SEDECO(ng)%POC(iCt,m,k,i,j)
-          R_POC(isp,m,k) = R_POC(isp,m,k) - (v1c +v2c +v3c +v4c +v5c)*cff
-          R_DIC(isp,k)   = R_DIC(isp,k)   + (v1c +v2c +v3c +v4c +v5c)*cff
+          R_POC(isp,m,k) = R_POC(isp,m,k) - (v1c +v2c +v3c +v4c +v5c)*rPOC(isp,m)
+          R_DIC(isp,k)   = R_DIC(isp,k)   + (v1c +v2c +v3c +v4c +v5c)*rPOC(isp,m)
         ENDDO
         R_O2(k) = R_O2(k) - v1c
         R_TA(k) = R_TA(k) +0.8d0*v2c +4.0d0*v3c + 4.0d0*v4c +v5c
 
         DO isp=1,N_Nsp
-          cff = SEDECO(ng)%PON(isp,m,k,i,j)/SEDECO(ng)%PON(iNt,m,k,i,j)
-          R_PON(isp,m,k) = R_PON(isp,m,k) - (v1n +v2n +v3n +v4n +v5n)*cff
-          R_NH4(isp,k)   = R_NH4(isp,k)   + (v1n +v2n +v3n +v4n +v5n)*cff
+          R_PON(isp,m,k) = R_PON(isp,m,k) - (v1n +v2n +v3n +v4n +v5n)*rPON(isp,m)
+          R_NH4(isp,k)   = R_NH4(isp,k)   + (v1n +v2n +v3n +v4n +v5n)*rPON(isp,m)
 
-          cff = SEDECO(ng)%NH4(isp,k,i,j)/SEDECO(ng)%NH4(iNt,k,i,j)
-          R_NO3(isp,k)   = R_NO3(isp,k) -0.8d0*v2n*cff
+          R_NO3(isp,k)   = R_NO3(isp,k) -0.8d0*v2n*rNH4(isp)
         ENDDO
         R_TA(k) = R_TA(k) +v1n +v2n +v3n +v4n +v5n
 
         DO isp=1,N_Psp
-            cff = SEDECO(ng)%POP(isp,m,k,i,j)/SEDECO(ng)%POP(iPt,m,k,i,j)
-            R_POP(isp,m,k) = R_POP(isp,m,k) - (v1p +v2p +v3p +v4p +v5p)*cff
-            R_PO4(isp,k)   = R_PO4(isp,k)   + (v1p +v2p +v3p +v4p +v5p)*cff
+            R_POP(isp,m,k) = R_POP(isp,m,k) - (v1p +v2p +v3p +v4p +v5p)*rPOP(isp,m)
+            R_PO4(isp,k)   = R_PO4(isp,k)   + (v1p +v2p +v3p +v4p +v5p)*rPOP(isp,m)
         ENDDO
         R_TA(k) = R_TA(k) -(v1p +v2p +v3p +v4p +v5p)
   
         DO isp=1,N_Ssp
-          cff = SEDECO(ng)%SO4(isp,k,i,j)/SEDECO(ng)%SO4(iSt,k,i,j)
-          R_SO4(isp,k) = R_SO4(isp,k) - v5c*cff
-          R_H2S(isp,k) = R_H2S(isp,k) + v5c*cff
+          R_SO4(isp,k) = R_SO4(isp,k) - v5c*rSO4(isp)
+          R_H2S(isp,k) = R_H2S(isp,k) + v5c*rSO4(isp)
         ENDDO
       ENDDO
 
@@ -1528,34 +1534,28 @@ CONTAINS
         v5p = r5*cff
 
         DO isp=1,N_Csp
-          cff = SEDECO(ng)%DOC(isp,m,k,i,j)/SEDECO(ng)%DOC(iCt,m,k,i,j)
-          R_DOC(isp,m,k) = R_DOC(isp,m,k) - (v1c +v2c +v3c +v4c +v5c)*cff
-          R_DIC(isp,k)   = R_DIC(isp,k)   + (v1c +v2c +v3c +v4c +v5c)*cff
+          R_DOC(isp,m,k) = R_DOC(isp,m,k) - (v1c +v2c +v3c +v4c +v5c)*rDOC(isp,m)
+          R_DIC(isp,k)   = R_DIC(isp,k)   + (v1c +v2c +v3c +v4c +v5c)*rDOC(isp,m)
         ENDDO
         R_O2(k) = R_O2(k) - v1c
         R_TA(k) = R_TA(k) +0.8d0*v2c +4.0d0*v3c + 4.0d0*v4c +v5c
 
         DO isp=1,N_Nsp
-          cff = SEDECO(ng)%DON(isp,m,k,i,j)/SEDECO(ng)%DON(iNt,m,k,i,j)
-          R_DON(isp,m,k) = R_DON(isp,m,k) - (v1n +v2n +v3n +v4n +v5n)*cff
-          R_NH4(isp,k)   = R_NH4(isp,k)   + (v1n +v2n +v3n +v4n +v5n)*cff
-
-          cff = SEDECO(ng)%NH4(isp,k,i,j)/SEDECO(ng)%NH4(iNt,k,i,j)
-          R_NO3(isp,k)   = R_NO3(isp,k) -0.8d0*v2n*cff
+          R_DON(isp,m,k) = R_DON(isp,m,k) - (v1n +v2n +v3n +v4n +v5n)*rDON(isp,m)
+          R_NH4(isp,k)   = R_NH4(isp,k)   + (v1n +v2n +v3n +v4n +v5n)*rDON(isp,m)
+          R_NO3(isp,k)   = R_NO3(isp,k) -0.8d0*v2n*rNO3(isp)
         ENDDO
         R_TA(k) = R_TA(k) +v1n +v2n +v3n +v4n +v5n
 
         DO isp=1,N_Psp
-            cff = SEDECO(ng)%DOP(isp,m,k,i,j)/SEDECO(ng)%DOP(iPt,m,k,i,j)
-            R_DOP(isp,m,k) = R_DOP(isp,m,k) - (v1p +v2p +v3p +v4p +v5p)*cff
-            R_PO4(isp,k)   = R_PO4(isp,k)   + (v1p +v2p +v3p +v4p +v5p)*cff
+          R_DOP(isp,m,k) = R_DOP(isp,m,k) - (v1p +v2p +v3p +v4p +v5p)*rDOP(isp,m)
+          R_PO4(isp,k)   = R_PO4(isp,k)   + (v1p +v2p +v3p +v4p +v5p)*rDOP(isp,m)
         ENDDO
         R_TA(k) = R_TA(k) -(v1p +v2p +v3p +v4p +v5p)
   
         DO isp=1,N_Ssp
-          cff = SEDECO(ng)%SO4(isp,k,i,j)/SEDECO(ng)%SO4(iSt,k,i,j)
-          R_SO4(isp,k) = R_SO4(isp,k) - v5c*cff
-          R_H2S(isp,k) = R_H2S(isp,k) + v5c*cff
+          R_SO4(isp,k) = R_SO4(isp,k) - v5c*rSO4(isp)
+          R_H2S(isp,k) = R_H2S(isp,k) + v5c*rSO4(isp)
         ENDDO
       ENDDO
 
@@ -1566,18 +1566,16 @@ CONTAINS
       R_O2(k)  = R_O2(k) - 2.0d0*v6
       R_TA(k)  = R_TA(k) - 2.0d0*v6
       DO isp=1,N_Nsp
-        cff = SEDECO(ng)%NH4(isp,k,i,j)/SEDECO(ng)%NH4(iNt,k,i,j)
-        R_NO3(isp,k) = R_NO3(isp,k) + v6*cff
-        R_NH4(isp,k) = R_NH4(isp,k) - v6*cff
+        R_NO3(isp,k) = R_NO3(isp,k) + v6*rNH4(isp)
+        R_NH4(isp,k) = R_NH4(isp,k) - v6*rNH4(isp)
       ENDDO
 
       ! R7:   FeOOH + PO43- --> FeOOH=PO43-
       v7 = cfsd * k7_Q10*SEDECO(ng)%FeOOH(k,i,j)*SEDECO(ng)%PO4(iPt,k,i,j)
       R_FeOOH(k) = R_FeOOH(k) -v7
       DO isp=1,N_Psp
-        cff = SEDECO(ng)%PO4(isp,k,i,j)/SEDECO(ng)%PO4(iPt,k,i,j)
-        R_PO4(isp,k)       = R_PO4(isp,k)       - v7*cff
-        R_FeOOH_PO4(isp,k) = R_FeOOH_PO4(isp,k) + v7*cff
+        R_PO4(isp,k)       = R_PO4(isp,k)       - v7*rPO4(isp)
+        R_FeOOH_PO4(isp,k) = R_FeOOH_PO4(isp,k) + v7*rPO4(isp)
       ENDDO
 
       ! R8:   2Fe2+ + MnO2 + 2H2O --> 2FeOOH + Mn2+ + 2H+
@@ -1600,14 +1598,12 @@ CONTAINS
                     *SEDECO(ng)%FeOOH_PO4(iPt,k,i,j)*SEDECO(ng)%H2S(iSt,k,i,j)
       R_TA(k)  = R_TA(k) + 4.0d0*v10a
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%H2S(isp,k,i,j)/SEDECO(ng)%H2S(iSt,k,i,j)
-        R_H2S(isp,k) = R_H2S(isp,k) - v10a*cff
-        R_S0(isp,k)  = R_S0(isp,k)  + v10a*cff
+        R_H2S(isp,k) = R_H2S(isp,k) - v10a*rH2S(isp)
+        R_S0(isp,k)  = R_S0(isp,k)  + v10a*rH2S(isp)
       ENDDO
       DO isp=1,N_Psp
-        cff = SEDECO(ng)%FeOOH_PO4(isp,k,i,j)/SEDECO(ng)%FeOOH_PO4(iPt,k,i,j)
-        R_PO4(isp,k)       = R_PO4(isp,k)       +2.0d0*v10a*cff
-        R_FeOOH_PO4(isp,k) = R_FeOOH_PO4(isp,k) -2.0d0*v10a*cff
+        R_PO4(isp,k)       = R_PO4(isp,k)       +2.0d0*v10a*rFeOOH_PO4(isp)
+        R_FeOOH_PO4(isp,k) = R_FeOOH_PO4(isp,k) -2.0d0*v10a*rFeOOH_PO4(isp)
       ENDDO
 
       ! R10b: H2S + 2FeOOH + 4H+ --> S0 + 2Fe2+ + 4H2O
@@ -1616,9 +1612,8 @@ CONTAINS
       R_FeOOH(k) = R_FeOOH(k) - 2.0d0*v10b
       R_Fe2(k)   = R_Fe2(k)   + 2.0d0*v10b
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%H2S(isp,k,i,j)/SEDECO(ng)%H2S(iSt,k,i,j)
-        R_H2S(isp,k) = R_H2S(isp,k) - v10b*cff
-        R_S0(isp,k)  = R_S0(isp,k)  + v10b*cff
+        R_H2S(isp,k) = R_H2S(isp,k) - v10b*rH2S(isp)
+        R_S0(isp,k)  = R_S0(isp,k)  + v10b*rH2S(isp)
       ENDDO
 
       ! R11:  4Fe2+ + O2 + 6H2O --> 4FeOOH + 8H+
@@ -1629,47 +1624,41 @@ CONTAINS
       R_FeOOH(k) = R_FeOOH(k) + 4.0d0*v11
 
       ! R12:  H2S + MnO2 + 4H+ --> S0 + Mn2+ + 2H2O
-      v12  = cfsd * k12_Q10*SEDECO(ng)%MnO2(k,i,j)*SEDECO(ng)%H2S(iSt,,k,i,j)
+      v12  = cfsd * k12_Q10*SEDECO(ng)%MnO2(k,i,j)*SEDECO(ng)%H2S(iSt,k,i,j)
       R_TA(k)  = R_TA(k) + 4.0d0*v12
       R_MnO2(k) = R_MnO2(k) - v12
       R_Mn2(k)  = R_Mn2(k)  + v12
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%H2S(isp,k,i,j)/SEDECO(ng)%H2S(iSt,k,i,j)
-        R_H2S(isp,k) = R_H2S(isp,k) - v12*cff
-        R_S0(isp,k)  = R_S0(isp,k)  + v12*cff
+        R_H2S(isp,k) = R_H2S(isp,k) - v12*rH2S(isp)
+        R_S0(isp,k)  = R_S0(isp,k)  + v12*rH2S(isp)
       ENDDO
 
       ! R13:  H2S + Fe2+ --> FeS + 2H+
-      v13  = cfdd * k13_Q10*SEDECO(ng)%Fe2(k,i,j) *SEDECO(ng)%H2S(iSt,,k,i,j)
+      v13  = cfdd * k13_Q10*SEDECO(ng)%Fe2(k,i,j) *SEDECO(ng)%H2S(iSt,k,i,j)
       R_TA(k)  = R_TA(k) + 2.0d0*v13
       R_Fe2(k) = R_Fe2(k) - v13
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%H2S(isp,k,i,j)/SEDECO(ng)%H2S(iSt,k,i,j)
-        R_H2S(isp,k) = R_H2S(isp,k) - v13*cff
-        R_FeS(isp,k) = R_FeS(isp,k) + v13*cff
+        R_H2S(isp,k) = R_H2S(isp,k) - v13*rH2S(isp)
+        R_FeS(isp,k) = R_FeS(isp,k) + v13*rH2S(isp)
       ENDDO
 
       ! R14:  FeS + S0 --> FeS2
       v14  = cfss * k14_Q10*SEDECO(ng)%FeS(iSt,k,i,j)*SEDECO(ng)%S0(iSt,k,i,j)
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%FeS(isp,k,i,j)/SEDECO(ng)%FeS(iSt,k,i,j)
-        R_FeS(isp,k) = R_FeS(isp,k) - v14*cff
-        cff2 = SEDECO(ng)%S0(isp,k,i,j)/SEDECO(ng)%S0(iSt,k,i,j)
-        R_S0(isp,k)  = R_S0(isp,k) - v14*cff2
-        R_FeS2(isp,k)= R_FeS2(isp,k) + v14*(cff + cff2)*0.5d0 !!?????????????????????????????????????Check needed!!!
+        R_FeS(isp,k) = R_FeS(isp,k) - v14*rFeS(isp)
+        R_S0(isp,k)  = R_S0(isp,k) - v14*rS0(isp)
+        R_FeS2(isp,k)= R_FeS2(isp,k) + v14*(rFeS(isp) + rS0(isp))*0.5d0 !!?????????????????????????????????????Check needed!!!
       ENDDO
 
       ! R15:  SO42- + 3H2S + 4FeS + 2H+ --> 4FeS2 + 4H2O
       v15  = cfsd * k15_Q10*SEDECO(ng)%FeS(iSt,k,i,j)*SEDECO(ng)%H2S(iSt,k,i,j)
       R_TA(k)  = R_TA(k) + 2.0d0*v15
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%SO4(isp,k,i,j)/SEDECO(ng)%SO4(iSt,k,i,j)
-        R_SO4(isp,k) = R_SO4(isp,k) - v15*cff
-        cff2 = SEDECO(ng)%H2S(isp,k,i,j)/SEDECO(ng)%H2S(iSt,k,i,j)
-        R_H2S(isp,k) = R_H2S(isp,k) - v15*cff2
-        cff3 = SEDECO(ng)%FeS(isp,k,i,j)/SEDECO(ng)%FeS(iSt,k,i,j)
-        R_FeS(isp,k) = R_FeS(isp,k) - v15*cff3
-        R_FeS2(isp,k) = R_FeS2(isp,k) + v15*(cff + cff2 + cff3)/3.0d0 !!?????????????????????????????????????Check needed!!!
+        R_SO4(isp,k) = R_SO4(isp,k) - v15*rSO4(isp)
+        R_H2S(isp,k) = R_H2S(isp,k) - v15*rH2S(isp)
+        cff3 = Iso_ratio( SEDECO(ng)%FeS(isp,k,i,j), SEDECO(ng)%FeS(iSt,k,i,j) )
+        R_FeS(isp,k) = R_FeS(isp,k) - v15*rFeS(isp)
+        R_FeS2(isp,k) = R_FeS2(isp,k) + v15*(rSO4(isp)+rH2S(isp)+rFeS(isp))/3.0d0 !!?????????????????????????????????????Check needed!!!
       ENDDO
 
       ! R16:  H2S + 2O2 --> SO42- + 2H+
@@ -1677,9 +1666,8 @@ CONTAINS
       R_TA(k)  = R_TA(k) + 2.0d0*v16
       R_O2(k)  = R_O2(k) - 2.0d0*v16
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%H2S(isp,k,i,j)/SEDECO(ng)%H2S(iSt,k,i,j)
-        R_H2S(isp,k) = R_H2S(isp,k) - v16*cff
-        R_SO4(isp,k) = R_SO4(isp,k) + v16*cff
+        R_H2S(isp,k) = R_H2S(isp,k) - v16*rH2S(isp)
+        R_SO4(isp,k) = R_SO4(isp,k) + v16*rH2S(isp)
       ENDDO
 
       ! R17:  FeS + 2O2 --> Fe2+ + SO42-
@@ -1687,9 +1675,8 @@ CONTAINS
       R_O2(k)  = R_O2(k) - 2.0d0*v17
       R_Fe2(k) = R_Fe2(k) + v17
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%FeS(isp,k,i,j)/SEDECO(ng)%FeS(iSt,k,i,j)
-        R_FeS(isp,k) = R_FeS(isp,k) - v17*cff
-        R_SO4(isp,k) = R_SO4(isp,k) + v17*cff
+        R_FeS(isp,k) = R_FeS(isp,k) - v17*rFeS(isp)
+        R_SO4(isp,k) = R_SO4(isp,k) + v17*rFeS(isp)
       ENDDO
 
       ! R18:  2FeS2 + 7O2 + 2H2O --> 2Fe2+ + 4SO42- + 4H+
@@ -1698,13 +1685,12 @@ CONTAINS
       R_O2(k)  = R_O2(k) - 7.0d0*v18
       R_Fe2(k) = R_Fe2(k) + 2.0d0*v18
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%FeS2(isp,k,i,j)/SEDECO(ng)%FeS2(iSt,k,i,j)
-        R_FeS2(isp,k) = R_FeS2(isp,k) - 2.0d0*v18*cff
-        R_SO4(isp,k)  = R_SO4(isp,k)  + 4.0d0*v18*cff
+        R_FeS2(isp,k) = R_FeS2(isp,k) - 2.0d0*v18*rFeS2(isp)
+        R_SO4(isp,k)  = R_SO4(isp,k)  + 4.0d0*v18*rFeS2(isp)
       ENDDO
 
       ! R19:  4S0 + 4H2O --> 3H2S + SO42- + 2H+
-      if (SEDECO(ng)%H2S(k,i,j) <= H2Sstop) then  
+      if (SEDECO(ng)%H2S(iSt,k,i,j) <= H2Sstop) then  
         v19  = cfsd * k19_Q10                                                  & 
                 *SEDECO(ng)%S0(iSt,k,i,j)*(1d0 - (SEDECO(ng)%H2S(iSt,k,i,j)/H2Sstop))  !!??????????????????????
       else
@@ -1712,10 +1698,9 @@ CONTAINS
       endif
       R_TA(k)  = R_TA(k) - 2.0d0*v19
       DO isp=1,N_Ssp
-        cff = SEDECO(ng)%S0(isp,k,i,j)/SEDECO(ng)%S0(iSt,k,i,j)
-        R_S0(isp,k) = R_S0(isp,k) - 4.0d0*v19*cff
-        R_H2S(isp,k) = R_H2S(isp,k)  + 3.0d0*v19*cff !!!??????????????????????????
-        R_SO4(isp,k) = R_SO4(isp,k)  + 1.0d0*v19*cff !!!??????????????????????????
+        R_S0(isp,k) = R_S0(isp,k) - 4.0d0*v19*rS0(isp)
+        R_H2S(isp,k) = R_H2S(isp,k)  + 3.0d0*v19*rS0(isp)!!!??????????????????????????
+        R_SO4(isp,k) = R_SO4(isp,k)  + 1.0d0*v19*rS0(isp) !!!??????????????????????????
       ENDDO
 
       ! R20:  MnO2 --> MnO2_undeg
@@ -1732,7 +1717,7 @@ CONTAINS
 ! ********************************************************************* !
 !!! yuta_seagrass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>YT:Add
 # if defined SEAGRASS
-    DO k = 1,Nsed
+    DO k = 1,Nsed-1
 #  if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
     ! [umol/L s] = [umol/L s]
       R_O2 (k) = R_O2 (k) + sum(SEDECO(ng)%sg_dO2_dt (:,k,i,j),DIM=1) ! (umol L-1 s-1) change in DO  due to flux from seagrass (positive means seagrass to sediment)
@@ -1776,153 +1761,153 @@ CONTAINS
 ! ********************************************************************* !
 
     !! Mass Balance cal (Concentration at each layer in sed column)
-    DO k = 1,Nsed
-        ! -- O2 -- !
-        SEDECO(ng)%O2(k,i,j)  = massbalance_sed_d(SEDECO(ng)%O2(k,i,j),FT_O2(k),FT_O2(k+1),R_O2(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscO2(k))
-        ! -- DIC -- !
-        SEDECO(ng)%DIC(k,i,j) = massbalance_sed_d(SEDECO(ng)%DIC(k,i,j),FT_DIC(k),FT_DIC(k+1),R_DIC(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscDIC(k))
-        ! -- N2 -- !
-!        SEDECO(ng)%N2(k,i,j)  = massbalance_sed_d(SEDECO(ng)%N2(k,i,j),FT_N2(k),FT_N2(k+1),R_N2(k), & 
-!                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscN2(k))
-# if defined ORGANIC_MATTER
-        ! -- DOC -- !
-        SEDECO(ng)%DOCf(k,i,j) = massbalance_sed_d(SEDECO(ng)%DOCf(k,i,j),FT_DOC(k,1),FT_DOC(k+1,1),R_DOC(k,1), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscDOC(k,1))  ! DOCf    
-        SEDECO(ng)%DOCs(k,i,j) = massbalance_sed_d(SEDECO(ng)%DOCs(k,i,j),FT_DOC(k,2),FT_DOC(k+1,2),R_DOC(k,2), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscDOC(k,2))  ! DOCs
-        ! -- POC -- !
-        SEDECO(ng)%POCf(k,i,j) = massbalance_sed_p(SEDECO(ng)%POCf(k,i,j),FT_POC(k,1),FT_POC(k+1,1),R_POC(k,1), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPOC(k,1))  ! POCf
-        SEDECO(ng)%POCs(k,i,j) = massbalance_sed_p(SEDECO(ng)%POCs(k,i,j),FT_POC(k,2),FT_POC(k+1,2),R_POC(k,2), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPOC(k,2))  ! POCs
-        SEDECO(ng)%POCn(k,i,j) = massbalance_sed_p(SEDECO(ng)%POCn(k,i,j),FT_POC(k,3),FT_POC(k+1,3),0d0, &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPOC(k,3))  ! POCn
-# endif
+    DO k = 1,Nsed-1
+      cfdd = SEDECO(ng)%poro(k,i,j)
+      cfsd = rhos_d(k) * (1.0d0 - SEDECO(ng)%poro(k,i,j))
+  
+      ! -- O2 -- !
+      SEDECO(ng)%O2(k,i,j) = massbalance( SEDECO(ng)%O2(k,i,j)   &
+                               ,Fw_O2(k),Fw_O2(k+1),R_O2(k)      &
+                               ,SEDECO(ng)%dzr(k),cfdd,dt)
+      ! -- TA -- !
+      SEDECO(ng)%TA(k,i,j) = massbalance( SEDECO(ng)%TA(k,i,j)   &
+                               ,Fw_TA(k),Fw_TA(k+1),R_TA(k)      &
+                               ,SEDECO(ng)%dzr(k),cfdd,dt )
+      ! -- DIC -- !
+      DO isp=1,N_Csp
+        SEDECO(ng)%DIC(isp,k,i,j) = massbalance( SEDECO(ng)%DIC(isp,k,i,j)       &
+                                    ,Fw_DIC(isp,k),Fw_DIC(isp,k+1),R_DIC(isp,k)  &
+                                    ,SEDECO(ng)%dzr(k),cfdd,dt )
+      ENDDO
 # if defined NUTRIENTS
-#  if defined adsorption
+      DO isp=1,N_Nsp
         ! -- NO3 -- !
-        SEDECO(ng)%NO3(k,i,j) = massbalance_sed_d(SEDECO(ng)%NO3(k,i,j),FT_NO3(k),FT_NO3(k+1),R_NO3(k), &
-                                            dz(k),(SEDECO(ng)%poro(k,i,j)+rhos_d(k)*(1d0 - SEDECO(ng)%poro(k,i,j))*Kad_NO3),dt,miscNO3(k)) 
+        SEDECO(ng)%NO3(isp,k,i,j) = massbalance( SEDECO(ng)%NO3(isp,k,i,j)        &
+                                      ,Fw_NO3(isp,k),Fw_NO3(isp,k+1),R_NO3(isp,k) &
+                                      ,SEDECO(ng)%dzr(k),cfdd,dt ) 
         ! -- NH4 -- !
-        SEDECO(ng)%NH4(k,i,j) = massbalance_sed_d(SEDECO(ng)%NH4(k,i,j),FT_NH4(k),FT_NH4(k+1),R_NH4(k), &
-                                            dz(k),(SEDECO(ng)%poro(k,i,j)+rhos_d(k)*(1d0 - SEDECO(ng)%poro(k,i,j))*Kad_NH4),dt,miscNH4(k)) 
+        SEDECO(ng)%NH4(isp,k,i,j) = massbalance( SEDECO(ng)%NH4(isp,k,i,j)        &
+                                      ,Fw_NH4(isp,k),Fw_NH4(isp,k+1),R_NH4(isp,k) &
+                                      ,SEDECO(ng)%dzr(k),cfdd,dt ) 
+      ENDDO
+      DO isp=1,N_Nsp
         ! -- PO4 -- !
-        SEDECO(ng)%PO4(k,i,j) = massbalance_sed_d(SEDECO(ng)%PO4(k,i,j),FT_PO4(k),FT_PO4(k+1),R_PO4(k), &
-                                            dz(k),(SEDECO(ng)%poro(k,i,j)+rhos_d(k)*(1d0 - SEDECO(ng)%poro(k,i,j))*Kad_PO4),dt,miscPO4(k))
-#  else
-        ! -- NO3 -- !
-        SEDECO(ng)%NO3(k,i,j) = massbalance_sed_d(SEDECO(ng)%NO3(k,i,j),FT_NO3(k),FT_NO3(k+1),R_NO3(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscNO3(k)) 
-        ! -- NH4 -- !
-        SEDECO(ng)%NH4(k,i,j) = massbalance_sed_d(SEDECO(ng)%NH4(k,i,j),FT_NH4(k),FT_NH4(k+1),R_NH4(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscNH4(k)) 
-        ! -- PO4 -- !
-        SEDECO(ng)%PO4(k,i,j) = massbalance_sed_d(SEDECO(ng)%PO4(k,i,j),FT_PO4(k),FT_PO4(k+1),R_PO4(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscPO4(k))
-#  endif
-#  if defined ORGANIC_MATTER
-
-        ! -- DON -- !
-        SEDECO(ng)%DONf(k,i,j) = massbalance_sed_d(SEDECO(ng)%DONf(k,i,j),FT_DON(k,1),FT_DON(k+1,1),R_DON(k,1), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscDON(k,1))  ! DONf
-        SEDECO(ng)%DONs(k,i,j) = massbalance_sed_d(SEDECO(ng)%DONs(k,i,j),FT_DON(k,2),FT_DON(k+1,2),R_DON(k,2), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscDON(k,2))  ! DONs
-        ! -- PON -- !
-        SEDECO(ng)%PONf(k,i,j) = massbalance_sed_p(SEDECO(ng)%PONf(k,i,j),FT_PON(k,1),FT_PON(k+1,1),R_PON(k,1), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPON(k,1))  ! PONf
-        SEDECO(ng)%PONs(k,i,j) = massbalance_sed_p(SEDECO(ng)%PONs(k,i,j),FT_PON(k,2),FT_PON(k+1,2),R_PON(k,2), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPON(k,2))  ! PONs
-        SEDECO(ng)%PONn(k,i,j) = massbalance_sed_p(SEDECO(ng)%PONn(k,i,j),FT_PON(k,3),FT_PON(k+1,3),0d0, &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPON(k,3))  ! PONn
-        ! -- DOP -- !
-        SEDECO(ng)%DOPf(k,i,j) = massbalance_sed_d(SEDECO(ng)%DOPf(k,i,j),FT_DOP(k,1),FT_DOP(k+1,1),R_DOP(k,1), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscDOP(k,1))  ! DOPf
-        SEDECO(ng)%DOPs(k,i,j) = massbalance_sed_d(SEDECO(ng)%DOPs(k,i,j),FT_DOP(k,2),FT_DOP(k+1,2),R_DOP(k,2), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscDOP(k,2))  ! DOPs
-        ! -- POP -- !
-        SEDECO(ng)%POPf(k,i,j) = massbalance_sed_p(SEDECO(ng)%POPf(k,i,j),FT_POP(k,1),FT_POP(k+1,1),R_POP(k,1), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPOP(k,1))  ! POPf
-        SEDECO(ng)%POPs(k,i,j) = massbalance_sed_p(SEDECO(ng)%POPs(k,i,j),FT_POP(k,2),FT_POP(k+1,2),R_POP(k,2), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPOP(k,2))  ! POPs
-        SEDECO(ng)%POPn(k,i,j) = massbalance_sed_p(SEDECO(ng)%POPn(k,i,j),FT_POP(k,3),FT_POP(k+1,3),0d0, &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscPOP(k,3))  ! POPn
-#  endif
+        SEDECO(ng)%PO4(isp,k,i,j) = massbalance( SEDECO(ng)%PO4(isp,k,i,j)        &
+                                      ,Fw_PO4(isp,k),Fw_PO4(isp,k+1),R_PO4(isp,k) &
+                                      ,SEDECO(ng)%dzr(k),cfdd,dt )
+      ENDDO
 # endif
+      ! -- DOM -- !
+      DO m = 1,Ndom
+        DO isp=1,N_Csp
+          SEDECO(ng)%DOC(isp,m,k,i,j) = massbalance(SEDECO(ng)%DOC(isp,m,k,i,j)        &
+                                     ,Fw_DOC(isp,m,k),Fw_DOC(isp,m,k+1),R_DOC(isp,m,k) &
+                                     ,SEDECO(ng)%dzr(k),cfdd,dt)     
+        ENDDO
+# if defined NUTRIENTS
+        DO isp=1,N_Nsp
+          SEDECO(ng)%DON(isp,m,k,i,j) = massbalance(SEDECO(ng)%DON(isp,m,k,i,j)        &
+                                     ,Fw_DON(isp,m,k),Fw_DON(isp,m,k+1),R_DON(isp,m,k) &
+                                     ,SEDECO(ng)%dzr(k),cfdd,dt)     
+        ENDDO
+        DO isp=1,N_Psp
+          SEDECO(ng)%DOP(isp,m,k,i,j) = massbalance(SEDECO(ng)%DOP(isp,m,k,i,j)        &
+                                     ,Fw_DOP(isp,m,k),Fw_DOP(isp,m,k+1),R_DOP(isp,m,k) &
+                                     ,SEDECO(ng)%dzr(k),cfdd,dt)     
+        ENDDO
+# endif
+      ENDDO
+      ! -- POM (solid) -- !
+      DO m = 1,Npom-1
+        DO isp=1,N_Csp
+          SEDECO(ng)%POC(isp,m,k,i,j) = massbalance(SEDECO(ng)%POC(isp,m,k,i,j)        &
+                                     ,Fw_POC(isp,m,k),Fw_POC(isp,m,k+1),R_POC(isp,m,k) &
+                                     ,SEDECO(ng)%dzr(k),cfsd,dt)     
+        ENDDO
+# if defined NUTRIENTS
+        DO isp=1,N_Nsp
+          SEDECO(ng)%PON(isp,m,k,i,j) = massbalance(SEDECO(ng)%PON(isp,m,k,i,j)        &
+                                     ,Fw_PON(isp,m,k),Fw_PON(isp,m,k+1),R_PON(isp,m,k) &
+                                     ,SEDECO(ng)%dzr(k),cfsd,dt)     
+        ENDDO
+        DO isp=1,N_Psp
+          SEDECO(ng)%POP(isp,m,k,i,j) = massbalance(SEDECO(ng)%POP(isp,m,k,i,j)        &
+                                     ,Fw_POP(isp,m,k),Fw_POP(isp,m,k+1),R_POP(isp,m,k) &
+                                     ,SEDECO(ng)%dzr(k),cfsd,dt)     
+        ENDDO
+# endif
+      ENDDO
 # if defined SULFATE
-#  if defined adsorption
-        ! -- Mn2 -- !
-        SEDECO(ng)%Mn2(k,i,j) = massbalance_sed_d(SEDECO(ng)%Mn2(k,i,j),FT_Mn2(k),FT_Mn2(k+1),R_Mn2(k), &
-                                            dz(k),(SEDECO(ng)%poro(k,i,j)+rhos_d(k)*(1d0 - SEDECO(ng)%poro(k,i,j))*Kad_Mn2),dt,miscMn2(k)) 
-        ! -- Fe2 -- !
-        SEDECO(ng)%Fe2(k,i,j) = massbalance_sed_d(SEDECO(ng)%Fe2(k,i,j),FT_Fe2(k),FT_Fe2(k+1),R_Fe2(k), &
-                                            dz(k),(SEDECO(ng)%poro(k,i,j)+rhos_d(k)*(1d0 - SEDECO(ng)%poro(k,i,j))*Kad_Fe2),dt,miscFe2(k)) 
-#  else
-        ! -- Mn2 -- !
-        SEDECO(ng)%Mn2(k,i,j) = massbalance_sed_d(SEDECO(ng)%Mn2(k,i,j),FT_Mn2(k),FT_Mn2(k+1),R_Mn2(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscMn2(k)) 
-        ! -- Fe2 -- !
-        SEDECO(ng)%Fe2(k,i,j) = massbalance_sed_d(SEDECO(ng)%Fe2(k,i,j),FT_Fe2(k),FT_Fe2(k+1),R_Fe2(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscFe2(k)) 
-#  endif
-        ! -- MnO2 -- !
-        SEDECO(ng)%MnO2(k,i,j) = massbalance_sed_p(SEDECO(ng)%MnO2(k,i,j),FT_MnO2(k),FT_MnO2(k+1),R_MnO2(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscMnO2(k)) 
-        ! -- FeS -- !
-        SEDECO(ng)%FeS(k,i,j) = massbalance_sed_p(SEDECO(ng)%FeS(k,i,j),FT_FeS(k),FT_FeS(k+1),R_FeS(k),  &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscFeS(k)) 
-        ! -- FeS2 -- !
-        SEDECO(ng)%FeS2(k,i,j) = massbalance_sed_p(SEDECO(ng)%FeS2(k,i,j),FT_FeS2(k),FT_FeS2(k+1),R_FeS2(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscFeS2(k)) 
-        ! -- FeOOH -- !
-        SEDECO(ng)%FeOOH(k,i,j) = massbalance_sed_p(SEDECO(ng)%FeOOH(k,i,j),FT_FeOOH(k),FT_FeOOH(k+1),R_FeOOH(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscFeOOH(k)) 
-        ! -- FeOOH=PO4 -- !
-        SEDECO(ng)%FeOOH_PO4(k,i,j) = massbalance_sed_p(SEDECO(ng)%FeOOH_PO4(k,i,j),FT_FeOOH_PO4(k),FT_FeOOH_PO4(k+1), & 
-                                                  R_FeOOH_PO4(k),dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscFeOOH_PO4(k)) 
+      ! -- Mn2+ -- !
+      SEDECO(ng)%Mn2(k,i,j) = massbalance( SEDECO(ng)%Mn2(k,i,j)  &
+                                ,Fw_Mn2(k),Fw_Mn2(k+1),R_Mn2(k)   &
+                                ,SEDECO(ng)%dzr(k),cfdd,dt ) 
+      ! -- Fe2+ -- !
+      SEDECO(ng)%Fe2(k,i,j) = massbalance( SEDECO(ng)%Fe2(k,i,j)  &
+                                ,Fw_Fe2(k),Fw_Fe2(k+1),R_Fe2(k)   &
+                                ,SEDECO(ng)%dzr(k),cfdd,dt ) 
+      ! -- MnO2 (solid) -- !
+      SEDECO(ng)%MnO2(k,i,j) = massbalance( SEDECO(ng)%MnO2(k,i,j)  &
+                                 ,Fw_MnO2(k),Fw_MnO2(k+1),R_MnO2(k) &
+                                 ,SEDECO(ng)%dzr(k),cfsd,dt ) 
+      ! -- FeOOH (solid) -- !
+      SEDECO(ng)%FeOOH(k,i,j) = massbalance( SEDECO(ng)%FeOOH(k,i,j)   &
+                                 ,Fw_FeOOH(k),Fw_FeOOH(k+1),R_FeOOH(k) &
+                                 ,SEDECO(ng)%dzr(k),cfsd,dt ) 
+      DO isp=1,N_Psp
+        ! -- FeOOH=PO4 (solid) -- !
+        SEDECO(ng)%FeOOH_PO4(isp,k,i,j) = massbalance( SEDECO(ng)%FeOOH_PO4(isp,k,i,j) &
+                         ,Fw_FeOOH_PO4(isp,k),Fw_FeOOH_PO4(isp,k+1),R_FeOOH_PO4(isp,k) &
+                         ,SEDECO(ng)%dzr(k),cfsd,dt ) 
+      ENDDO
+      DO isp=1,N_Ssp
+        ! -- FeS (solid) -- !
+        SEDECO(ng)%FeS(isp,k,i,j) = massbalance( SEDECO(ng)%FeS(isp,k,i,j)      &
+                                  ,Fw_FeS(isp,k),Fw_FeS(isp,k+1),R_FeS(isp,k)   &
+                                  ,SEDECO(ng)%dzr(k),cfsd,dt ) 
+        ! -- FeS2 (solid) -- !
+        SEDECO(ng)%FeS2(isp,k,i,j) = massbalance( SEDECO(ng)%FeS2(isp,k,i,j)    &
+                                 ,Fw_FeS2(isp,k),Fw_FeS2(isp,k+1),R_FeS2(isp,k) &
+                                 ,SEDECO(ng)%dzr(k),cfsd,dt ) 
         ! -- H2S -- !
-        SEDECO(ng)%H2S(k,i,j) = massbalance_sed_d(SEDECO(ng)%H2S(k,i,j),FT_H2S(k),FT_H2S(k+1),R_H2S(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscH2S(k)) 
-         ! -- S0 -- !
-        SEDECO(ng)%S0(k,i,j) = massbalance_sed_p(SEDECO(ng)%S0(k,i,j),FT_S0(k),FT_S0(k+1),R_S0(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,rhos_d(k),miscS0(k)) 
+        SEDECO(ng)%H2S(isp,k,i,j) = massbalance( SEDECO(ng)%H2S(isp,k,i,j)      &
+                                ,Fw_H2S(isp,k),Fw_H2S(isp,k+1),R_H2S(isp,k)     &
+                                ,SEDECO(ng)%dzr(k),cfdd,dt ) 
+         ! -- S0 (solid) -- !
+        SEDECO(ng)%S0(isp,k,i,j) = massbalance( SEDECO(ng)%S0(isp,k,i,j)        &
+                                ,Fw_S0(isp,k),Fw_S0(isp,k+1),R_S0(isp,k)        &
+                                ,SEDECO(ng)%dzr(k),cfsd,dt ) 
         ! -- SO4 -- !
-        SEDECO(ng)%SO4(k,i,j) = massbalance_sed_d(SEDECO(ng)%SO4(k,i,j),FT_SO4(k),FT_SO4(k+1),R_SO4(k), &
-                                                  dz(k),SEDECO(ng)%poro(k,i,j),dt,miscSO4(k))
-
+        SEDECO(ng)%SO4(isp,k,i,j) = massbalance( SEDECO(ng)%SO4(isp,k,i,j)      &
+                                ,Fw_SO4(isp,k),Fw_SO4(isp,k+1),R_SO4(isp,k)     &
+                                ,SEDECO(ng)%dzr(k),cfdd,dt )
+      ENDDO
 # endif
     ENDDO
-
 
 ! ********************************************************************* !
 !   set output parameters
 ! ********************************************************************* !
-# if defined SEDECO_ADVECTION
     Flux_Tmp = Fw_Tmp(1)
     Flux_Sal = Fw_Sal(1) 
     Flux_DO  = Fw_O2 (1) 
     Flux_TA  = Fw_TA (1) 
     Flux_DIC(:) = Fw_DIC(:,1)
-# if defined ORGANIC_MATTER
-    Flux_POC(:) = Fw_POC(:,1)
-# endif
+    Flux_POC(:,:) = Fw_POC(:,:,1)
 # if defined NUTRIENTS
     Flux_NO3(:) = Fw_NO3(:,1)
     Flux_NH4(:) = Fw_NH4(:,1)
     Flux_PO4(:) = Fw_PO4(:,1)
-#  if defined ORGANIC_MATTER
-    Flux_PON(:) = Fw_PON(:,1)
-    Flux_POP(:) = Fw_POP(:,1)
-#  endif
+    Flux_PON(:,:) = Fw_PON(:,:,1)
+    Flux_POP(:,:) = Fw_POP(:,:,1)
 # endif
 # if defined SULFATE
     Flux_Mn2  = Fw_Mn2 (1)
-    Flux_MnO2 = Fw_MnO2(1)
+!    Flux_MnO2 = Fw_MnO2(1)
     Flux_Fe2  = Fw_Fe2 (1)
     ! Flux_FeS (:) = Fw_FeS (:,1)  ! yt_edit diffusion is not modeled so flux is zero
     ! Flux_FeS2(:) = Fw_FeS2(:,1)  ! yt_edit diffusion is not modeled so flux is zero
-    Flux_FeOOH = Fw_FeOOH(1)
+!    Flux_FeOOH = Fw_FeOOH(1)
     ! Flux_FeOOH_PO4 = Fw_FeOOH_PO4(:,1)  ! yt_edit diffusion is not modeled so flux is zero
     Flux_H2S(:) = Fw_H2S(:,1)
     ! Flux_S0(:)  = Fw_S0(:,1)  ! yt_edit diffusion is not modeled so flux is zero
@@ -1940,57 +1925,36 @@ CONTAINS
           dsec=dsec+OUTPUT_INTERVAL*60.0d0
         endif
         
-        write(58,*) date, SEDECO(ng)%O2(i,j,:)
-        write(80,*) date, SEDECO(ng)%DIC(i,j,:)
-!        write(81,*) date, SEDECO(ng)%N2(i,j,:)
-#  if defined ORGANIC_MATTER
-        write(65,*) date, SEDECO(ng)%DOCf(i,j,:)
-        write(82,*) date, SEDECO(ng)%DOCs(i,j,:)
-        write(66,*) date, SEDECO(ng)%POCf(i,j,:)
-        write(83,*) date, SEDECO(ng)%POCs(i,j,:)
-        write(100,*) date, SEDECO(ng)%POCn(i,j,:)
-#  endif
+        write(58,*) date, SEDECO(ng)%O2(:,i,j)
+        write(80,*) date, SEDECO(ng)%DIC(iCt,:,i,j)
+        write(65,*) date, SEDECO(ng)%DOC(iCt,iLDOM,:,i,j)
+        write(82,*) date, SEDECO(ng)%DOC(iCt,iRDOM,:,i,j)
+        write(66,*) date, SEDECO(ng)%POC(iCt,iLPOM,:,i,j)
+        write(83,*) date, SEDECO(ng)%POC(iCt,iRPOM,:,i,j)
 #  if defined NUTRIENTS
-        write(61,*) date, SEDECO(ng)%NH4(i,j,:)
-        write(63,*) date, SEDECO(ng)%NO3(i,j,:)
-        write(64,*) date, SEDECO(ng)%PO4(i,j,:)
+        write(61,*) date, SEDECO(ng)%NH4(iNt,:,i,j)
+        write(63,*) date, SEDECO(ng)%NO3(iNt,:,i,j)
+        write(64,*) date, SEDECO(ng)%PO4(iPt,:,i,j)
     ! #   if defined ORGANIC_MATTER
-    !       write(67,*) date, SEDECO(ng)%DON(i,j,:)
-    !       write(68,*) date, SEDECO(ng)%PON(i,j,:)
-    !       write(69,*) date, SEDECO(ng)%DOP(i,j,:)
-    !       write(70,*) date, SEDECO(ng)%POP(i,j,:)
+    !       write(67,*) date, SEDECO(ng)%DON(iNt,iLDOM,:,i,j)
+    !       write(68,*) date, SEDECO(ng)%PON(iNt,iRDOM,:,i,j)
+    !       write(69,*) date, SEDECO(ng)%DOP(iPt,iLPOM,:,i,j)
+    !       write(70,*) date, SEDECO(ng)%POP(iPt,iRPOM,:,i,j)
     ! #   endif
 #  endif
-# if defined SULFATE
-        write(84,*) date, SEDECO(ng)%Mn2(i,j,:)
-        write(85,*) date, SEDECO(ng)%MnO2(i,j,:)
-        write(86,*) date, SEDECO(ng)%Fe2(i,j,:)
-        write(87,*) date, SEDECO(ng)%FeS(i,j,:)
-        write(88,*) date, SEDECO(ng)%FeS2(i,j,:)
-        write(89,*) date, SEDECO(ng)%FeOOH(i,j,:)
-        write(90,*) date, SEDECO(ng)%FeOOH_PO4(i,j,:)
-        write(91,*) date, SEDECO(ng)%H2S(i,j,:)
-        write(93,*) date, SEDECO(ng)%S0(i,j,:)
-        write(94,*) date, SEDECO(ng)%SO4(i,j,:)
-# endif
-            !! for debug !!
-        !  write(96,'(*(g0:,", "))') date, Tamb, Samb, O2amb   &
-        !                         ,Dw_O2(0), 0d0, Fd_O2(0), 0d0, 0d0, FT_O2(0), 0d0, 0d0
-        !  write(97,'(*(g0:,", "))') date, SEDECO(ng)%Tmp(i,j,1), SEDECO(ng)%Sal(i,j,1), SEDECO(ng)%O2(i,j,1)    &
-        !                         ,Dw_O2(1), Ds_O2(1), Fd_O2(1), Fb_O2(1), Fc_O2(1), FT_O2(1), v1(1), R_O2(1)
-        ! write(96,'(*(g0:,", "))') date, SEDECO(ng)%Tmp(i,j,1), SEDECO(ng)%Sal(i,j,1), SEDECO(ng)%DOCf(i,j,1)    &
-        !                         ,Dw_DOC(1,1), 0d0, Fd_DOC(1,1), 0d0, 0d0, FT_DOC(1,1), 0d0, 0d0
-        ! write(97,'(*(g0:,", "))') date, SEDECO(ng)%Tmp(i,j,2), SEDECO(ng)%Sal(i,j,2), SEDECO(ng)%DOCf(i,j,2)    &
-        !                         ,Dw_DOC(2,1), Ds_DOC(2,1), Fd_DOC(2,1), Fb_DOC(2,1), Fc_DOC(2,1), FT_DOC(2,1), vdom(2,1), R_DOC(2,1)
-        ! write(97,'(*(g0:,", "))') date, vOM(10), v1(10),v2(10),v3(10),v4(10),v5(10)
-        ! write(98,*) date, redoxlevel(:) !! for debug
-        write(99,*) dz(:), z(:), SEDECO(ng)%poro(i,j,:)
-        write(101,*) date, v1(:)
-        write(102,*) date, v2(:)
-        write(103,*) date, v3(:)
-        write(104,*) date, v4(:)
-        write(105,*) date, v5(:)
-!        write(106,*) date, vOM(:)
+#  if defined SULFATE
+        write(84,*) date, SEDECO(ng)%Mn2(:,i,j)
+        write(85,*) date, SEDECO(ng)%MnO2(:,i,j)
+        write(86,*) date, SEDECO(ng)%Fe2(:,i,j)
+        write(87,*) date, SEDECO(ng)%FeS(iSt,:,i,j)
+        write(88,*) date, SEDECO(ng)%FeS2(iSt,:,i,j)
+        write(89,*) date, SEDECO(ng)%FeOOH(:,i,j)
+        write(90,*) date, SEDECO(ng)%FeOOH_PO4(iPt,:,i,j)
+        write(91,*) date, SEDECO(ng)%H2S(iSt,:,i,j)
+        write(93,*) date, SEDECO(ng)%S0(iSt,:,i,j)
+        write(94,*) date, SEDECO(ng)%SO4(iSt,:,i,j)
+#  endif
+        write(99,*) SEDECO(ng)%dzr(:), SEDECO(ng)%zr(:), SEDECO(ng)%poro(:,i,j)
         write(107,*) date, R_O2(:)   !! for debug
         write(108,*) date, Flux_DO   !! for debug
         ! endif
@@ -2032,52 +1996,20 @@ CONTAINS
   end function AdvUp
 
 !! --- Mass balance calculation in sediment column ---------------------------- !!
-  !! solutes (dissolved)
-  real(8) function massbalance_sed_d(C,FTin,FTout,R,dz,poro,dt)
+  real(8) function massbalance(C,FTin,FTout,R,dz,cff,dt)
     implicit none
     real(8),intent(in) :: C             ! concentration                   (µmol L-1 = nmol cm-3)
     real(8),intent(in) :: FTin          ! total flux (IN)                 (nmol cm-2 s-1)
     real(8),intent(in) :: FTout         ! total flux (OUT)                (nmol cm-2 s-1)
     real(8),intent(in) :: R             ! Net prodution and consumption   (nmol cm-3 s-1)
     real(8),intent(in) :: dz            ! layer thickness                 (cm)
-    real(8),intent(in) :: poro          ! porosity                        (cm_w3 cm_s-3)
+    real(8),intent(in) :: cff           ! porosity                        (cm_w3 cm_s-3)
     real(8),intent(in) :: dt            ! time step                       (s)
-    real(8) :: Ccal
 
-    Ccal = C + ((FTin - FTout)/dz + R)/poro * dt
+    massbalance = C + ((FTin - FTout)/dz + R)/cff * dt
 !  [nmol cm_w-3] = [nmol cm_w-3] + ([nmol cm_s-2 s-1]/(cm_s) + [nmol cm_s-3 s-1])/[cm_w3 cm_s-3] * [s] 
-    Ccal = max(Ccal,0.0d0)
-    ! Ccal = min(Ccal,3.0d4)
-    ! Ccal = min(Ccal,1.0d4)
-    ! massbalance_sed_d = min(Ccal,1.0d4)
-    massbalance_sed_d = Ccal
-
     return
-  end function massbalance_sed_d
-
-  !! solids (particulate)
-  real(8) function massbalance_sed_p(C,FTin,FTout,R,dz,poro,dt,rho_s)
-    implicit none
-    real(8),intent(in) :: C             ! concentration                  (nmol g-1)
-    real(8),intent(in) :: FTin          ! total flux  (IN)               (nmol cm-2 s-1)
-    real(8),intent(in) :: FTout         ! total flux  (OUT)              (nmol cm-2 s-1)
-    real(8),intent(in) :: R             ! Net prodution and consumption  (nmol cm-3 s-1)
-    real(8),intent(in) :: dz            ! layer thickness                (cm)
-    real(8),intent(in) :: poro          ! porosity                       (cm_w3 cm_s-3)
-    real(8),intent(in) :: dt            ! time step                      (s)
-    real(8),intent(in) :: rho_s         ! soil(wet) density              (g cm_w-3)
-    real(8) :: Ccal
-
-    Ccal = C + ((FTin -FTout)/dz + R)/(rho_s*(1.0d0-poro)) * dt
-  ! [nmol g-1] = [nmol g-1] + ([nmol cm-2 s-1]/[cm] + [nmol cm-3 s-1])/([g cm_w-3] * [cm_w3 cm_s-3]) * [s]
-    Ccal = max(Ccal,0.0d0)
-    ! Ccal = min(Ccal,1.0d4)
-    ! Ccal = min(Ccal,1.0d7)
-    ! massbalance_sed_p = min(Ccal,1.0d4)
-    massbalance_sed_p = Ccal
-
-    return
-  end function massbalance_sed_p
+  end function massbalance
 
 #endif
 END MODULE mod_sedecosys

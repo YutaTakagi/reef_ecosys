@@ -3,6 +3,7 @@
 /*#define INPUT_BOTTOM_PFD*/
 
 /*#define REEF_FLOW*/
+#define SEDIMENT
 
 /*** submarine groundwater discharge ***/
 
@@ -85,12 +86,15 @@
 /*** Sediment model options. ***/
 # if defined SEDIMENT_ECOSYS  /* Masa_edits */
 /*#  define SEDIMENT_EMPIRICAL*/     /* USE empirical sediment module  */
-#  define SEDECO_CLOSED_BOTTOM_DIFFUSION_BOUNDARY /* closed boundary condition at the bottom sediment layer */
-#  define SULFATE      /* For sulfate reduction in sediment */
-/*#  define SEDECO_BURIAL*/    /* For Burial term in sediment transport (massbalance) */
-/*#  define SEDECO_ADVECTION*/
 #  define ORGANIC_MATTER
 #  define NUTRIENTS
+#  define SULFATE      /* For sulfate reduction in sediment */
+#  if defined SEDIMENT
+#   define SEDECO_BURIAL    /* For Burial term in sediment transport (massbalance) */
+#  endif
+#  if defined SGD_ON
+#   define SEDECO_SGD    /* For Burial term in sediment transport (massbalance) */
+#  endif
 # endif
 
 

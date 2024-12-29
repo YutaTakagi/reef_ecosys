@@ -1170,6 +1170,20 @@ contains
 !!!***********************************************************************
 !!!   Isotope functions
 !!!*********************************************************************** 
+! **********************************************************************
+!  Safe calculation of isotope ratio.
+! **********************************************************************
+
+  real(8) function Iso_ratio(Ci,Ct) ! isotope ratio Ci/Ct
+
+    implicit none
+    real(8), intent(in) :: Ci  ! Isotope concentration (e.g., umol/L) 
+    real(8), intent(in) :: Ct  ! Total concentration   (e.g., umol/L)
+
+    Iso_ratio = Ci/Ct
+
+    return
+  end function Iso_ratio
 
 ! **********************************************************************
 !  d13C VPDB from R13C value.
