@@ -14,6 +14,8 @@ MODULE mod_param
 #if defined FOODWEB
   USE mod_foodweb
 #endif
+  USE mod_geochem
+
   implicit none
 !
 !-----------------------------------------------------------------------
@@ -209,6 +211,23 @@ MODULE mod_param
   real(8), allocatable :: p_algae(:,:,:)
   real(8), allocatable :: p_sand(:,:)
 
+#if defined SEDECO_SGD && defined SGD_ON
+  real(8) :: sgd_flux        ! sumbarine groundwater discharge rate of grid (cm s-1)  
+  real(8) :: sgd_Tmp         ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
+  real(8) :: sgd_Sal         ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
+  real(8) :: sgd_DIC(N_Csp)  ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+  real(8) :: sgd_TA          ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+  real(8) :: sgd_DOx         ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
+# if defined NUTRIENTS            
+  real(8) :: sgd_NO3(N_Nsp)  ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+  real(8) :: sgd_NH4(N_Nsp)  ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+  real(8) :: sgd_PO4(N_Psp)  ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+# endif
+#endif
+#if defined SEDECO_BURIAL
+  real(8) :: Fdep_sed        ! Sedimentation rate (cm s-1) (Positive: sedimentation; Negative: erosion)
+#endif
+
 contains
 
 !!! **********************************************************************
@@ -234,22 +253,22 @@ contains
 
     real(8) :: d0, T0, S0
     real(8) :: TAlk0, TIC_0, Oxyg0, Sed1_0
-    real(8) :: DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
+    real(8) :: DOC1_0, DOC2_0, POC1_0, POC2_0, POC3_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
     real(8) :: d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
     real(8) :: d13C_Phyt1_0, d13C_Phyt2_0, d13C_Phyt3_0, d13C_Zoop1_0, d13C_PIC1_0
     real(8) :: NO3_0, NH4_0, PO4_0
-    real(8) :: DON1_0, DON2_0, PON1_0, PON2_0, DOP1_0, DOP2_0, POP1_0, POP2_0
+    real(8) :: DON1_0, DON2_0, PON1_0, PON2_0, PON3_0, DOP1_0, DOP2_0, POP1_0, POP2_0, POP3_0
     real(8) :: d15N_NO3_0, d15N_NH4_0, d15N_DON1_0, d15N_DON2_0, d15N_PON1_0, d15N_PON2_0
     real(8) :: d15N_Phyt1_0, d15N_Phyt2_0, d15N_Phyt3_0, d15N_Zoop1_0
     real(8) :: p_coral1_0, p_coral2_0, p_algae_0, p_sgrass_0, p_sand_0
 
     namelist/initial/d0, T0, S0
     namelist/initial/TAlk0, TIC_0, Oxyg0, Sed1_0
-    namelist/initial/DOC1_0, DOC2_0, POC1_0, POC2_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
+    namelist/initial/DOC1_0, DOC2_0, POC1_0, POC2_0, POC3_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
     namelist/initial/d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
     namelist/initial/d13C_Phyt1_0, d13C_Phyt2_0, d13C_Phyt3_0, d13C_Zoop1_0, d13C_PIC1_0
     namelist/initial/NO3_0, NH4_0, PO4_0
-    namelist/initial/DON1_0, DON2_0, PON1_0, PON2_0, DOP1_0, DOP2_0, POP1_0, POP2_0
+    namelist/initial/DON1_0, DON2_0, PON1_0, PON2_0, PON3_0, DOP1_0, DOP2_0, POP1_0, POP2_0, POP3_0
     namelist/initial/d15N_NO3_0, d15N_NH4_0, d15N_DON1_0, d15N_DON2_0, d15N_PON1_0, d15N_PON2_0
     namelist/initial/d15N_Phyt1_0, d15N_Phyt2_0, d15N_Phyt3_0, d15N_Zoop1_0
     namelist/initial/p_coral1_0, p_coral2_0, p_algae_0, p_sgrass_0, p_sand_0
@@ -298,12 +317,6 @@ contains
       i=i+1
       iPIC(j)=ic+i
     END DO
-# if defined FOODWEB_TESTMODE
-    DO j=1,Nphy
-      i=i+1
-      iDeadPhyt(j)=ic+i
-    END DO
-# endif
 #endif
 #if defined CARBON_ISOTOPE
     i=i+1
@@ -424,7 +437,7 @@ contains
       do i=LBi,UBi
         do k=1,N
         
-          dz(i,j,k)=d0 !(m)
+          dz(i,j,k)=1.0d0 !(m)
         
           C(i,j,k,iTemp) = T0       
           C(i,j,k,iSalt) = S0
@@ -452,34 +465,25 @@ contains
           C(i,j,k,iDOC(2)) = DOC2_0       !DOC  (umol L-1) 
           C(i,j,k,iPOC(1)) = POC1_0       !POC  (umol L-1) 
           C(i,j,k,iPOC(2)) = POC2_0       !POC  (umol L-1) 
+          C(i,j,k,iPOC(3)) = POC3_0       !POC  (umol L-1) 
           C(i,j,k,iPhyt(1)) = Phyt1_0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           C(i,j,k,iPhyt(2)) = Phyt2_0     !Phytoplankton2 0.3(umolC L-1) 							diatom
           C(i,j,k,iPhyt(3)) = Phyt3_0     !Phytoplankton3 0.3(umolC L-1) 							coccolith
           C(i,j,k,iPhyt(4)) = Phyt4_0     !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
           C(i,j,k,iZoop(1)) = Zoop1_0     !Zooplankton (umol L-1)1.3
           C(i,j,k,iPIC(1)) =  PIC1_0      !Particulated inorganic carbon (umol L-1)1.3
-# if defined FOODWEB_TESTMODE
-          C(i,j,k,iDeadPhyt(1)) = 0.0d0   !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-          C(i,j,k,iDeadPhyt(2)) = 0.0d0   !Phytoplankton2 0.3(umolC L-1) 							diatom
-          C(i,j,k,iDeadPhyt(3)) = 0.0d0   !Phytoplankton3 0.3(umolC L-1)
-          C(i,j,k,iDeadPhyt(4)) = 0.0d0   !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
-# endif
 ! Offshore values
           Co(i,j,iDOC(1)) = DOC1_0       !DOC  (umol L-1) 
           Co(i,j,iDOC(2)) = DOC2_0       !DOC  (umol L-1) 
           Co(i,j,iPOC(1)) = POC1_0       !POC  (umol L-1) 
           Co(i,j,iPOC(2)) = POC2_0       !POC  (umol L-1) 
+          Co(i,j,iPOC(3)) = POC3_0       !POC  (umol L-1) 
           Co(i,j,iPhyt(1)) = Phyt1_0       !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           Co(i,j,iPhyt(2)) = Phyt2_0       !Phytoplankton2 0.3(umolC L-1) 							diatom
           Co(i,j,iPhyt(3)) = Phyt3_0       !Phytoplankton2 0.3(umolC L-1)
           Co(i,j,iPhyt(4)) = Phyt4_0       !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
           Co(i,j,iZoop(1)) = Zoop1_0       !Zooplankton (umol L-1)1.3
           Co(i,j,iPIC(1)) =  PIC1_0        !Particulated inorganic carbon (umol L-1)1.3
-# if defined FOODWEB_TESTMODE
-          Co(i,j,iDeadPhyt(1)) = 0.0d0   !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-          Co(i,j,iDeadPhyt(2)) = 0.0d0   !Phytoplankton2 0.3(umolC L-1) 							diatom
-          Co(i,j,iDeadPhyt(3)) = 0.0d0   !Phytoplankton2 0.3(umolC L-1) 							diatom
-# endif         
 #endif
 #if defined CARBON_ISOTOPE
           R13C=R13C_fromd13C(d13C_TIC0)
@@ -542,19 +546,23 @@ contains
           C(i,j,k,iDON(2)) = DON2_0     !DON  (umol L-1) 
           C(i,j,k,iPON(1)) = PON1_0     !PON  (umol L-1) 
           C(i,j,k,iPON(2)) = PON2_0    !PON  (umol L-1) 
+          C(i,j,k,iPON(3)) = PON3_0    !PON  (umol L-1) 
           C(i,j,k,iDOP(1)) = DOP1_0     !DOP  (umol L-1) 
           C(i,j,k,iDOP(2)) = DOP2_0    !DOP  (umol L-1) 
           C(i,j,k,iPOP(1)) = POP1_0      !POP  (umol L-1) 
           C(i,j,k,iPOP(2)) = POP2_0     !POP  (umol L-1) 
+          C(i,j,k,iPOP(3)) = POP3_0     !POP  (umol L-1) 
 ! Offshore values
           Co(i,j,iDON(1)) = DON1_0     !DON  (umol L-1) 
           Co(i,j,iDON(2)) = DON2_0     !DON  (umol L-1) 
           Co(i,j,iPON(1)) = PON1_0     !PON  (umol L-1) 
           Co(i,j,iPON(2)) = PON2_0    !PON  (umol L-1) 
+          Co(i,j,iPON(3)) = PON3_0    !PON  (umol L-1) 
           Co(i,j,iDOP(1)) = DOP1_0     !DOP  (umol L-1) 
           Co(i,j,iDOP(2)) = DOP2_0    !DOP  (umol L-1) 
           Co(i,j,iPOP(1)) = POP1_0      !POP  (umol L-1) 
           Co(i,j,iPOP(2)) = POP2_0     !POP  (umol L-1) 
+          Co(i,j,iPOP(3)) = POP3_0     !POP  (umol L-1) 
 # endif
 # if defined NITROGEN_ISOTOPE            
 !!!!!!!!!!!!

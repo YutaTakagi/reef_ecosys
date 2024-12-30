@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2017-2024 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2017-2025 Takashi NAKAMURA  =====
 !!!  edited by Masa Muto 2023
 
 !--------------------------------------------------------------------------------
@@ -126,13 +126,14 @@ contains
 #endif
       
 #if defined SEDIMENT_TESTMODE
-    ! open(56,file='./output/eco5-sedDIC_his.txt')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(57,file='./output/eco5-sedTA_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    open(62,file='./output/eco5-sedTmp_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    open(80,file='./output/eco5-sedSal_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
+    open(56,file='./output/eco5-sedDIC_his.txt')!!!!!!!!!!!!!!!!!!!for debug
+    open(57,file='./output/eco5-sedTA_his.txt')!!!!!!!!!!!!!!!!!!!for debug
     open(58,file='./output/eco5-sedDO_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
     ! open(59,file='./output/eco5-sedpH_his.txt')!!!!!!!!!!!!!!!!!!!for debug
     ! open(60,file='./output/eco5-sedWarg_his.txt')!!!!!!!!!!!!!!!!!!!for debug
     open(61,file='./output/eco5-sedNH4_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-!    open(62,file='./output/eco5-sedNO2_his.txt')!!!!!!!!!!!!!!!!!!!for debug
     open(63,file='./output/eco5-sedNO3_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
     open(64,file='./output/eco5-sedPO4_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
     open(65,file='./output/eco5-sedDOCf_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
@@ -151,7 +152,6 @@ contains
     ! open(79,file='./output/eco5-sedDNp_his.txt')!!!!!!!!!!!!!!!!!!!for debug
 
     !! MM edit 2023
-    open(80,file='./output/eco5-sedCO2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
     open(81,file='./output/eco5-sedN2_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
     open(82,file='./output/eco5-sedDOCs_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
     open(83,file='./output/eco5-sedPOCs_his.txt',status='replace')!!!!!!!!!!!!!!!!!!!for debug
@@ -287,16 +287,15 @@ END SUBROUTINE files_close
     write(fid,'(*(g0:,", "))') 'time', 'PFDsurf'                           &
         ,'Temp','Salt','TA','DIC','DO'                                     &
 #if defined ORGANIC_MATTER
-        ,'DOC1','DOC2','POC1','POC2','Phyt1','Phyt2','Phyt3', 'Phyt4'      &
+        ,'DOC1','DOC2','POC1','POC2','POC3','Phyt1'                        &
+        ,'Phyt2','Phyt3', 'Phyt4'                                          &
         ,'TotalPhy', 'Zoop','PIC'                                          &
-# if defined FOODWEB_TESTMODE
-        ,'DeadPhyt1','DeadPhyt2','DeadPhyt3'                               &
-# endif
 #endif
 #if defined NUTRIENTS            
         ,'NO3','NH4','PO4'                                                 &
 # if defined ORGANIC_MATTER
-        ,'DON1','DON2','PON1','PON2','DOP1','DOP2','POP1','POP2'           &
+        ,'DON1','DON2','PON1','PON2','PON3'                                &
+        ,'DOP1','DOP2','POP1','POP2','POP3'                                &
 # endif
 #endif
 #if defined CARBON_ISOTOPE
@@ -371,28 +370,24 @@ END SUBROUTINE files_close
     d13C_DIC=d13C_fromR13C(C(1,1,1,iT13C)/C(1,1,1,iTIC_))
 #endif
         
-    write(fid,'(*(g0:,", "))') time, PFDsurf                               &
+    write(fid,'(*(g0:,", "))') time, PFDsurf                           &
            , C(1,1,1,iTemp), C(1,1,1,iSalt)                            &
-           , C(1,1,1,iTAlk), C(1,1,1,iTIC_), C(1,1,1,iOxyg)          &
+           , C(1,1,1,iTAlk), C(1,1,1,iTIC_), C(1,1,1,iOxyg)            &
 #if defined ORGANIC_MATTER
            , C(1,1,1,iDOC(1)), C(1,1,1,iDOC(2))                        &
-           , C(1,1,1,iPOC(1)), C(1,1,1,iPOC(2))                        &
+           , C(1,1,1,iPOC(1)), C(1,1,1,iPOC(2)), C(1,1,1,iPOC(3))      &
            , C(1,1,1,iPhyt(1)), C(1,1,1,iPhyt(2)), C(1,1,1,iPhyt(3))   &
            , C(1,1,1,iPhyt(4))                                         &
-           , C(1,1,1,iPhyt(1))+C(1,1,1,iPhyt(2))+C(1,1,1,iPhyt(3))     &
+           , C(1,1,1,iPhyt(1))+C(1,1,1,iPhyt(2))+C(1,1,1,iPhyt(3))+C(1,1,1,iPhyt(4)) &
            , C(1,1,1,iZoop(1)), C(1,1,1,iPIC(1))                       &
-# if defined FOODWEB_TESTMODE
-           , C(1,1,1,iDeadPhyt(1)), C(1,1,1,iDeadPhyt(2))              &
-           , C(1,1,1,iDeadPhyt(3))                                       &
-# endif
 #endif
 #if defined NUTRIENTS            
-           , C(1,1,1,iNO3_), C(1,1,1,iNH4_), C(1,1,1,iPO4_)          &
+           , C(1,1,1,iNO3_), C(1,1,1,iNH4_), C(1,1,1,iPO4_)            &
 # if defined ORGANIC_MATTER
            , C(1,1,1,iDON(1)), C(1,1,1,iDON(2))                        &
-           , C(1,1,1,iPON(1)), C(1,1,1,iPON(2))                        &
+           , C(1,1,1,iPON(1)), C(1,1,1,iPON(2)), C(1,1,1,iPON(3))      &
            , C(1,1,1,iDOP(1)), C(1,1,1,iDOP(2))                        &
-           , C(1,1,1,iPOP(1)), C(1,1,1,iPOP(2))                        &
+           , C(1,1,1,iPOP(1)), C(1,1,1,iPOP(2)), C(1,1,1,iPOP(3))      &
 # endif
 #endif
 #if defined CARBON_ISOTOPE

@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2025 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -33,11 +33,11 @@ PROGRAM main
   
   integer, parameter :: Im = 1
   integer, parameter :: Jm = 1
-  integer, parameter :: N  = 1
+  integer, parameter :: N  = 2
 
   real(8), parameter :: dt = 1.0d0
   integer, parameter :: isplitc  = 20
-  integer, parameter :: isplitsed  = 1
+  integer, parameter :: isplitsed  = 20
   integer, parameter :: Ngrids = 1
 
   integer :: i,j,k,id, Nid
@@ -52,11 +52,12 @@ PROGRAM main
   real(8) :: R13C
 #endif
 !  For Output      
-  real(8), parameter :: OUTPUT_INTERVAL = 1.0d0     ! Output interval (min)
+  real(8), parameter :: OUTPUT_INTERVAL = 60.0d0 !1d0/60d0 !60.0d0 !1.0d0     ! Output interval (min)
   real(8) :: dsec = 0.d0 !sec
   
   real(8) :: h1,h2
   real(8) :: fvol_rc, fvol_ch
+  real(8) :: dC_dt_sgd
 
   integer :: in_file(12)
   real(8) :: Tmax, time0
@@ -66,10 +67,12 @@ PROGRAM main
 #endif
   logical :: start_of_new_run = .true.
 
+  real(8) :: DIC(N_Csp,N)        
+
   namelist/input_info/in_file
   namelist/ecosys_config/Tmax, time0
   namelist/ecosys_config/nSetting
-  namelist/ecosys_config/Nsed
+
 #ifdef SEDIMENT_ECOSYS
 !  namelist/sedecosys_config/Nsed
 #endif
@@ -203,6 +206,24 @@ PROGRAM main
 #endif
 
 !----- Ecosystem model ----------------------------------------
+!    DIC(iCt,:) = C(1,1,:,iTIC_)
+
+#if defined SEDECO_SGD && defined SGD_ON
+    sgd_flux  = 0d0 !1.0d-2   ! sumbarine groundwater discharge rate (cm s-1)  This flux is assumed to be the same throughout the sediment ecosystem layers (no compression/expansion) So volume flux doesn't change but concentrations of tracers do
+    sgd_Tmp   = 20.0d0  ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
+    sgd_Sal   = 5.0d0  ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
+    sgd_DIC(:)= 3500.0d0  ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+    sgd_TA    = 3500.0d0  ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+    sgd_DOx   = 10.0d0  ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
+# if defined NUTRIENTS            
+    sgd_NO3(:)= 100.0d0  ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+    sgd_NH4(:)= 1.0d0  ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+    sgd_PO4(:)= 1.0d0  ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+# endif
+#endif
+#if defined SEDECO_BURIAL
+    Fdep_sed = -3.0d-8  ! 2.77d-8 g/cm2/s = 1.0 g/m2/h; Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
+#endif
 
     CALL reef_ecosys          &
 !      input parameters
@@ -232,6 +253,7 @@ PROGRAM main
 
               ,C(1,1,:,iTemp)     &   ! Tmp(N): Temperature (oC)
               ,C(1,1,:,iSalt)     &   ! Sal(N): Salinity (PSU)
+!              ,DIC(iCt,:)         &   ! DIC(N): Total dissolved inorganic carbon (DIC: umol kg-1)
               ,C(1,1,:,iTIC_)     &   ! DIC(N): Total dissolved inorganic carbon (DIC: umol kg-1)
               ,C(1,1,:,iTAlk)     &   ! TA (N): Total alkalinity (TA: umol kg-1)
               ,C(1,1,:,iOxyg)     &   ! DOx(N): Dissolved oxygen (umol L-1)
@@ -241,19 +263,6 @@ PROGRAM main
               ,C(1,1,:,iPhyt(:))      &   ! PHY(N): phytoplankton (umol C L-1)
               ,C(1,1,:,iZoop(:))      &   ! ZOO(N): zooplankton (umol C L-1)
               ,C(1,1,:,iPIC(:))       &   ! PIC(N): Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-# if defined FOODWEB_TESTMODE
-              ,C(1,1,:,iDeadPhyt(:))  &   ! DeadPHY(Nphy): Dead phytoplankton (umol C L-1)
-# endif
-#endif
-#if defined CARBON_ISOTOPE
-              ,C(1,1,:,iT13C)         &   ! DI13C(N): 13C of DIC (umol kg-1)
-# if defined ORGANIC_MATTER
-              ,C(1,1,:,iDO13C(:))     &   ! DO13C (N): 13C of Labile Dissolved organic carbon (LDOC: umol L-1)
-              ,C(1,1,:,iPO13C(:))     &   ! PO13C (N): 13C of Particulate organic carbon (POC: umol L-1)
-              ,C(1,1,:,iPhyt13C(:))   &   ! PHY13C(N): 13C of phytoplankton1 (umol C L-1), dinoflagellate
-              ,C(1,1,:,iZoop13C(:))   &   ! ZOO13C(N): 13C of zooplankton (umol C L-1)
-              ,C(1,1,:,iPI13C(:))     &   ! PI13C (N): 13C of Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-# endif
 #endif
 #if defined NUTRIENTS         
               ,C(1,1,:,iNO3_)     &   ! NO3(N): NO3 (umol L-1)
@@ -265,40 +274,26 @@ PROGRAM main
               ,C(1,1,:,iDOP(:))     &   ! DOP(N): Dissolved organic phosporius (DOP: umol L-1)
               ,C(1,1,:,iPOP(:))     &   ! POP(N): Particulate organic phosporius (POP: umol L-1)
 # endif
-# if defined NITROGEN_ISOTOPE
-             ,C(1,1,:,i15NO3)     &   ! NO3_15N(N): 15N of NO3 (umol L-1)
-             ,C(1,1,:,i15NH4)     &   ! NH4_15N(N): 15N of NH4 (umol L-1)
-#  if defined ORGANIC_MATTER
-             ,C(1,1,:,iDO15N(:))     &   ! DO15N (N): 15N of Labile Dissolved organic nitrogen (LDON: umol L-1)
-             ,C(1,1,:,iPO15N(:))     &   ! PO15N (N): 15N of Particulate organic nitrogen (PON: umol L-1)
-             ,C(1,1,:,iPhyt15N(:))   &   ! PHY15N(N): 15N of phytoplankton1 (umol C L-1), dinoflagellate
-             ,C(1,1,:,iZoop15N(:))   &   ! ZOO15N(N): 15N of zooplankton (umol C L-1)
-#  endif
-# endif
 #endif
 #if defined COT_STARFISH         
               ,C(1,1,:,iCOTe)     &   ! COTe(N): COT starfish egg (umol L-1)
               ,C(1,1,:,iCOTl)     &   ! COTl(N): COT starfish larvae (umol L-1)
 #endif
-#if defined SEDECO_ADVECTION && defined SGD_ON
+#if defined SEDECO_SGD && defined SGD_ON
               , sgd_flux          &   ! sumbarine groundwater discharge rate (cm s-1)  This flux is assumed to be the same throughout the sediment ecosystem layers (no compression/expansion) So volume flux doesn't change but concentrations of tracers do
-              , sgd_Tmp_in        &   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
-              , sgd_Sal_in        &   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
-              , sgd_DIC_in        &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
-              , sgd_TA_in         &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
-              , sgd_DOx_in        &   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
-# if defined CARBON_ISOTOPE
-              , sgd_DI13C_in      &   ! SGD concentration coming in through bottom: DI13C : 13C of DIC (umol kg-1)
-# endif
+              , sgd_Tmp           &   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
+              , sgd_Sal           &   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
+              , sgd_DIC(:)        &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+              , sgd_TA            &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+              , sgd_DOx           &   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
 # if defined NUTRIENTS            
-              , sgd_NO3_in        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
-              , sgd_NH4_in        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
-              , sgd_PO4_in        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
-#  if defined NITROGEN_ISOTOPE
-              , sgd_NO3_15N_in    &   ! SGD concentration coming in through bottom: NO3_15N: 15N of NO3 (umol L-1)
-              , sgd_NH4_15N_in    &   ! SGD concentration coming in through bottom: NH4_15N: 15N of NH4 (umol L-1)
-#  endif
+              , sgd_NO3(:)        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
+              , sgd_NH4(:)        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
+              , sgd_PO4(:)        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
 # endif
+#endif
+#if defined SEDECO_BURIAL
+              , Fdep_sed          &    ! Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
 #endif
 !      output parameters
               ,dC_dt(1,1,:,iTemp)   &   ! Tmp(N): Temperature (oC)
@@ -312,19 +307,6 @@ PROGRAM main
               ,dC_dt(1,1,:,iPhyt(1):iPhyt(Nphy))   &   ! dPHY_dt(N): dPHY/dt (umol C L-1 s-1)
               ,dC_dt(1,1,:,iZoop(1):iZoop(Nzoo))   &   ! dZOO_dt(N): dZOO/dt (umol C L-1 s-1)
               ,dC_dt(1,1,:,iPIC(1):iPIC(Npim))      &   ! dPIC_dt(N): dPIC/dt (umol L-1 s-1)
-# if defined FOODWEB_TESTMODE
-              ,dC_dt(1,1,:,iDeadPhyt(1):iDeadPhyt(Nphy))   &   ! dDeadPHY/dt  (umol L-1 s-1)
-# endif
-#endif
-#if defined CARBON_ISOTOPE
-              ,dC_dt(1,1,:,iT13C)   &   ! dDI13C_dt(N): dDI13C/dt (umol kg-1 s-1)
-# if defined ORGANIC_MATTER     
-              ,dC_dt(1,1,:,iDO13C(1):iDO13C(Ndom))    &   ! dDO13C_dt (N): dDO13C/dt  (umol L-1 s-1) 
-              ,dC_dt(1,1,:,iPO13C(1):iPO13C(Npom))    &   ! dPO13C_dt (N): dPO13C/dt  (umol L-1 s-1) 
-              ,dC_dt(1,1,:,iPhyt13C(1):iPhyt13C(Nphy))  &   ! dPHY13C_dt(N): dPHY13C/dt  (umol L-1 s-1)  
-              ,dC_dt(1,1,:,iZoop13C(1):iZoop13C(Nzoo))  &   ! dZOO13C_dt(N): dZOO13C/dt  (umol L-1 s-1)  
-              ,dC_dt(1,1,:,iPI13C(1):iPI13C(Npim))    &   ! dPI13C_dt (N): dPI13C/dt  (umol L-1 s-1)  
-# endif
 #endif
 #if defined NUTRIENTS 
               ,dC_dt(1,1,:,iNO3_)   &   ! dNO3_dt(N): dNO3/dt (umol L-1 s-1)
@@ -336,17 +318,6 @@ PROGRAM main
               ,dC_dt(1,1,:,iPON(1):iPON(Npom))      &   ! dPON_dt(N): dPON/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iDOP(1):iDOP(Ndom))      &   ! dDOP_dt(N): dDOP/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iPOP(1):iPOP(Npom))      &   ! dPOP_dt(N): dPOP/dt (umol L-1 s-1)
-# endif
-# if defined NITROGEN_ISOTOPE
-              ,C_dt(1,1,:,i15NO3)        &   ! dNO3_15N_dt(N): dNO3_15N/dt (umol L-1 s-1)
-!              ,C_dt(1,1,:,i15NO2)        &   ! dNO2_15N_dt(N): dNO2_15N/dt (umol L-1 s-1)
-              ,C_dt(1,1,:,i15NH4)        &   ! dNH4_15N_dt(N): dNH4_15N/dt (umol L-1 s-1)
-#  if defined ORGANIC_MATTER
-              ,C_dt(1,1,:,iDO15N(1):iDO15N(Ndom))     &   ! dDO15N_dt (N): dDO15N/dt  (umol L-1 s-1) 
-              ,C_dt(1,1,:,iPO15N(1):iPO15N(Npom))     &   ! dPO15N_dt (N): dPO15N/dt  (umol L-1 s-1) 
-              ,C_dt(1,1,:,iPhyt15N(1):iPhyt15N(Nphy))   &   ! dPHY15N_dt(N): dPHY1_15N/dt  (umol L-1 s-1)  
-              ,C_dt(1,1,:,iZoop15N(1):iZoop15N(Nzoo))   &   ! dZOO15N_dt(N): dZOO_15N/dt  (umol L-1 s-1)  
-#  endif
 # endif
 #endif
 #if defined COT_STARFISH         
@@ -376,12 +347,18 @@ PROGRAM main
 
       else if (nSetting .eq. 2) then
         
-        C(1,1,k,iTemp)=C(1,1,k,iTemp)+0.
-        C(1,1,k,iSalt)=C(1,1,k,iSalt)+0.
-        C(1,1,k,iSedi)=C(1,1,k,iSedi)+0.
+!        C(1,1,k,iTemp)=C(1,1,k,iTemp)+0.
+!        C(1,1,k,iSalt)=C(1,1,k,iSalt)+0.
+!        C(1,1,k,iSedi)=C(1,1,k,iSedi)+0.
         
-        do id=4,Nid
+        do id=1,Nid
+
           C(1,1,k,id)=C(1,1,k,id) + dC_dt(1,1,k,id)*dt
+#if defined SEDECO_SGD && defined SGD_ON
+          ! Volume flux by SGD and overflow is assumed 
+          dC_dt_sgd = -0.01d0*sgd_flux *C(1,1,k,id)/dz(1,1,1)
+          C(1,1,k,id)=C(1,1,k,id) + dC_dt_sgd*dt
+#endif
         end do
 
 !---------- Constant Flow condition ------------------------------------

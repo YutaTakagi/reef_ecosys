@@ -222,13 +222,13 @@ CONTAINS
     real(8), parameter :: e_Gpoc2z(3,1) = reshape( [ 0.10d0,    0.10d0,   0.10d0   ], [3,1] ) ! to Gzoo ! (no dim.)      Assimilation efficiency of ZOO (0.7:Kawamiya et al., 1995)
 !------- Decomposition parameters --------------------
 !                                        LDOM      RDOM
-    real(8), parameter :: k_Ddoc(2) = [ 3.0d-7,   1.0d-11   ]    ! (s-1)    Decomposition rate of DOC at 0 oC (0.3d0 d-1; Kishi et al., 2001)
+    real(8), parameter :: k_Ddoc(2) = [ 2.0d-7,   1.0d-11   ]    ! (s-1)    Decomposition rate of DOC at 0 oC (0.3d0 d-1; Kishi et al., 2001)
     real(8), parameter :: k_Ddon(2) = [ 2.0d-7,   1.0d-11   ]    ! (s-1)    Decomposition rate of DON at 0 oC (0.02d0 d-1; Kishi et al., 2007)
     real(8), parameter :: k_Ddop(2) = [ 2.0d-7,   1.0d-11   ]    ! (s-1)    Decomposition rate of DOP at 0 oC 
 !                                        LPOM      RPOM      CPOM
-    real(8), parameter :: k_Dpoc(3) = [ 3.0d-7,   3.0d-7,  1.0d-10   ]    ! (s-1)    Decomposition rate of POC at 0 oC (0.3d0 d-1; Kishi et al., 2001)
-    real(8), parameter :: k_Dpon(3) = [ 1.0d-7,   1.0d-7,  1.0d-10   ]    ! (s-1)    Decomposition rate of PON at 0 oC (0.1d0 d-1; Kishi et al., 2007)
-    real(8), parameter :: k_Dpop(3) = [ 1.0d-7,   1.0d-7,  1.0d-10   ]    ! (s-1)    Decomposition rate of POP at 0 oC 
+    real(8), parameter :: k_Dpoc(3) = [ 1.0d-4,   1.0d-7,  1.0d-10   ]    ! (s-1)    Decomposition rate of POC at 0 oC (0.3d0 d-1; Kishi et al., 2001)
+    real(8), parameter :: k_Dpon(3) = [ 1.0d-4,   1.0d-7,  1.0d-10   ]    ! (s-1)    Decomposition rate of PON at 0 oC (0.1d0 d-1; Kishi et al., 2007)
+    real(8), parameter :: k_Dpop(3) = [ 1.0d-4,   1.0d-7,  1.0d-10   ]    ! (s-1)    Decomposition rate of POP at 0 oC 
 !                                        LDOM      RDOM
     real(8), parameter :: b_Ddoc(2) = [ 0.0693d0, 0.0693d0 ]    ! (degC-1) Temperature coefficient for decomposition of DOC (Kishi et al., 2001)
     real(8), parameter :: b_Ddon(2) = [ 0.0693d0, 0.0693d0 ]    ! (degC-1) Temperature coefficient for decomposition of DON (Kishi et al., 2007)
@@ -433,11 +433,11 @@ CONTAINS
 
       IF(k == iDnfl) THEN
         Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4toNO3(k)
-        Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))    
+        Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4toNO3(k))    
         Vp_PO4(k) = cf3*cf3/(cf3*cf3+Kp_PO4(k)*Kp_PO4(k))
       ELSE IF(k == iDtm) THEN   
         Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4toNO3(k)
-        Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4(k))    
+        Vp_NO3(k) = cf2*cf2/(cf2*cf2+Kp_NO3(k)*Kp_NO3(k)) * exp(-psi(k) * cf1) * (1.0d0 - rNH4toNO3(k))    
         Vp_PO4(k) = cf3*cf3/(cf3*cf3+Kp_PO4(k)*Kp_PO4(k))
       ELSE IF(k == iCya) THEN   
         Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4toNO3(k)
@@ -523,7 +523,7 @@ CONTAINS
       DO isp=1,N_Csp
         dPHY_dt(isp,k) = dPHY_dt(isp,k) - Rp(k) *rPHY(isp,k)
         dDIC_dt(isp) = dDIC_dt(isp) + Rp(k) *rPHY(isp,k)
-        dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Rp(k)*rCCp(k)*rPIC(isp,k)  !!!??????????????? Check needed
+        dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Rp(k)*rCCp(k)!*rPIC(isp,k)  !!!??????????????? Check needed?????????????????????????????????
       ENDDO
 #if defined NUTRIENTS
       DO isp=1,N_Nsp
@@ -578,7 +578,7 @@ CONTAINS
           dPHY_dt(isp,m) = dPHY_dt(isp,m) - Gp2z(m,k) *rPHY(isp,m)
           dZOO_dt(isp,k) = dZOO_dt(isp,k) + Gp2z(m,k)*e_Gp2z(m,k) *a_grz(isp) *rPHY(isp,m)
           dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*a_grz(isp)) *rPHY(isp,m) !!!!****Need check
-          dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Gp2z(m,k)*rCCp(m)*rPIC(isp,m) !!!!****Need check
+          dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Gp2z(m,k)*rCCp(m)!*rPIC(isp,m) !!!!****Need check?????????????????????????????????????????
         ENDDO
 #if defined NUTRIENTS
         DO isp=1,N_Nsp

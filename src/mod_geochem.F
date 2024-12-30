@@ -1179,8 +1179,12 @@ contains
     implicit none
     real(8), intent(in) :: Ci  ! Isotope concentration (e.g., umol/L) 
     real(8), intent(in) :: Ct  ! Total concentration   (e.g., umol/L)
-
-    Iso_ratio = Ci/Ct
+    if(Ct>0.0d0) then
+      Iso_ratio = Ci/Ct
+    else
+      Iso_ratio = 0.0d0
+    endif
+    Iso_ratio = min(Iso_ratio, 1.0d0)
 
     return
   end function Iso_ratio
