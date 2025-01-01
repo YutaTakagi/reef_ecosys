@@ -63,7 +63,6 @@ CONTAINS
     , PHY            &   ! PHY(Nphy): phytoplankton (umol C L-1)
     , ZOO            &   ! ZOO(Nzoo): zooplankton (umol C L-1)
     , PIC            &   ! PIC(Npim): Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-#if defined NUTRIENTS         
     , NO3            &   ! NO3 (umol L-1)
     , NH4            &   ! NH4 (umol L-1)
     , PO4            &   ! PO4 (umol L-1)
@@ -71,11 +70,10 @@ CONTAINS
     , PON            &   ! Particulate organic nitrogen (PON: umol L-1)
     , DOP            &   ! Dissolved organic phosporius (DOP: umol L-1)
     , POP            &   ! Particulate organic phosporius (POP: umol L-1)
-#endif
-#if defined COT_STARFISH         
+# if defined COT_STARFISH         
     , COTe           &   ! COT starfish egg (umol L-1)
     , COTl           &   ! COT starfish larvae (umol L-1)
-#endif
+# endif
 !   output parameters
     , dDIC_dt        &   ! dDIC/dt  (umol kg-1 s-1)  1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
     , dTA_dt         &   ! dTA/dt   (umol kg-1 s-1) 
@@ -85,7 +83,6 @@ CONTAINS
     , dPHY_dt        &   ! dPHY1/dt  (umol L-1 s-1)  
     , dZOO_dt        &   ! dZOO/dt  (umol L-1 s-1)  
     , dPIC_dt        &   ! dPIC/dt  (umol L-1 s-1)
-#if defined NUTRIENTS
     , dNO3_dt        &   ! dNO3/dt (umol L-1 s-1)
     , dNH4_dt        &   ! dNH4/dt (umol L-1 s-1)
     , dPO4_dt        &   ! dPO4/dt (umol L-1 s-1)
@@ -93,11 +90,10 @@ CONTAINS
     , dPON_dt        &   ! dPON/dt (umol L-1 s-1)
     , dDOP_dt        &   ! dDOP/dt (umol L-1 s-1)
     , dPOP_dt        &   ! dPOP/dt (umol L-1 s-1)
-#endif                                
-#if defined COT_STARFISH         
+# if defined COT_STARFISH         
     , dCOTe_dt       &   ! dCOTe/dt (umol L-1 s-1)
     , dCOTl_dt       &   ! dCOTl/dt (umol L-1 s-1)
-#endif
+# endif
     , pH             &   ! pH
     , Wcal           &   ! Calcite saturation state
     , Warg           &   ! Aragonite saturation state
@@ -124,7 +120,6 @@ CONTAINS
     real(8), intent(in) :: PHY(N_Csp,Nphy)      ! phytoplankton1 (umol C L-1), dinoflagellate
     real(8), intent(in) :: ZOO(N_Csp,Nzoo)      ! zooplankton (umol C L-1)
     real(8), intent(in) :: PIC(N_Csp,Npim)      ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-#if defined NUTRIENTS         
     real(8), intent(in) :: NO3(N_Nsp)            ! NO3 (umol L-1)
     real(8), intent(in) :: NH4(N_Nsp)            ! NH4 (umol L-1)
     real(8), intent(in) :: PO4(N_Nsp)            ! PO4 (umol L-1)
@@ -132,11 +127,10 @@ CONTAINS
     real(8), intent(in) :: PON(N_Nsp,Npom)      ! Particulate organic nitrogen (PON: umol L-1)
     real(8), intent(in) :: DOP(N_Psp,Ndom)      ! Labile Dissolved organic phosporius (DOP: umol L-1)
     real(8), intent(in) :: POP(N_Psp,Npom)      ! Particulate organic phosporius (POP: umol L-1)
-#endif
-#if defined COT_STARFISH         
+# if defined COT_STARFISH         
     real(8), intent(in) :: COTe           ! COT starfish egg (umol L-1)
     real(8), intent(in) :: COTl           ! COT starfish larvae (umol L-1)
-#endif
+# endif
 !   output parameters
     real(8), intent(out) :: dDIC_dt(N_Csp)       ! dDIC/dt  (umol kg-1 s-1)  1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
     real(8), intent(out) :: dTA_dt        ! dTA/dt   (umol kg-1 s-1) 
@@ -146,7 +140,6 @@ CONTAINS
     real(8), intent(out) :: dPHY_dt(N_Csp,Nphy) ! dPHY1/dt  (umol L-1 s-1)  
     real(8), intent(out) :: dZOO_dt(N_Csp,Nzoo) ! dZOO/dt  (umol L-1 s-1)  
     real(8), intent(out) :: dPIC_dt(N_Csp,Npim) ! dPIC/dt  (umol L-1 s-1) 
-#if defined NUTRIENTS
     real(8), intent(out) :: dNO3_dt(N_Nsp)       ! dNO3/dt (umol L-1 s-1)
     real(8), intent(out) :: dNH4_dt(N_Nsp)       ! dNH4/dt (umol L-1 s-1)
     real(8), intent(out) :: dPO4_dt(N_Psp)       ! dPO4/dt (umol L-1 s-1)
@@ -154,11 +147,10 @@ CONTAINS
     real(8), intent(out) :: dPON_dt(N_Nsp,Npom) ! dPON/dt (umol L-1 s-1)
     real(8), intent(out) :: dDOP_dt(N_Psp,Ndom) ! dDOP/dt (umol L-1 s-1)
     real(8), intent(out) :: dPOP_dt(N_Psp,Npom) ! dPOP/dt (umol L-1 s-1)
-#endif                                
-#if defined COT_STARFISH
+# if defined COT_STARFISH
     real(8), intent(out) :: dCOTe_dt      ! dCOTe/dt (umol L-1 s-1)
     real(8), intent(out) :: dCOTl_dt      ! dCOTl/dt (umol L-1 s-1)
-#endif
+# endif
     real(8), intent(out) :: pH             ! pH
     real(8), intent(out) :: Wcal           ! Calcite saturation state
     real(8), intent(out) :: Warg           ! Aragonite saturation state
@@ -184,7 +176,6 @@ CONTAINS
 !  PHY ratio of extracellular excretion to production 0.135(Kawamiya et al., 1995)    
     real(8), parameter :: k_Ep(4) = [ 0.135d0,  0.135d0,  0.135d0,  0.135d0  ] ! (no dim.) 
     real(8), parameter :: rLDOMphy = 0.99d0  ! (Labile DOM)/(Total DOM) of phytoplankton excreted DOM (no dim.) 
-#if defined NUTRIENTS
 !  PHY Nutrient Assimilation Parameter         
 !                                       Dnfl    Dtm     Ccl     Cya
     real(8), parameter :: Kp_NH4(4) = [ 3.0d-1, 5.0d-2, 1.0d-2, 2.0d-1 ]      ! (µmol L-1)       JS_edit   
@@ -193,7 +184,6 @@ CONTAINS
     ! (1.5L umolN-1; Kishi et al., 2007)  0.01  0.226  0.5
 !                                       Dnfl    Dtm     Ccl     Cya
     real(8), parameter :: psi(4) =    [ 0.5d0,  0.5d0,  0.5d0,  0.5d0  ] !(L umolC-1)   
-#endif
 !------- Zooplankton parameters ------------------------
 !                                            from  Dnfl       Dtm        Ccl         Cya
     real(8), parameter :: k_Gp2z(4,1) = reshape( [ 3.0d-6,    2.0d-6,    3.0d-7 ,    3.0d-7    ], [4,1] ) ! to Gzoo! (s-1)          Maximum grazing rate of PHY1 by ZOO at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)0.16
@@ -261,13 +251,9 @@ CONTAINS
     real(8), parameter :: k_Dcpop2dtr = 1.0d-9    ! (s-1)     Decomposition rate of CPOM to Detritus at 0 oC
     real(8), parameter :: b_Dcpop2dtr = 0.0693d0  ! (degC-1)  Temperature coefficient for decomposition of CPOM to Detritus
 !------- Physical parameters --------------------
-#if defined NUTRIENTS
     real(8), parameter :: k_Nit = 3.0d-7     ! (s-1)      Nitrification rate at 0 oC (0.03d0 d-1; Kishi et al., 2007)
     real(8), parameter :: b_Nit = 0.0693d0   ! (degC-1)   Temperature coefficient for nitrification (Kishi et al., 2007)
-#endif
 !------- Physical parameters --------------------
-#if defined NUTRIENTS   
-
 ! Redfield Ratio (1934) C:N:P -> C:N=6.6  C:P=106    N:P=16
 ! Martiny et al  (2014) C:N:P -> C:N=7.4  C:P=163    N:P=22
 ! GLODAP Data           C:N:P -> C:N=9.2  C:P=131.9  N:P=14.4
@@ -278,20 +264,19 @@ CONTAINS
     real(8), parameter :: rCNz(1) = [ 9.2d0   ]    ! (no dim.) ZOO  C:N ratio
     real(8), parameter :: rCPz(1) = [ 131.9d0 ]    ! (no dim.) ZOO  C:P ratio
     real(8), parameter :: rNH4toNO3(4) = 0.3d0            ! (no dim.)  PHY NH4:Nitrogen ratio JS_edit make array to use 4 categories
-#endif                                
     real(8), parameter :: rCCp(4) = [ 0.0d0, 0.0d0, 0.5d0, 0.0d0 ]  ! ***** (no dim.) CaCO3:OrgC ratio !!! Need Ref!!!!!!!!!!
 !----- for carbon isotope ------------------------
-#if defined CARBON_TRACE
+# if defined CARBON_TRACE
 !                                        iCt   Ctrac1  Ctrac1  Ctrac1
     real(8), parameter :: a_phot(4) = [ 1.0d0,  1.0d0,  1.0d0,  1.0d0 ] 
     real(8), parameter :: a_calc(4) = [ 1.0d0,  1.0d0,  1.0d0,  1.0d0 ] 
     real(8), parameter :: a_grz (4) = [ 1.0d0,  1.0d0,  1.0d0,  1.0d0 ] 
-#else
+# else
 !                                        iCt          iC13
     real(8), parameter :: a_phot(2) = [ 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
     real(8), parameter :: a_calc(2) = [ 1.0d0,   2.7d-3 + 1.0d0 ] !!!!! To Be Confirmed
     real(8), parameter :: a_grz (2) = [ 1.0d0,   1.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
-#endif
+# endif
     real(8), parameter :: sn =   1.0d-20 ! A small number for avoiding a number divided by 0
 
 !------- Local variables --------------------
@@ -301,18 +286,16 @@ CONTAINS
     real(8) :: Ddoc(Ndom), Dpoc(Npom), Dp2doc(Npom,Ndom)
     real(8) :: Dcpoc2dtr
     real(8) :: CO3, Dissol
-#if defined CARBON_ISOTOPE
+# if defined CARBON_ISOTOPE
     real(8) :: rDI13C, rPO13C(Npom), rDO13C(Ndom)
     real(8) :: rPHY13C(Nphy), rZOO13C(Nzoo), rPI13C(Npim)
-#endif
-#if defined NUTRIENTS
+# endif
     real(8) :: Ddon(Ndom), Dpon(Npom), Dp2don(Npom,Ndom)
     real(8) :: Ddop(Ndom), Dpop(Npom), Dp2dop(Npom,Ndom)
     real(8) :: Vp_NH4(Nphy), Vp_NO3(Nphy)
     real(8) :: Vp_PO4(Nphy)
     real(8) :: Dcpon2dtr, Dcpop2dtr
     real(8) :: Nit
-#endif
 
     real(8) :: rDIC(N_Csp)     ! Total dissolved inorganic carbon (DIC: umol kg-1)
     real(8) :: rDOC(N_Csp,Ndom)      ! Dissolved organic carbon (DOC: umol L-1)
@@ -320,7 +303,6 @@ CONTAINS
     real(8) :: rPHY(N_Csp,Nphy)      ! phytoplankton1 (umol C L-1), dinoflagellate
     real(8) :: rZOO(N_Csp,Nzoo)      ! zooplankton (umol C L-1)
     real(8) :: rPIC(N_Csp,Npim)      ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-#if defined NUTRIENTS         
     real(8) :: rNO3(N_Nsp)            ! NO3 (umol L-1)
     real(8) :: rNH4(N_Nsp)            ! NH4 (umol L-1)
     real(8) :: rPO4(N_Nsp)            ! PO4 (umol L-1)
@@ -328,7 +310,6 @@ CONTAINS
     real(8) :: rPON(N_Nsp,Npom)      ! Particulate organic nitrogen (PON: umol L-1)
     real(8) :: rDOP(N_Psp,Ndom)      ! Labile Dissolved organic phosporius (DOP: umol L-1)
     real(8) :: rPOP(N_Psp,Npom)      ! Particulate organic phosporius (POP: umol L-1)
-#endif
     
     integer :: k,m,isp
     real(8) :: cf1, cf2, cf3
@@ -342,7 +323,6 @@ CONTAINS
     dPHY_dt(:,:) = 0.0d0
     dZOO_dt(:,:) = 0.0d0
     dPIC_dt(:,:) = 0.0d0
-#if defined NUTRIENTS
     dNO3_dt(:) = 0.0d0
     dNH4_dt(:) = 0.0d0
     dPO4_dt(:) = 0.0d0
@@ -350,17 +330,15 @@ CONTAINS
     dPON_dt(:,:) = 0.0d0
     dDOP_dt(:,:) = 0.0d0
     dPOP_dt(:,:) = 0.0d0
-#endif                                
-#if defined COT_STARFISH
+# if defined COT_STARFISH
     dCOTe_dt = 0.0d0
     dCOTl_dt = 0.0d0
-#endif
+# endif
 
 !===== Calculate istope ratio =================================
     DO isp=1,N_Csp
       rDIC(isp) = Iso_ratio( DIC(isp), DIC(iCt) )
     ENDDO
-#if defined NUTRIENTS
     DO isp=1,N_Nsp
       rNO3(isp) = Iso_ratio( NO3(isp), NO3(iNt) )
       rNH4(isp) = Iso_ratio( NH4(isp), NH4(iNt) )
@@ -368,32 +346,27 @@ CONTAINS
     DO isp=1,N_Psp
       rPO4(isp) = Iso_ratio( PO4(isp), PO4(iPt) )
     ENDDO
-#endif
     DO m = 1,Ndom
       DO isp=1,N_Csp
         rDOC(isp,m) = Iso_ratio( DOC(isp,m), DOC(iCt,m) )  
       ENDDO
-#if defined NUTRIENTS
       DO isp=1,N_Nsp
         rDON(isp,m) = Iso_ratio( DON(isp,m), DON(iNt,m) )   
       ENDDO
       DO isp=1,N_Psp
         rDOP(isp,m) = Iso_ratio( DOP(isp,m), DOP(iPt,m) )
       ENDDO
-#endif
     ENDDO   
     DO m = 1,Npom-1
       DO isp=1,N_Csp
         rPOC(isp,m) = Iso_ratio( POC(isp,m), POC(iCt,m) ) 
       ENDDO
-#if defined NUTRIENTS
       DO isp=1,N_Nsp
         rPON(isp,m) = Iso_ratio( PON(isp,m), PON(iNt,m) )   
       ENDDO
       DO isp=1,N_Psp
         rPOP(isp,m) = Iso_ratio( POP(isp,m), POP(iPt,m) )
       ENDDO
-#endif
     ENDDO   
     DO m = 1,Nphy
       DO isp=1,N_Csp
@@ -426,10 +399,9 @@ CONTAINS
 
 !----- Assimilation rate (umolC L-1 s-1) ----------------- JS_edit find more references about switching NH4 to NO3, etc (nutrient assimilation)
 
-#if defined NUTRIENTS
-        cf1 = MAX(NH4(iNt), 0.0d0)  !!! Error handling
-        cf2 = MAX(NO3(iNt), 0.0d0)  !!! Error handling
-        cf3 = MAX(PO4(iPt), 0.0d0)  !!! Error handling
+      cf1 = MAX(NH4(iNt), 0.0d0)  !!! Error handling
+      cf2 = MAX(NO3(iNt), 0.0d0)  !!! Error handling
+      cf3 = MAX(PO4(iPt), 0.0d0)  !!! Error handling
 
       IF(k == iDnfl) THEN
         Vp_NH4(k) = cf1*cf1/(cf1*cf1+Kp_NH4(k)*Kp_NH4(k)) * rNH4toNO3(k)
@@ -458,11 +430,6 @@ CONTAINS
 
       Ap(k) = Ap(k) * Pp(k)
 
-#else
-      Ap(k) = (1.0d0-k_Ep(k)) * Pp(k)
-
-#endif
-
 !     === Mass balance ===
       DO isp=1,N_Csp
         dPHY_dt(isp,k) = dPHY_dt(isp,k) + Ap(k)*a_phot(isp)*rDIC(isp)
@@ -470,7 +437,6 @@ CONTAINS
       ENDDO
       dTA_dt = dTA_dt - Ap(k)*rCCp(k)*2.0d0  ! calcification
       dDOx_dt = dDOx_dt + Ap(k)  !!!!!!**************
-#if defined NUTRIENTS
       if(Vp_NO3(k)+Vp_NH4(k) /= 0.0d0) then ! yt_edit prevent div by 0
         DO isp=1,N_Nsp
           dNO3_dt(isp) = dNO3_dt(isp) - Ap(k)*Vp_NO3(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)*rNO3(isp)
@@ -484,15 +450,10 @@ CONTAINS
         dPO4_dt(isp) = dPO4_dt(isp) - Ap(k)/rCPp(k)*rPO4(isp)
       ENDDO
       dTA_dt    = dTA_dt  + 2.0d0 * Ap(k)/rCPp(k)  ! increases alkalinity by 2 mole per mole HPO42-
-#endif
 
 !----- Excretion rate (umolC L-1 s-1) -----------------
 
-#if defined NUTRIENTS
       Ep(k) = (Pp(k) - Ap(k))*k_Ep(k) 
-#else
-      Ep(k) = k_Ep(k) * Pp(k)
-#endif
 
 !     === Mass balance ===
 
@@ -502,12 +463,10 @@ CONTAINS
         dDOC_dt(isp,iLDOM) = dDOC_dt(isp,iLDOM) + Ep(k)*rLDOMphy *a_phot(isp)*rDIC(isp)  !!!!!!**************
         dDOC_dt(isp,iRDOM) = dDOC_dt(isp,iRDOM) + Ep(k)*(1.0d0-rLDOMphy*a_phot(isp))*rDIC(isp)  !!!!!!**************
       ENDDO
-#if defined NUTRIENTS
 !      dDON_dt(iLDOM) = dDON_dt(iLDOM) + Ep(k)*rLDOMphy/rCNp(k)  !!!!!!**************
 !      dDOP_dt(iLDOM) = dDOP_dt(iLDOM) + Ep(k)*rLDOMphy/rCPp(k)  !!!!!!**************
 !      dDON_dt(iRDOM) = dDON_dt(iRDOM) + Ep(k)*(1.0d0-rLDOMphy)/rCNp(k)  !!!!!!**************
 !      dDOP_dt(iRDOM) = dDOP_dt(iRDOM) + Ep(k)*(1.0d0-rLDOMphy)/rCPp(k)  !!!!!!**************
-#endif
 
 !----- Respiration rate (umolC L-1 s-1) -----------------
 
@@ -525,7 +484,6 @@ CONTAINS
         dDIC_dt(isp) = dDIC_dt(isp) + Rp(k) *rPHY(isp,k)
         dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Rp(k)*rCCp(k)!*rPIC(isp,k)  !!!??????????????? Check needed?????????????????????????????????
       ENDDO
-#if defined NUTRIENTS
       DO isp=1,N_Nsp
         dNH4_dt(isp) = dNH4_dt(isp) + Rp(k)/rCNp(k) *rPHY(isp,k)  !!!??????????????? Check needed
       ENDDO
@@ -533,7 +491,6 @@ CONTAINS
         dPO4_dt(isp) = dPO4_dt(isp) + Rp(k)/rCPp(k) *rPHY(isp,k)  !!!??????????????? Check needed
       ENDDO
       dTA_dt = dTA_dt + 1.0d0*Rp(k)/rCNp(k) - 2.0d0*Rp(k)/rCPp(k)
-#endif
 
 !----- Mortality (umolC L-1 s-1) -----------------
 
@@ -548,14 +505,12 @@ CONTAINS
         dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Mp(k) *rPHY(isp,k)
         dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Mp(k)*rCCp(k) *a_calc(isp)/a_phot(isp)*rPHY(isp,k)  !!!!!
       ENDDO
-#if defined NUTRIENTS
       DO isp=1,N_Nsp
         dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Mp(k)/rCNp(k) *rPHY(isp,k)  !!!!!!**************
       ENDDO
       DO isp=1,N_Psp
         dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Mp(k)/rCPp(k) *rPHY(isp,k)  !!!!!!**************
       ENDDO
-#endif
     END DO
 
 !===== Zooplankton reaction ======================================
@@ -580,14 +535,12 @@ CONTAINS
           dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*a_grz(isp)) *rPHY(isp,m) !!!!****Need check
           dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Gp2z(m,k)*rCCp(m)!*rPIC(isp,m) !!!!****Need check?????????????????????????????????????????
         ENDDO
-#if defined NUTRIENTS
         DO isp=1,N_Nsp
           dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNp(m)*rPHY(isp,m) !!!!****Need check
         ENDDO
         DO isp=1,N_Psp
           dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCPp(m)*rPHY(isp,m) !!!!****Need check
         ENDDO
-#endif
       END DO
 
 !!!------- Microbial loop (implicitly assumed) ---------------
@@ -596,9 +549,7 @@ CONTAINS
 
       DO m=1, Ndom
         cf1 = DOC(iCt,m)
-#if defined NUTRIENTS
         cf1 =  MIN( MIN(DOC(iCt,m),DON(iNt,m)*rCNz(k)) , DOP(iPt,m)*rCPz(k) )
-#endif
         Gdoc2z(m,k) = k_Gdoc2z(m,k) * exp(b_Gdoc2z(m,k)*Tmp) * cf1 * ZOO(iCt,k) ! yt_edit consider making this michaelis-menten dependent on ZOO to not exceed exceed 100% uptake
         Gdoc2z(m,k) = MAX( Gdoc2z(m,k), 0.0d0 )  !!! Error handling
 
@@ -608,7 +559,6 @@ CONTAINS
           dDOC_dt(isp,m) = dDOC_dt(isp,m) - Gdoc2z(m,k) *rDOC(isp,m)
           dDOC_dt(isp,iLDOM) = dDOC_dt(isp,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k)*a_grz(isp)) *rDOC(isp,m)
         ENDDO
-#if defined NUTRIENTS
         DO isp=1,N_Nsp
           dDON_dt(isp,m) = dDON_dt(isp,m) - Gdoc2z(m,k)/rCNz(k) *rDON(isp,m)
           dDON_dt(isp,iLDOM) = dDON_dt(isp,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCNz(k) *rZOO(isp,k)  !!! ********** Check needed
@@ -617,16 +567,13 @@ CONTAINS
           dDOP_dt(isp,m) = dDOP_dt(isp,m) - Gdoc2z(m,k)/rCPz(k) *rDOP(isp,m)
           dDOP_dt(isp,iLDOM) = dDOP_dt(isp,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCPz(k)*rZOO(isp,k)
         ENDDO
-#endif
       END DO
 
 !----- Grazing rate of POC by ZOO (umolC L-1 s-1) -----------------
 
       DO m=1, Npom
         cf1 = POC(iCt,m)
-#if defined NUTRIENTS
         cf1 =  MIN( MIN(POC(iCt,m),PON(iNt,m)*rCNz(k)) , POP(iPt,m)*rCPz(k) )
-#endif
         Gpoc2z(m,k) = k_Gpoc2z(m,k) * exp(b_Gpoc2z(m,k)*Tmp) * cf1 * ZOO(iCt,k)
         Gpoc2z(m,k) = MAX( Gpoc2z(m,k), 0.0d0 )  !!! Error handling
 
@@ -636,7 +583,6 @@ CONTAINS
           dPOC_dt(isp,m) = dPOC_dt(isp,m) - Gpoc2z(m,k)*rPOC(isp,m)
           dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k)*a_grz(isp))*rPOC(isp,m) !!!!****Need check
         ENDDO
-#if defined NUTRIENTS
         DO isp=1,N_Nsp
           dPON_dt(isp,m) = dPON_dt(isp,m) - Gpoc2z(m,k)/rCNz(k) *rPON(isp,m)
           dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCNz(k) *rPON(isp,m)
@@ -645,7 +591,6 @@ CONTAINS
           dPOP_dt(isp,m) = dPOP_dt(isp,m) - Gpoc2z(m,k)/rCPz(k) *rPOP(isp,m)
           dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCPz(k) *rPOP(isp,m)
         ENDDO
-#endif
       END DO
   
 !----- Respiration rate (umolC L-1 s-1) -----------------
@@ -663,7 +608,6 @@ CONTAINS
         dZOO_dt(isp,k) = dZOO_dt(isp,k) - Rz(k)*rZOO(isp,k)
         dDIC_dt(isp) = dDIC_dt(isp) + Rz(k)*rZOO(isp,k)
       ENDDO
-#if defined NUTRIENTS
       DO isp=1,N_Nsp
         dNH4_dt(isp) = dNH4_dt(isp) + Rz(k)/rCNz(k)*rZOO(isp,k) !!!??????????????????????????????????
       ENDDO
@@ -671,7 +615,6 @@ CONTAINS
         dPO4_dt(isp) = dPO4_dt(isp) + Rz(k)/rCPz(k)*rZOO(isp,k) !!!??????????????????????????????????
       ENDDO
       dTA_dt = dTA_dt + 1.0d0*Rz(k)/rCNz(k) - 2.0d0*Rz(k)/rCPz(k)
-#endif
   
 !----- Mortality (umolC L-1 s-1) -----------------
 
@@ -684,14 +627,12 @@ CONTAINS
         dZOO_dt(isp,k) = dZOO_dt(isp,k) - Mz(k)*rZOO(isp,k)
         dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Mz(k)*rZOO(isp,k)
       ENDDO
-#if defined NUTRIENTS
       DO isp=1,N_Nsp
         dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Mz(k)/rCNz(k)*rZOO(isp,k) !!!??????????????????????????????????
       ENDDO
       DO isp=1,N_Psp
         dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Mz(k)/rCPz(k)*rZOO(isp,k) !!!??????????????????????????????????
       ENDDO
-#endif
     END DO
 
 !===== Decomposition ==================================================
@@ -712,7 +653,6 @@ CONTAINS
         dDOC_dt(isp,k) = dDOC_dt(isp,k) - Ddoc(k)*rDOC(isp,k)
         dDIC_dt(isp)   = dDIC_dt(isp)   + Ddoc(k)*rDOC(isp,k)
       ENDDO
-#if defined NUTRIENTS
       Ddon(k) = k_Ddon(k) * exp(b_Ddon(k)*Tmp) * DON(iNt,k)
       IF(DOx <= 0.0d0) THEN !-----For Error handling
         Ddon(k) = 0.0d0
@@ -736,7 +676,6 @@ CONTAINS
         dPO4_dt(isp)   = dPO4_dt(isp)   + Ddop(k)*rDOP(isp,k)
       ENDDO
       dTA_dt = dTA_dt + 1.0d0*Ddon(k) - 2.0d0*Ddop(k)
-#endif
     END DO
 
 !----- Decomposition rate of POM (umol L-1 s-1) -----------------
@@ -756,7 +695,6 @@ CONTAINS
         dDIC_dt(isp)   = dDIC_dt(isp)   + Dpoc(k)*rPOC(isp,k)
       ENDDO
 
-#if defined NUTRIENTS
       Dpon(k) = k_Dpon(k) * exp(b_Dpon(k)*Tmp) * PON(iNt,k)
       IF(DOx <= 0.0d0) THEN !-----For Error handling
         Dpon(k) = 0.0d0
@@ -780,7 +718,6 @@ CONTAINS
         dPO4_dt(isp)   = dPO4_dt(isp)   + Dpop(k)*rPOP(isp,k)
       ENDDO
       dTA_dt = dTA_dt + 1.0d0*Dpon(k) - 2.0d0*Dpop(k)
-#endif
     END DO
 
 !----- Decomposition rate from POM to DOM (umol L-1 s-1) -----------------
@@ -799,7 +736,6 @@ CONTAINS
           dDOC_dt(isp,k) = dDOC_dt(isp,k) + Dp2doc(m,k)*rPOC(isp,m)
           dPOC_dt(isp,m) = dPOC_dt(isp,m) - Dp2doc(m,k)*rPOC(isp,m)
         ENDDO
-#if defined NUTRIENTS
         Dp2don(m,k) = k_Dp2don(m,k) * exp(b_Dp2don(m,k)*Tmp) * MAX(PON(iNt,m),0.0d0)
         IF(DOx <= 0.0d0) THEN !-----For Error handling
           Dp2don(m,k) = 0.0d0
@@ -823,7 +759,6 @@ CONTAINS
           dPOP_dt(isp,m) = dPOP_dt(isp,m) - Dp2dop(m,k)*rPOP(isp,m)
         ENDDO
 
-#endif
       END DO
     END DO
 
@@ -838,7 +773,7 @@ CONTAINS
       dPOC_dt(isp,iCPOM) = dPOC_dt(isp,iCPOM) - Dcpoc2dtr*rPOC(isp,iCPOM)
       dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Dcpoc2dtr*rPOC(isp,iCPOM)
     ENDDO
-#if defined NUTRIENTS
+
     Dcpon2dtr = k_Dcpon2dtr * exp(b_Dcpon2dtr*Tmp) * PON(iNt,iCPOM)
     Dcpon2dtr = MAX( Dcpon2dtr, 0.0d0 )  !!! Error handling
 
@@ -855,12 +790,10 @@ CONTAINS
       dPOP_dt(isp,iCPOM) = dPOP_dt(isp,iCPOM) - Dcpop2dtr*rPOP(isp,iCPOM)
       dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Dcpop2dtr*rPOP(isp,iCPOM)
     ENDDO
-#endif
 
   
 !===== Nitrification ==================================================== JS_edit find reference
 
-#if defined NUTRIENTS
     Nit = k_Nit * exp(b_Nit*Tmp) * MAX( NH4(iNt), 0.0d0 )**2
     IF(DOx <= 0.0d0) THEN !-----For Error handling
         Nit = 0.0d0
@@ -875,7 +808,6 @@ CONTAINS
     ENDDO
     dDOx_dt = dDOx_dt - Nit*2.0d0
     dTA_dt = dTA_dt - Nit*2.0d0
-#endif
 
 !===== Carbonate dissolution ==============================================
 

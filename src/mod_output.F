@@ -286,18 +286,12 @@ END SUBROUTINE files_close
     
     write(fid,'(*(g0:,", "))') 'time', 'PFDsurf'                           &
         ,'Temp','Salt','TA','DIC','DO'                                     &
-#if defined ORGANIC_MATTER
         ,'DOC1','DOC2','POC1','POC2','POC3','Phyt1'                        &
         ,'Phyt2','Phyt3', 'Phyt4'                                          &
         ,'TotalPhy', 'Zoop','PIC'                                          &
-#endif
-#if defined NUTRIENTS            
         ,'NO3','NH4','PO4'                                                 &
-# if defined ORGANIC_MATTER
         ,'DON1','DON2','PON1','PON2','PON3'                                &
         ,'DOP1','DOP2','POP1','POP2','POP3'                                &
-# endif
-#endif
 #if defined CARBON_ISOTOPE
         ,'d13C_DIC'                                                        &
 #endif
@@ -373,23 +367,17 @@ END SUBROUTINE files_close
     write(fid,'(*(g0:,", "))') time, PFDsurf                           &
            , C(1,1,1,iTemp), C(1,1,1,iSalt)                            &
            , C(1,1,1,iTAlk), C(1,1,1,iTIC_), C(1,1,1,iOxyg)            &
-#if defined ORGANIC_MATTER
            , C(1,1,1,iDOC(1)), C(1,1,1,iDOC(2))                        &
            , C(1,1,1,iPOC(1)), C(1,1,1,iPOC(2)), C(1,1,1,iPOC(3))      &
            , C(1,1,1,iPhyt(1)), C(1,1,1,iPhyt(2)), C(1,1,1,iPhyt(3))   &
            , C(1,1,1,iPhyt(4))                                         &
            , C(1,1,1,iPhyt(1))+C(1,1,1,iPhyt(2))+C(1,1,1,iPhyt(3))+C(1,1,1,iPhyt(4)) &
            , C(1,1,1,iZoop(1)), C(1,1,1,iPIC(1))                       &
-#endif
-#if defined NUTRIENTS            
            , C(1,1,1,iNO3_), C(1,1,1,iNH4_), C(1,1,1,iPO4_)            &
-# if defined ORGANIC_MATTER
            , C(1,1,1,iDON(1)), C(1,1,1,iDON(2))                        &
            , C(1,1,1,iPON(1)), C(1,1,1,iPON(2)), C(1,1,1,iPON(3))      &
            , C(1,1,1,iDOP(1)), C(1,1,1,iDOP(2))                        &
            , C(1,1,1,iPOP(1)), C(1,1,1,iPOP(2)), C(1,1,1,iPOP(3))      &
-# endif
-#endif
 #if defined CARBON_ISOTOPE
            , d13C_DIC                                                      &
 #endif
@@ -442,9 +430,7 @@ END SUBROUTINE files_close
 # if defined CORAL_BORON_ISOTOPE
        ,'d11Barg'                                            &
 # endif
-# if defined ORGANIC_MATTER
        ,'DOCuptake'                                          &
-# endif
 # if defined CORAL_INGESTION
        ,'ZOOuptake'                                          &
 # endif
@@ -566,19 +552,13 @@ END SUBROUTINE write_crl_ave_lavel
 !        ,'sedeco_Pg', 'sedeco_R', 'sedeco_Pn', 'sedeco_G'    &
 # endif
         ,'dDIC_dt','dTA_dt','dDO_dt'                         &
-# if defined ORGANIC_MATTER
         ,'dDOC_dt','dPOC_dt'                                 &
-# endif
 # if defined CARBON_ISOTOPE
         ,'dDI13C_dt'                                         &
 # endif
-# if defined NUTRIENTS
         ,'dNO3_dt','dNH4_dt'                                 &
         ,'dPO4_dt'                                           &
-#  if defined ORGANIC_MATTER
         ,'dDON_dt','dPON_dt','dDOP_dt','dPOP_dt'             &
-#  endif
-# endif
         ,'pH', 'fCO2', 'Warg', 'Wcal'                        &
         ,'U10', 'CO2flux' , 'O2flux'
 

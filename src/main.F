@@ -215,11 +215,9 @@ PROGRAM main
     sgd_DIC(:)= 3500.0d0  ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
     sgd_TA    = 3500.0d0  ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
     sgd_DOx   = 10.0d0  ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
-# if defined NUTRIENTS            
     sgd_NO3(:)= 100.0d0  ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
     sgd_NH4(:)= 1.0d0  ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
     sgd_PO4(:)= 1.0d0  ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
-# endif
 #endif
 #if defined SEDECO_BURIAL
     Fdep_sed = -3.0d-8  ! 2.77d-8 g/cm2/s = 1.0 g/m2/h; Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
@@ -257,24 +255,18 @@ PROGRAM main
               ,C(1,1,:,iTIC_)     &   ! DIC(N): Total dissolved inorganic carbon (DIC: umol kg-1)
               ,C(1,1,:,iTAlk)     &   ! TA (N): Total alkalinity (TA: umol kg-1)
               ,C(1,1,:,iOxyg)     &   ! DOx(N): Dissolved oxygen (umol L-1)
-#if defined ORGANIC_MATTER
               ,C(1,1,:,iDOC(:))       &   ! DOC(N): Dissolved organic carbon (DOC: umol L-1)
               ,C(1,1,:,iPOC(:))       &   ! POC(N): Particulate organic carbon (POC: umol L-1)
               ,C(1,1,:,iPhyt(:))      &   ! PHY(N): phytoplankton (umol C L-1)
               ,C(1,1,:,iZoop(:))      &   ! ZOO(N): zooplankton (umol C L-1)
               ,C(1,1,:,iPIC(:))       &   ! PIC(N): Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
-#endif
-#if defined NUTRIENTS         
               ,C(1,1,:,iNO3_)     &   ! NO3(N): NO3 (umol L-1)
               ,C(1,1,:,iNH4_)     &   ! NH4(N): NH4 (umol L-1)
               ,C(1,1,:,iPO4_)     &   ! PO4(N): PO4 (umol L-1)
-# if defined ORGANIC_MATTER
               ,C(1,1,:,iDON(:))     &   ! DON(N): Dissolved organic nitrogen (DON: umol L-1)
               ,C(1,1,:,iPON(:))     &   ! PON(N): Particulate organic nitrogen (PON: umol L-1)
               ,C(1,1,:,iDOP(:))     &   ! DOP(N): Dissolved organic phosporius (DOP: umol L-1)
               ,C(1,1,:,iPOP(:))     &   ! POP(N): Particulate organic phosporius (POP: umol L-1)
-# endif
-#endif
 #if defined COT_STARFISH         
               ,C(1,1,:,iCOTe)     &   ! COTe(N): COT starfish egg (umol L-1)
               ,C(1,1,:,iCOTl)     &   ! COTl(N): COT starfish larvae (umol L-1)
@@ -286,11 +278,9 @@ PROGRAM main
               , sgd_DIC(:)        &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
               , sgd_TA            &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
               , sgd_DOx           &   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
-# if defined NUTRIENTS            
               , sgd_NO3(:)        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
               , sgd_NH4(:)        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
               , sgd_PO4(:)        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
-# endif
 #endif
 #if defined SEDECO_BURIAL
               , Fdep_sed          &    ! Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
@@ -301,25 +291,19 @@ PROGRAM main
               ,dC_dt(1,1,:,iTIC_)   &   ! dDIC_dt(N): dDIC/dt (umol kg-1 s-1)
               ,dC_dt(1,1,:,iTAlk)   &   ! dTA_dt (N): dTA/dt (umol kg-1 s-1)
               ,dC_dt(1,1,:,iOxyg)   &   ! dDOx_dt(N): dDO/dt (umol L-1 s-1)
-#if defined ORGANIC_MATTER
               ,dC_dt(1,1,:,iDOC(1):iDOC(Ndom))      &   ! dDOC_dt(N): dDOC/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iPOC(1):iPOC(Npom))      &   ! dPOC_dt(N): dPOC/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iPhyt(1):iPhyt(Nphy))   &   ! dPHY_dt(N): dPHY/dt (umol C L-1 s-1)
               ,dC_dt(1,1,:,iZoop(1):iZoop(Nzoo))   &   ! dZOO_dt(N): dZOO/dt (umol C L-1 s-1)
               ,dC_dt(1,1,:,iPIC(1):iPIC(Npim))      &   ! dPIC_dt(N): dPIC/dt (umol L-1 s-1)
-#endif
-#if defined NUTRIENTS 
               ,dC_dt(1,1,:,iNO3_)   &   ! dNO3_dt(N): dNO3/dt (umol L-1 s-1)
 !              ,dC_dt(1,1,:,iNO2_)   &   ! dNO2_dt(N): dNO2/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iNH4_)   &   ! dNH4_dt(N): dNH4/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iPO4_)   &   ! dPO4_dt(N): dPO4/dt (umol L-1 s-1)
-# if defined ORGANIC_MATTER
               ,dC_dt(1,1,:,iDON(1):iDON(Ndom))      &   ! dDON_dt(N): dDON/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iPON(1):iPON(Npom))      &   ! dPON_dt(N): dPON/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iDOP(1):iDOP(Ndom))      &   ! dDOP_dt(N): dDOP/dt (umol L-1 s-1)
               ,dC_dt(1,1,:,iPOP(1):iPOP(Npom))      &   ! dPOP_dt(N): dPOP/dt (umol L-1 s-1)
-# endif
-#endif
 #if defined COT_STARFISH         
               ,dC_dt(1,1,:,iCOTe)   &   ! dCOTe/dt(N): (umol L-1 s-1)
               ,dC_dt(1,1,:,iCOTl)   &   ! dCOTl/dt(N): (umol L-1 s-1)

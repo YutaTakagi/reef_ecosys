@@ -4,26 +4,54 @@
 module mod_geochem
 
   implicit none
-! ------ Number of Isotope species -----
+! ------ Carbon Isotope parameters -----
+#if defined CARBON_ISOTOPE || defined CARBON_TRACE
+  integer, parameter :: N_Csp = 2  ! Number of Carbon species/isotopes
+#elif defined CLUMPED_ISOTOPE
+  integer, parameter :: N_Csp = 3  ! Number of Carbon species/isotopes
+#else
   integer, parameter :: N_Csp = 1  ! Number of Carbon species/isotopes
+#endif
   integer, parameter ::  iCt  = 1  ! Total carbon (12C+13C)
   integer, parameter ::  iC13 = 2  ! 13C
   integer, parameter ::  iD47 = 3  ! Clumpt isotope (47d)
 
+! ------ Nitrogen Isotope parameters -----
+#if defined NITROGEN_ISOTOPE || defined NITROGEN_TRACE
+  integer, parameter :: N_Nsp = 2  ! Number of Nitrogen species/isotopes
+#else
   integer, parameter :: N_Nsp = 1  ! Number of Nitrogen species/isotopes
+#endif
   integer, parameter ::  iNt  = 1  ! Total nitrogen (14N+15N)
   integer, parameter ::  iN15 = 2  ! 15N
 
+! ------ Phosphorous Isotope parameters -----
+#if defined PHOSPHOROUS_TRACE
+  integer, parameter :: N_Psp = 2  ! Number of Phosphorous species
+#else
   integer, parameter :: N_Psp = 1  ! Number of Phosphorous species
+#endif
   integer, parameter ::  iPt  = 1  ! Total phosphrous
   integer, parameter ::  iP1  = 2  ! phosphrous tracer2
 
+! ------ Sulfur Isotope parameters -----
+#if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
+  integer, parameter :: N_Ssp = 2  ! Number of Sulfur species/isotopes
+#else
   integer, parameter :: N_Ssp = 1  ! Number of Sulfur species/isotopes
+#endif
   integer, parameter ::  iSt  = 1  ! Total Sulfur (32S+34S)
   integer, parameter ::  iS34 = 2  ! 34S
 
-! ------ Isotope related parameter -----
+! ------ Carbon Isotope related parameters -----
   real(8), parameter :: R13C_VPDB = 0.011056d0/0.988944d0
+! ------ Nitrogen Isotope related parameters -----
+  real(8), parameter :: R15N_AIR = 0.003663d0/0.996337d0
+! ------ Sulfur Isotope related parameters -----
+  real(8), parameter :: R34S_VCDT = 0.00419719d0/0.9503957d0
+! ------ Oxygen Isotope related parameters -----
+  real(8), parameter :: R18O_VSMOW = 0.0020004d0/0.9976206d0
+! ------ Boron Isotope related parameters -----
   real(8), parameter :: R11B_SRM951 = 80.173d0/19.827d0  !NIST SRM 951 boric acid standard
 
 ! ------ Molecular diffusion coefficients in seawater @ 25 degC, 35 psu -----
@@ -1190,6 +1218,79 @@ contains
   end function Iso_ratio
 
 ! **********************************************************************
+!  R (isotope ratio) from delta value with standard R value.
+! **********************************************************************
+
+  real(8) function R_from_delta(delta,Rstd)  ! e.g., R13C = 13C/12C; R15N = 15N/14N
+
+    implicit none
+    real(8), intent(in) :: delta ! Isotope ratio (delta value; per mill vs standard)
+    real(8), intent(in) :: Rstd  ! Isotope ratio of standard
+
+    R_from_delta=(delt*1.d-3 + 1.d0)*Rstd
+
+    return
+  end function R_from_delta
+
+! **********************************************************************
+!  delta value (isotope ratio vs standard) from 
+!   R (isotope ratio) with standard R value.
+! **********************************************************************
+
+  real(8) function delta_from_R(Rsample,Rstd)  ! e.g., R13C = 13C/12C; R15N = 15N/14N
+
+    implicit none
+    real(8), intent(in) :: Rsample ! Isotope ratio of sample
+    real(8), intent(in) :: Rstd    ! Isotope ratio of standard
+
+    delta_from_R=(Rsample/Rstd-1.d0)*1.d3
+
+    return
+  end function delta_from_R
+
+! **********************************************************************
+!  delta value (isotope ratio vs standard) from 
+!   isotope concentration and total concentration with standard R value.
+! **********************************************************************
+
+  real(8) function delta_from_Ci_Ct(Ci,Ct,Rstd)  ! e.g., R13C = 13C/12C; R15N = 15N/14N
+
+    implicit none
+    real(8), intent(in) :: Ci    ! Isotope concentration
+    real(8), intent(in) :: Ct    ! Total concentration
+    real(8), intent(in) :: Rstd  ! Isotope ratio of standard
+
+    if((Ct-Ci)<=0.0d0) then
+      delta_from_Ci_Ct=-9999.0d0
+    else
+      delta_from_Ci_Ct=(Ci/(Ct-Ci)/Rstd-1.d0)*1.d3
+    endif
+
+    return
+  end function delta_from_Ci_Ct
+
+! **********************************************************************
+!  isotope concentration from delta value (isotope ratio vs standard)
+!   and total concentration with standard R value.
+! **********************************************************************
+
+  real(8) function Ci_from_Ct_delta(Ct,delta,Rstd)  ! e.g., R13C = 13C/12C; R15N = 15N/14N
+
+    implicit none
+    real(8), intent(in) :: Ct    ! Total concentration
+    real(8), intent(in) :: delta ! Isotope ratio (delta value; per mill vs standard)
+    real(8), intent(in) :: Rstd  ! Isotope ratio of standard
+    real(8) :: cff
+
+    cff = (delta*1.0d-3 + 1.0d0)*Rstd
+
+    Ci_from_Ct_delta= cff/(1+cff) * Ct
+
+    return
+  end function Ci_from_Ct_delta
+
+
+! **********************************************************************
 !  d13C VPDB from R13C value.
 ! **********************************************************************
 
@@ -1218,6 +1319,19 @@ contains
     return
   end function R13C_fromd13C
 
+! **********************************************************************
+!  R15N from R15N air value.
+! **********************************************************************
+
+  real(8) function R15N_fromd15N(d15N)  ! R15N = 15N/14N
+
+    implicit none
+    real(8), intent(in) :: d15N ! Nitrogen isotope ratio (per mill air)
+
+    R15N_fromd15N=(d15N*1.d-3 + 1.d0)*R15N_AIR
+
+    return
+  end function R15N_fromd15N
 
 ! **********************************************************************
 !  Carbon 13 isotope concentrations

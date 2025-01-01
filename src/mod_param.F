@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2025 Takashi NAKAMURA  =====
 
 !--------------------------------------------------------------------------------
 !
@@ -151,47 +151,34 @@ MODULE mod_param
   integer :: iTIC_                  ! Total inorganic carbon
   integer :: iTAlk                  ! Total alkalinity
   integer :: iOxyg                  ! Dissolved oxygen concentration
-#if defined ORGANIC_MATTER
   integer :: iDOC(Ndom)            ! Dissolved organic C-concentration
   integer :: iPOC(Npom)            ! Particulate organic C-concentration
   integer :: iPhyt(Nphy)          ! Phytoplankton1 density
   integer :: iZoop(Nzoo)          ! Zooplankton density
   integer :: iPIC(Npim)            ! Particulate inorganic C-concentration
-# if defined FOODWEB_TESTMODE
-  integer :: iDeadPhyt(Nphy)      ! Dead Phytoplankton density
-# endif
-#endif
 #if defined CARBON_ISOTOPE
   integer :: iT13C                  ! Corbon 13 of total inorganic carbon
-# if defined ORGANIC_MATTER
   integer :: iDO13C(Ndom)          ! Dissolved organic 13C-concentration
   integer :: iPO13C(Npom)          ! Particulate organic 13C-concentration
   integer :: iPhyt13C(Nphy)       ! Phytoplankton1 13C-concentration
   integer :: iZoop13C(Nzoo)       ! Zooplankton 13C-concentration
   integer :: iPI13C(Npim)          ! Particulate inorganic 13C-concentration
-# endif
 #endif
-#if defined NUTRIENTS
   integer :: iNO3_                  ! Nitrate concentration
   integer :: iNH4_                  ! Ammonium concentration
   integer :: iPO4_                  ! Ammonium concentration
-# if defined ORGANIC_MATTER
   integer :: iDON(Ndom)            ! Dissolved organic N-concentration
   integer :: iPON(Npom)            ! Particulate organic N-concentration
   integer :: iDOP(Ndom)            ! Dissolved organic P-concentration
   integer :: iPOP(Npom)            ! Particulate organic P-concentration
-# endif
-# if defined NITROGEN_ISOTOPE
+#if defined NITROGEN_ISOTOPE
   integer :: i15NO3                  ! Nitrogen isotope concentration in Nitrate 
 !  integer :: i15NO2                  ! Nitrogen isotope concentration in Nitrite
   integer :: i15NH4                  ! Nitrogen isotope concentration in Ammonium
-#  if defined ORGANIC_MATTER
   integer :: iDO15N(Ndom)          ! Dissolved organic 15N-concentration
   integer :: iPO15N(Npom)          ! Particulate organic 15N-concentration
   integer :: iPhyt15N(Nphy)       ! Phytoplankton 15N-concentration
   integer :: iZoop15N(Nzoo)       ! Zooplankton 15N-concentration
-#  endif
-# endif
 #endif
 #if defined COT_STARFISH
   integer :: iCOTe                  ! Eggs of crown-of-thorns starfish
@@ -218,11 +205,9 @@ MODULE mod_param
   real(8) :: sgd_DIC(N_Csp)  ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
   real(8) :: sgd_TA          ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
   real(8) :: sgd_DOx         ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
-# if defined NUTRIENTS            
   real(8) :: sgd_NO3(N_Nsp)  ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
   real(8) :: sgd_NH4(N_Nsp)  ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
   real(8) :: sgd_PO4(N_Psp)  ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
-# endif
 #endif
 #if defined SEDECO_BURIAL
   real(8) :: Fdep_sed        ! Sedimentation rate (cm s-1) (Positive: sedimentation; Negative: erosion)
@@ -296,7 +281,6 @@ contains
     iTAlk=ic+i
     i=i+1
     iOxyg=ic+i  !  4
-#if defined ORGANIC_MATTER
     DO j=1,Ndom
       i=i+1
       iDOC(j)=ic+i
@@ -317,11 +301,9 @@ contains
       i=i+1
       iPIC(j)=ic+i
     END DO
-#endif
 #if defined CARBON_ISOTOPE
     i=i+1
     iT13C=ic+i  ! +1
-# if defined ORGANIC_MATTER
     DO j=1,Ndom
       i=i+1
       iDO13C(j)=ic+i
@@ -342,9 +324,7 @@ contains
       i=i+1
       iPI13C(j)=ic+i
     END DO
-# endif
 #endif
-#if defined NUTRIENTS
     i=i+1
     iNO3_=ic+i
 !    i=i+1
@@ -353,7 +333,6 @@ contains
     iNH4_=ic+i
     i=i+1
     iPO4_=ic+i
-# if defined ORGANIC_MATTER
     DO j=1,Ndom
       i=i+1
       iDON(j)=ic+i
@@ -370,15 +349,13 @@ contains
       i=i+1
       iPOP(j)=ic+i
     END DO
-# endif
-# if defined NITROGEN_ISOTOPE
+#if defined NITROGEN_ISOTOPE
     i=i+1
     i15NO3=ic+i  ! +1
 !    i=i+1
 !    i15NO2=ic+i  ! +1
     i=i+1
     i15NH4=ic+i  ! +1
-#  if defined ORGANIC_MATTER
     DO j=1,Ndom
       i=i+1
       iDO15N(j)=ic+i
@@ -395,8 +372,6 @@ contains
       i=i+1
       iZoop15N(j)=ic+i
     END DO
-#  endif
-# endif
 #endif
 #if defined COT_STARFISH
     i=i+1
@@ -460,7 +435,6 @@ contains
           Co(i,j,iTAlk) = TAlk0     !TA  (umol kg-1)  2232.0d0 2275.0d0, 2500.0d0, 2150.0d0, 2000.0d0, 1800.0d0, 1700.0d0, 1600.0d0 
 
           Co(i,j,iOxyg) = O2satu(C(i,j,k,iTemp)+273.15d0, C(i,j,k,iSalt))
-#if defined ORGANIC_MATTER
           C(i,j,k,iDOC(1)) = DOC1_0       !DOC  (umol L-1) 
           C(i,j,k,iDOC(2)) = DOC2_0       !DOC  (umol L-1) 
           C(i,j,k,iPOC(1)) = POC1_0       !POC  (umol L-1) 
@@ -484,14 +458,12 @@ contains
           Co(i,j,iPhyt(4)) = Phyt4_0       !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
           Co(i,j,iZoop(1)) = Zoop1_0       !Zooplankton (umol L-1)1.3
           Co(i,j,iPIC(1)) =  PIC1_0        !Particulated inorganic carbon (umol L-1)1.3
-#endif
 #if defined CARBON_ISOTOPE
           R13C=R13C_fromd13C(d13C_TIC0)
 !          Ci(nDI13C,i,j,k)=R13C/(1.+R13C)*Ci(nDIC,i,j,k) !DI13C (umol kg-1)
           C(i,j,k,iT13C) =R13C*C(i,j,k,iTIC_) !DI13C (umol kg-1) 
 ! Offshore values
           Co(i,j,iT13C) =R13C*C(i,j,k,iTIC_) !DI13C (umol kg-1) 
-# if defined ORGANIC_MATTER
           R13C=R13C_fromd13C(d13C_DOC1_0)
           C(i,j,k,iDO13C(1)) = R13C*C(i,j,k,iDO13C(1))       !DOC  (umol L-1) 
           R13C=R13C_fromd13C(d13C_DOC2_0)
@@ -529,9 +501,7 @@ contains
           Co(i,j,iZoop13C(1)) = R13C*Co(i,j,iZoop13C(1))       !Zooplankton (umol L-1)1.3
           R13C=R13C_fromd13C(d13C_PIC1_0)
           Co(i,j,iPI13C(1)) =  R13C*Co(i,j,iPI13C(1))       !Particulated inorganic carbon (umol L-1)1.3
-# endif
 #endif
-#if defined NUTRIENTS            
 !!!!!!!!!!!!
           C(i,j,k,iNO3_) = NO3_0      !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
           C(i,j,k,iPO4_) = PO4_0      !PO4  (umol L-1) 0.03d0 0.05d0, 2.0d0 control0.04d0 P0.2d0
@@ -541,7 +511,6 @@ contains
           Co(i,j,iPO4_) = PO4_0      !PO4  (umol L-1) 0.03d0 0.05d0, 2.0d0 control0.04d0 P0.2d0
           Co(i,j,iNH4_) = NH4_0       !NH4  (umol L-1) 
 
-# if defined ORGANIC_MATTER
           C(i,j,k,iDON(1)) = DON1_0     !DON  (umol L-1) 
           C(i,j,k,iDON(2)) = DON2_0     !DON  (umol L-1) 
           C(i,j,k,iPON(1)) = PON1_0     !PON  (umol L-1) 
@@ -563,15 +532,13 @@ contains
           Co(i,j,iPOP(1)) = POP1_0      !POP  (umol L-1) 
           Co(i,j,iPOP(2)) = POP2_0     !POP  (umol L-1) 
           Co(i,j,iPOP(3)) = POP3_0     !POP  (umol L-1) 
-# endif
-# if defined NITROGEN_ISOTOPE            
+#if defined NITROGEN_ISOTOPE            
 !!!!!!!!!!!!
           C(i,j,k,i15NO3) =  0.2d0       !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
           C(i,j,k,i15NH4) =  0.26d0       !NH4  (umol L-1) 
 ! Offshore values
           Co(i,j,i15NO3) =  0.2d0       !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
           Co(i,j,i15NH4) =  0.26d0       !NH4  (umol L-1) 
-#  if defined ORGANIC_MATTER
           C(i,j,k,iDO15N(1)) =   1.0d0 !3.0d0       !DON  (umol L-1) 
           C(i,j,k,iDO15N(2)) =  10.0d0 !3.0d0       !DON  (umol L-1) 
           C(i,j,k,iPO15N(1)) =  0.06d0 !0.05d0      !PON  (umol L-1) 
@@ -589,8 +556,6 @@ contains
           Co(i,j,iPhyt15N(2)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
           Co(i,j,iPhyt15N(3)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
           Co(i,j,iZoop15N(1)) = 0.0d0       !Zooplankton (umol L-1)1.3
-#  endif
-# endif
 #endif
 #if defined COT_STARFISH
           C(i,j,k,iCOTe) =  0.0d0       !COTS eggs (umol L-1) 
