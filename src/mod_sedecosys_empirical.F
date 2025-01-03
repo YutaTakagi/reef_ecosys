@@ -163,9 +163,9 @@ CONTAINS
     real(8) ldocn,ldocd
 # endif
 # if defined CARBON_ISOTOPE
-    real(8), parameter :: a_phot  = -20.0d-3+1.d0  ! -5 to -10 per mill (Dr. Miyajima, pers. comn.)
-    real(8), parameter :: a_resp  =  0.0d-3+1.d0  !
-    real(8), parameter :: a_calc =   2.7d-3 + 1.0d0 
+    real(8), parameter :: aC_phot  = -20.0d-3+1.d0  ! -5 to -10 per mill (Dr. Miyajima, pers. comn.)
+    real(8), parameter :: aC_resp  =  0.0d-3+1.d0  !
+    real(8), parameter :: aC_calc =   2.7d-3 + 1.0d0 
     real(8), parameter :: a_diss =   0.0d-3 + 1.0d0 
     real(8) R13C_DIC, R13C_QC, R13C_CaCO3
 # endif
@@ -203,10 +203,10 @@ CONTAINS
       R13C_DIC =0.d0
     ENDIF
 
-    DI13Cuptake=  SEDECO(ng)%Pg(i,j)*R13C_DIC*a_phot                   &
-                + max(SEDECO(ng)%G (i,j),0.0d0)*R13C_DIC*a_calc        &
+    DI13Cuptake=  SEDECO(ng)%Pg(i,j)*R13C_DIC*aC_phot                   &
+                + max(SEDECO(ng)%G (i,j),0.0d0)*R13C_DIC*aC_calc        &
                 + min(SEDECO(ng)%G (i,j),0.0d0)*R13C_CaCO3*a_diss      &
-                - SEDECO(ng)%R (i,j)*R13C_QC*a_resp
+                - SEDECO(ng)%R (i,j)*R13C_QC*aC_resp
 # endif
       
 ! --- Nutrient fluxes between water column and coral -----

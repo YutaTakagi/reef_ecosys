@@ -11,10 +11,7 @@
 
 MODULE mod_param
 
-#if defined FOODWEB
-  USE mod_foodweb
-#endif
-  USE mod_geochem
+  USE mod_reef_ecosys_param
 
   implicit none
 !
@@ -221,10 +218,8 @@ contains
 
   subroutine initialize_params(LBi, UBi, LBj, UBj, N, Nid)
 
+    USE mod_reef_ecosys_param
     use mod_geochem
-#if defined FOODWEB
-    use mod_foodweb
-#endif
    
     implicit none
 ! input parameters

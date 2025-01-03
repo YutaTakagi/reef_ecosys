@@ -76,7 +76,7 @@
 /
 
 &output   
-  OUTFILE_prefix = 'sedecosys'
+  OUTFILE_prefix = 'output/sedeco1'
 /
 
 !--- Initial Condition -----------------------------------------------------

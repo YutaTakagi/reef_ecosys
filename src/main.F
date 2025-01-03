@@ -143,7 +143,9 @@ PROGRAM main
 #if defined REEF_FLOW_TESTMODE
   CALL write_flow_lavel(45)
 #endif
-
+#if defined SEDIMENT_TESTMODE
+  CALL write_sedeco_last_label(50)
+#endif
 
 !----- Main loop -------------------------------------------
 
@@ -539,6 +541,11 @@ PROGRAM main
       
 !----- End loop --------------------------------------
 
+
+!----- Write sedeco last data --------------------------------------
+#if defined SEDIMENT_TESTMODE
+  CALL write_sedeco_last_data(50)
+#endif
 
 !----- Close output files --------------------------------------
 

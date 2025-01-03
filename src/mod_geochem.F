@@ -4,44 +4,42 @@
 module mod_geochem
 
   implicit none
-! ------ Carbon Isotope parameters -----
-#if defined CARBON_ISOTOPE || defined CARBON_TRACE
-  integer, parameter :: N_Csp = 2  ! Number of Carbon species/isotopes
-#elif defined CLUMPED_ISOTOPE
-  integer, parameter :: N_Csp = 3  ! Number of Carbon species/isotopes
-#else
-  integer, parameter :: N_Csp = 1  ! Number of Carbon species/isotopes
-#endif
-  integer, parameter ::  iCt  = 1  ! Total carbon (12C+13C)
-  integer, parameter ::  iC13 = 2  ! 13C
-  integer, parameter ::  iD47 = 3  ! Clumpt isotope (47d)
 
-! ------ Nitrogen Isotope parameters -----
-#if defined NITROGEN_ISOTOPE || defined NITROGEN_TRACE
-  integer, parameter :: N_Nsp = 2  ! Number of Nitrogen species/isotopes
+!----- Carbon isotope fractionation ------------------------
+#if defined CARBON_TRACE
+  real(8), parameter :: aC_phot(3) = [ 1.0d0, 1.0d0, 1.0d0 ]
+!  real(8), parameter :: aC_resp(3) = [ 1.0d0, 1.0d0, 1.0d0 ]
+  real(8), parameter :: aC_calc(3) = [ 1.0d0, 1.0d0, 1.0d0 ] 
+  real(8), parameter :: aC_co2 (3) = [ 1.0d0, 1.0d0, 1.0d0 ]
+  real(8), parameter :: aC_grz (3) = [ 1.0d0, 1.0d0, 1.0d0 ]
 #else
-  integer, parameter :: N_Nsp = 1  ! Number of Nitrogen species/isotopes
+                                     ! iCt      iC13             iD47 (clumped isotope)              
+  real(8), parameter :: aC_phot(3) = [ 1.0d0, -20.0d-3 + 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
+!  real(8), parameter :: aC_resp(3) = [ 1.0d0,   0.0d-3 + 1.0d0,   0.0d-3 + 1.0d0 ]
+  real(8), parameter :: aC_calc(3) = [ 1.0d0,   2.7d-3 + 1.0d0,   2.7d-3 + 1.0d0 ] 
+  real(8), parameter :: aC_co2 (3) = [ 1.0d0,  -7.0d-3 + 1.0d0,  -7.0d-3 + 1.0d0 ] !!!!! To Be Confirmed. Maybe ~-8-4.4
+  real(8), parameter :: aC_grz (3) = [ 1.0d0,            1.0d0,            1.0d0 ]
 #endif
-  integer, parameter ::  iNt  = 1  ! Total nitrogen (14N+15N)
-  integer, parameter ::  iN15 = 2  ! 15N
 
-! ------ Phosphorous Isotope parameters -----
-#if defined PHOSPHOROUS_TRACE
-  integer, parameter :: N_Psp = 2  ! Number of Phosphorous species
+!----- Nitrogen isotope fractionation ------------------------
+#if defined NITROGEN_TRACE
+  real(8), parameter :: aN_phot(2) = [ 1.0d0, 1.0d0, 1.0d0 ]
+  real(8), parameter :: aN_grz (2) = [ 1.0d0, 1.0d0, 1.0d0 ]
 #else
-  integer, parameter :: N_Psp = 1  ! Number of Phosphorous species
+                                     ! iNt      iN15         
+  real(8), parameter :: aN_phot(2) = [ 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
+  real(8), parameter :: aN_grz (2) = [ 1.0d0,            1.0d0 ]
 #endif
-  integer, parameter ::  iPt  = 1  ! Total phosphrous
-  integer, parameter ::  iP1  = 2  ! phosphrous tracer2
 
-! ------ Sulfur Isotope parameters -----
-#if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
-  integer, parameter :: N_Ssp = 2  ! Number of Sulfur species/isotopes
+!----- Sulfur isotope fractionation ------------------------
+#if defined SULFUR_TRACE
+!  real(8), parameter :: aN_phot(2) = [ 1.0d0, 1.0d0, 1.0d0 ]
+!  real(8), parameter :: aN_grz (2) = [ 1.0d0, 1.0d0, 1.0d0 ]
 #else
-  integer, parameter :: N_Ssp = 1  ! Number of Sulfur species/isotopes
+                                     ! iSt      iS34         
+!  real(8), parameter :: aN_phot(2) = [ 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
+!  real(8), parameter :: aN_grz (2) = [ 1.0d0,            1.0d0 ]
 #endif
-  integer, parameter ::  iSt  = 1  ! Total Sulfur (32S+34S)
-  integer, parameter ::  iS34 = 2  ! 34S
 
 ! ------ Carbon Isotope related parameters -----
   real(8), parameter :: R13C_VPDB = 0.011056d0/0.988944d0
@@ -1227,7 +1225,7 @@ contains
     real(8), intent(in) :: delta ! Isotope ratio (delta value; per mill vs standard)
     real(8), intent(in) :: Rstd  ! Isotope ratio of standard
 
-    R_from_delta=(delt*1.d-3 + 1.d0)*Rstd
+    R_from_delta=(delta*1.d-3 + 1.d0)*Rstd
 
     return
   end function R_from_delta

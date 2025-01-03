@@ -355,15 +355,6 @@ CONTAINS
     real(8), parameter :: rCCp(Nphy) = [ 0.0d0, 0.0d0, 0.5d0, 0.0d0 ]  ! ***** (no dim.) CaCO3:OrgC ratio !!! Need Ref!!!!!!!!!!
 #if defined CARBON_ISOTOPE
 !----- for carbon isotope ------------------------
-# if defined CARBON_TRACE
-    real(8), parameter :: a_phot = 1.0d0
-    real(8), parameter :: a_calc = 1.0d0
-    real(8), parameter :: a_grz  = 1.0d0
-# else
-    real(8), parameter :: a_phot = -20.0d-3 + 1.0d0 !!!!! To Be Confirmed
-    real(8), parameter :: a_calc =   2.7d-3 + 1.0d0 !!!!! To Be Confirmed
-    real(8), parameter :: a_grz  =   1.0d-3 + 1.0d0 !!!!! To Be Confirmed
-# endif
     real(8), parameter :: sn =   1.0d-20 ! A small number for avoiding a number divided by 0
 #endif
 
@@ -556,8 +547,8 @@ CONTAINS
       dDIC_dt = dDIC_dt - Ap(k) - Ap(k)*rCCp(k)      ! calcification
       dDOx_dt = dDOx_dt + Ap(k)  !!!!!!**************
 #if defined CARBON_ISOTOPE
-      dPHY13C_dt(k) = dPHY13C_dt(k) + Ap(k)*a_phot*rDI13C
-      dDI13C_dt = dDI13C_dt - Ap(k)*a_phot*rDI13C - Ap(k)*rCCp(k)*a_calc*rDI13C
+      dPHY13C_dt(k) = dPHY13C_dt(k) + Ap(k)*aC_phot*rDI13C
+      dDI13C_dt = dDI13C_dt - Ap(k)*aC_phot*rDI13C - Ap(k)*rCCp(k)*aC_calc*rDI13C
 #endif
 #if defined NUTRIENTS
       if(Vp_NO3(k)+Vp_NH4(k) /= 0.0d0) then ! yt_edit prevent div by 0
@@ -586,14 +577,14 @@ CONTAINS
       dDIC_dt = dDIC_dt - Ep(k)
       dDOx_dt = dDOx_dt + Ep(k)  !!!!!!**************
 #if defined CARBON_ISOTOPE
-      dDI13C_dt = dDI13C_dt - Ep(k)*a_phot*rDI13C
+      dDI13C_dt = dDI13C_dt - Ep(k)*aC_phot*rDI13C
 #endif
       dDOC_dt(iLbl) = dDOC_dt(iLbl) + Ep(k)*rLDOMphy  !!!!!!**************
       dDOC_dt(iRfr) = dDOC_dt(iRfr) + Ep(k)*(1.0d0-rLDOMphy)  !!!!!!**************
 #if defined CARBON_ISOTOPE
 !      dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Ep(k)*rPHY13C(k)
-      dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Ep(k)*rLDOMphy*a_phot*rDI13C
-      dDO13C_dt(iRfr) = dDO13C_dt(iRfr) + Ep(k)*(1.0d0-rLDOMphy)*a_phot*rDI13C
+      dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Ep(k)*rLDOMphy*aC_phot*rDI13C
+      dDO13C_dt(iRfr) = dDO13C_dt(iRfr) + Ep(k)*(1.0d0-rLDOMphy)*aC_phot*rDI13C
 #endif
 #if defined NUTRIENTS
 !      dDON_dt(iLbl) = dDON_dt(iLbl) + Ep(k)*rLDOMphy/rCNp(k)  !!!!!!**************
@@ -645,7 +636,7 @@ CONTAINS
 #if defined CARBON_ISOTOPE
       dPHY13C_dt(k) = dPHY13C_dt(k) - Mp(k)*rPHY13C(k)
       dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Mp(k)*rPHY13C(k)
-      dPI13C_dt = dPI13C_dt + Mp(k)*rCCp(k)*a_calc/a_phot*rPHY13C(k)  !!!!!!********** Need check
+      dPI13C_dt = dPI13C_dt + Mp(k)*rCCp(k)*aC_calc/aC_phot*rPHY13C(k)  !!!!!!********** Need check
 #endif
 #if defined NUTRIENTS
       dPON_dt(iDtr) = dPON_dt(iDtr) + Mp(k)/rCNp(k)  !!!!!!**************
@@ -675,8 +666,8 @@ CONTAINS
         dPOC_dt(iDtr) = dPOC_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))
 #if defined CARBON_ISOTOPE
         dPHY13C_dt(m) = dPHY13C_dt(m) - Gp2z(m,k)*rPHY13C(m)
-        dZOO13C_dt(k) = dZOO13C_dt(k) + Gp2z(m,k)*e_Gp2z(m,k)*a_grz*rPHY13C(m)
-        dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*a_grz)*rPHY13C(m)  !!!!****Need check
+        dZOO13C_dt(k) = dZOO13C_dt(k) + Gp2z(m,k)*e_Gp2z(m,k)*aC_grz*rPHY13C(m)
+        dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*aC_grz)*rPHY13C(m)  !!!!****Need check
 #endif
 #if defined NUTRIENTS
         dPON_dt(iDtr) = dPON_dt(iDtr) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNz(k)
@@ -702,9 +693,9 @@ CONTAINS
         dDOC_dt(m) = dDOC_dt(m) - Gdoc2z(m,k)
         dDOC_dt(iLbl) = dDOC_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))
 #if defined CARBON_ISOTOPE
-        dZOO13C_dt(k) = dZOO13C_dt(k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)*a_grz*rDO13C(m)
+        dZOO13C_dt(k) = dZOO13C_dt(k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)*aC_grz*rDO13C(m)
         dDO13C_dt(m) = dDO13C_dt(m) - Gdoc2z(m,k)*rDO13C(m)
-        dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k)*a_grz)*rDO13C(m)
+        dDO13C_dt(iLbl) = dDO13C_dt(iLbl) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k)*aC_grz)*rDO13C(m)
 #endif
 #if defined NUTRIENTS
         dDON_dt(m) = dDON_dt(m) - Gdoc2z(m,k)/rCNz(k)
@@ -730,9 +721,9 @@ CONTAINS
         dPOC_dt(m) = dPOC_dt(m) - Gpoc2z(m,k)
         dPOC_dt(iDtr) = dPOC_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))
 #if defined CARBON_ISOTOPE
-        dZOO13C_dt(k) = dZOO13C_dt(k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)*a_grz*rPO13C(m)
+        dZOO13C_dt(k) = dZOO13C_dt(k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)*aC_grz*rPO13C(m)
         dPO13C_dt(m) = dPO13C_dt(m) - Gpoc2z(m,k)*rPO13C(m)  !!!!****Need check
-        dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k)*a_grz)*rPO13C(m)  !!!!****Need check
+        dPO13C_dt(iDtr) = dPO13C_dt(iDtr) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k)*aC_grz)*rPO13C(m)  !!!!****Need check
 #endif
 #if defined NUTRIENTS
         dPON_dt(m) = dPON_dt(m) - Gpoc2z(m,k)/rCNz(k)

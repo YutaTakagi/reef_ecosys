@@ -15,6 +15,7 @@ contains
 !!!  Allocate module variables of reef ecosystem model
 !!! **********************************************************************
 SUBROUTINE allocate_reef_ecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
+  USE mod_reef_ecosys_param
 #ifdef CORAL_POLYP
   USE mod_coral
 #endif
@@ -45,12 +46,7 @@ SUBROUTINE allocate_reef_ecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
   write(*,*) 'yt_debug: mod_reef_ecosys.F allocate_reef_ecosys() finished macroalgae aloc'
 #endif
 #ifdef SEDIMENT_ECOSYS
-  CALL allocate_sedecosys(ng, Ngrids, LBi, UBi, LBj, UBj  &
-# if defined SEAGRASS && (defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || \
-     defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM)
-                          , Nsg                   &
-# endif
-                          )
+  CALL allocate_sedecosys(ng, Ngrids, LBi, UBi, LBj, UBj)
   write(*,*) 'yt_debug: mod_reef_ecosys.F allocate_reef_ecosys() finished sediment aloc'
 #endif
     
@@ -69,6 +65,7 @@ END SUBROUTINE allocate_reef_ecosys
 #endif
     )
 
+    USE mod_reef_ecosys_param
 #ifdef CORAL_POLYP
     USE mod_coral
 #endif
@@ -242,6 +239,7 @@ END SUBROUTINE allocate_reef_ecosys
 !      A vertical section of the ecosys grid showing water column.      
 !-----------------------------------------------------------------------
 
+    USE mod_reef_ecosys_param
     USE mod_geochem
 #ifdef CORAL_POLYP
     USE mod_coral
@@ -393,7 +391,6 @@ END SUBROUTINE allocate_reef_ecosys
     real(8) :: Flux_DON(N_Nsp,Ndom), Flux_PON(N_Nsp,Npom)    
     real(8) :: Flux_DOP(N_Psp,Ndom), Flux_POP(N_Psp,Npom)    
 !!! yuta_edits_for_masa >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>YT:Add
-#if defined SULFATE
     real(8) :: Mn2, Fe2, H2S(N_Ssp), SO4(N_Ssp)
     real(8) :: Fdep_MnO2, Fdep_FeOOH 
     real(8) :: Fdep_FeOOH_PO4(N_Psp)
@@ -402,7 +399,6 @@ END SUBROUTINE allocate_reef_ecosys
     real(8) :: Flux_Fe2, Flux_FeS(N_Ssp), Flux_FeS2(N_Ssp)
     real(8) :: Flux_FeOOH, Flux_FeOOH_PO4(N_Psp)
     real(8) :: Flux_H2S(N_Ssp), Flux_S0(N_Ssp), Flux_SO4(N_Ssp) ! ,Flux_HS, Flux_S2
-#endif
 !!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<YT:Add
     real(8) :: dDIC(N_Csp,N), dTA(N),  dDOx(N)
     real(8) :: dDOC(N_Csp,Ndom,N), dPOC(N_Csp,Npom,N)
@@ -432,8 +428,8 @@ END SUBROUTINE allocate_reef_ecosys
 ! Initialize all time difference values (d_XXX)
 !-----------------------------------------------------------------------
       
-    dtc = dt/isplitc                  ! Internal time step for coral polyp model (sec)
-    dtsed = dt/isplitsed              ! Internal time step for sediment ecosystem model (sec)
+    dtc = dt/dble(isplitc)                  ! Internal time step for coral polyp model (sec)
+    dtsed = dt/dble(isplitsed)              ! Internal time step for sediment ecosystem model (sec)
     
     DO k=1,N
 
@@ -864,9 +860,6 @@ END SUBROUTINE allocate_reef_ecosys
           ( ng                &   ! ng: nested grid number; 
           , icl               &   ! icl: seagrass species id
           , i, j              &   ! i,j: position
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-          , Nsed(ng)          &   ! Number of sediment layers
-# endif
           , dz(1)             &   ! vertical layer thickness (m)
           , date              &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
           , dt                &   ! Time step (sec)
@@ -929,9 +922,6 @@ END SUBROUTINE allocate_reef_ecosys
           ( ng             &   ! ng: nested grid number; 
           , icl            &   ! icl: seagrass species id
           , i, j           &   ! i,j: position
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-          , Nsed(ng)       &   ! Number of sediment layers
-# endif
           , dz(1)          &   ! vertical layer thickness (m)
           , date           &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
           , dt             &   ! Time step (sec)
@@ -1073,7 +1063,6 @@ END SUBROUTINE allocate_reef_ecosys
         CALL sedecosys      &
 !         input parameters
           ( ng, i, j        &   ! ng: nested grid number; i,j: position
-          , Nsed            &   ! Number of vertical biological sediment layers
           , datei           &   ! Date (days since x or elapsed days)
           , dtsed           &   ! Time step (sec)
           , Tmp(1)          &   ! Tmp: Temperature (oC)

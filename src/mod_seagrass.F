@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2012-2024 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2012-2025 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -27,7 +27,6 @@ MODULE mod_seagrass
 
   implicit none
 
-  integer, parameter :: Nsg = 1     ! Number of seagrass species
 # if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
   real(8), allocatable :: SeagrassRootProf(:, :, :) ! (ng, species, k) ! Profile of seagrass root biomass: fraction in each biological sediment layer 
 # endif
@@ -161,13 +160,12 @@ MODULE mod_seagrass
 ! ====================================================================================================
 ! Module dependencies
 ! ====================================================================================================
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-    USE mod_sedecosys, ONLY : Nsed
-# endif
+    USE mod_reef_ecosys_param
 
 ! ====================================================================================================
 ! Variable declarations
 ! ====================================================================================================
+    
     implicit none
 ! input parameters
     integer, intent(in) :: ng, Ngrids                          !                         ng is the nested grid number
@@ -301,10 +299,7 @@ MODULE mod_seagrass
 ! ====================================================================================================
 ! Module dependencies
 ! ====================================================================================================
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-    USE mod_sedecosys, ONLY : Nsed
-# endif
-    USE mod_geochem
+    USE mod_reef_ecosys_param
 
 ! ====================================================================================================
 ! Variable declarations
@@ -578,9 +573,6 @@ MODULE mod_seagrass
     ( ng                          &   !                           nested grid number; 
     , species                     &   !                           seagrass species id
     , i, j                        &   !                           i,j: position
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-    , Nsed                        &   !                           Number of sediment layers
-# endif
     , dz                          &   ! [m]                       vertical layer thickness (bottom water column layer)
     , date                        &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
     , dt                          &   ! [s]                       time step
@@ -617,6 +609,7 @@ MODULE mod_seagrass
 ! ====================================================================================================
 ! Module dependencies
 ! ====================================================================================================
+    USE mod_reef_ecosys_param
     USE mod_geochem
 # if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
     USE mod_sedecosys,    ONLY : SEDECO
@@ -631,9 +624,6 @@ MODULE mod_seagrass
     integer, intent(in)   :: ng                         !                             nested grid number
     integer, intent(in)   :: species                    !                             seagrass species id
     integer, intent(in)   :: i, j                       !                             i,j: position
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-    integer, intent(in)   :: Nsed                       !                             Number of sediment layers
-# endif
     real(8), intent(in)   :: dz                         ! [m]                         vertical layer thickness (bottom water column layer)
     real(8), intent(in)   :: date                       ! [days]                      Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
     real(8), intent(in)   :: dt                         ! [s]                         Time step interval duration
@@ -2263,9 +2253,6 @@ MODULE mod_seagrass
     ( ng                          &   !                           nested grid number; 
     , species                     &   !                           seagrass species id
     , i, j                        &   !                           i,j: position
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-    , Nsed                        &   !                           Number of sediment layers
-# endif
     , dz                          &   ! [m]                       vertical layer thickness (bottom water column layer)
     , date                        &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
     , dt                          &   ! [s]                       time step
@@ -2273,7 +2260,7 @@ MODULE mod_seagrass
 ! ====================================================================================================
 ! Module dependencies
 ! ====================================================================================================
-    USE mod_geochem
+    USE mod_reef_ecosys_param
 # if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
     USE mod_sedecosys,    ONLY : SEDECO
 # endif
@@ -2287,9 +2274,6 @@ MODULE mod_seagrass
     integer, intent(in)   :: ng                         !                             nested grid number
     integer, intent(in)   :: species                    !                             seagrass species id
     integer, intent(in)   :: i, j                       !                             i,j: position
-# if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-    integer, intent(in)   :: Nsed                       !                             Number of sediment layers
-# endif
     real(8), intent(in)   :: dz                         ! [m]                         vertical layer thickness (bottom water column layer)
     real(8), intent(in)   :: date                       ! [days]                      Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
     real(8), intent(in)   :: dt                         ! [s]                         Time step interval duration

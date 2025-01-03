@@ -10,7 +10,6 @@
 MODULE mod_macroalgae
 #ifdef MACROALGAE
   implicit none
-  integer, parameter :: Nag = 1    !! Number of algal groups
 
   TYPE T_ALGAE
     real(8), pointer :: Pg(:,:,:) 
@@ -28,7 +27,7 @@ CONTAINS
 !!! **********************************************************************
 
   SUBROUTINE allocate_macroalgae(ng, Ngrids, LBi, UBi, LBj, UBj)
-    USE mod_geochem
+    USE mod_reef_ecosys_param
     
     implicit none
     integer, intent(in) :: ng, Ngrids, LBi, UBi, LBj, UBj
@@ -50,7 +49,7 @@ CONTAINS
 !!! **********************************************************************
 
   SUBROUTINE initialize_macroalgae(ng, LBi, UBi, LBj, UBj)
-    USE mod_geochem
+    USE mod_reef_ecosys_param
     
     implicit none
 ! input parameters
@@ -110,6 +109,7 @@ CONTAINS
     )
 
 !-----------------------------------------------------------------------
+    USE mod_reef_ecosys_param
     USE mod_geochem
     
     implicit none
@@ -150,19 +150,25 @@ CONTAINS
     real(8) npref
     real(8) ldocn,ldocd
 #if defined CARBON_ISOTOPE
-    real(8), parameter :: a_phot(2)  = [  1.d0, -20.0d-3+1.d0 ]  ! -5 to -10 per mill (Dr. Miyajima, pers. comn.)
-    real(8), parameter :: a_resp(2)  = [  1.d0,   0.0d-3+1.d0 ]!
+    real(8), parameter :: aC_phot(2)  = [  1.d0, -20.0d-3+1.d0 ]  ! -5 to -10 per mill (Dr. Miyajima, pers. comn.)
+    real(8), parameter :: aC_resp(2)  = [  1.d0,   0.0d-3+1.d0 ]!
     real(8) R13C_DIC, R13C_QC
 #endif
     real(8) :: rQC(N_Csp),rDIC(N_Csp)
 
     integer :: isp
 
-    Flux_DO = 0.0d0
     Flux_DIC(:) = 0.0d0
+    Flux_DO = 0.0d0
+    Flux_DOC(:,:) = 0.0d0
+    Flux_POC(:,:) = 0.0d0
     Flux_NO3(:) = 0.0d0
     Flux_NH4(:) = 0.0d0
     Flux_PO4(:) = 0.0d0
+    Flux_DON(:,:) = 0.0d0
+    Flux_DOP(:,:) = 0.0d0
+    Flux_PON(:,:) = 0.0d0
+    Flux_POP(:,:) = 0.0d0
 
 ! --- Organic and Inorganic Production Rate -----------------
 
@@ -182,8 +188,8 @@ CONTAINS
       rDIC  = Iso_ratio( DICamb(isp), DICamb(iCt) )
       rQC = Iso_ratio( ALGAE(ng)%QC(isp,n,i,j), ALGAE(ng)%QC(iCt,n,i,j) )
   
-      Flux_DIC(isp)= ALGAE(ng)%Pg(n,i,j)*rDIC*a_phot(isp)        &
-                   - ALGAE(ng)%R (n,i,j)*rQC *a_resp(isp)
+      Flux_DIC(isp)= ALGAE(ng)%Pg(n,i,j)*rDIC*aC_phot(isp)        &
+                   - ALGAE(ng)%R (n,i,j)*rQC *aC_resp(isp)
     ENDDO
       
 ! --- Nutrient fluxes between water column and coral -----

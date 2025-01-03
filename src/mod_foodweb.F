@@ -4,34 +4,12 @@
 
 #include "cppdefs.h"
 
-
 !!!**** MODULE OF FOOD WEB *******************************************
 
 MODULE mod_foodweb
 #if defined FOODWEB
 
   implicit none
-
-  integer, parameter :: Ndom   = 2    ! Number of Dissolved Organic Matter types
-  integer, parameter ::  iLDOM = 1    !  1: Labile DOM
-  integer, parameter ::  iRDOM = 2    !  2: Refractory DOM
-
-  integer, parameter :: Npom   = 3    ! Number of Particulate Organic Matter types
-  integer, parameter ::  iLPOM = 1    !  1: Labile POM
-  integer, parameter ::  iRPOM = 2    !  2: Refractory POM
-  integer, parameter ::  iCPOM = 3    !  3: Coarse POM (leaf litter, etc.)
-
-  integer, parameter :: Nphy   = 4    ! Number of Phytoplankton types
-  integer, parameter ::  iDnfl = 1    !  1: Dinoflagellate
-  integer, parameter ::  iDtm  = 2    !  2: Diatom
-  integer, parameter ::  iCcl  = 3    !  3: Coccolithophorids
-  integer, parameter ::  iCya  = 4    !  4: Cyanobacteria
-   
-  integer, parameter :: Nzoo   = 1    ! Number of Zooplankton types
-  integer, parameter ::  iGzoo = 1    !  1: General Zooplankton
-
-  integer, parameter :: Npim    = 1   ! Number of Particulate Inorganic Matter types
-  integer, parameter ::  iCaCO3 = 1   !  1: Coccolith (CaCO3)
 
 !---- POM sinking parameters           LPOM    LPOM    CPOM    
   real(8), parameter :: rho_POM(3) = [ 1.1d0,  1.1d0,  0.99d0 ]  ! ***** POM density [g/cm3] 
@@ -101,7 +79,9 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 !
+    USE mod_reef_ecosys_param
     USE mod_geochem
+    USE mod_decomposition
 
     implicit none
 
@@ -265,18 +245,7 @@ CONTAINS
     real(8), parameter :: rCPz(1) = [ 131.9d0 ]    ! (no dim.) ZOO  C:P ratio
     real(8), parameter :: rNH4toNO3(4) = 0.3d0            ! (no dim.)  PHY NH4:Nitrogen ratio JS_edit make array to use 4 categories
     real(8), parameter :: rCCp(4) = [ 0.0d0, 0.0d0, 0.5d0, 0.0d0 ]  ! ***** (no dim.) CaCO3:OrgC ratio !!! Need Ref!!!!!!!!!!
-!----- for carbon isotope ------------------------
-# if defined CARBON_TRACE
-!                                        iCt   Ctrac1  Ctrac1  Ctrac1
-    real(8), parameter :: a_phot(4) = [ 1.0d0,  1.0d0,  1.0d0,  1.0d0 ] 
-    real(8), parameter :: a_calc(4) = [ 1.0d0,  1.0d0,  1.0d0,  1.0d0 ] 
-    real(8), parameter :: a_grz (4) = [ 1.0d0,  1.0d0,  1.0d0,  1.0d0 ] 
-# else
-!                                        iCt          iC13
-    real(8), parameter :: a_phot(2) = [ 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
-    real(8), parameter :: a_calc(2) = [ 1.0d0,   2.7d-3 + 1.0d0 ] !!!!! To Be Confirmed
-    real(8), parameter :: a_grz (2) = [ 1.0d0,   1.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
-# endif
+
     real(8), parameter :: sn =   1.0d-20 ! A small number for avoiding a number divided by 0
 
 !------- Local variables --------------------
@@ -314,6 +283,28 @@ CONTAINS
     integer :: k,m,isp
     real(8) :: cf1, cf2, cf3
 
+! Tne following variables are not used now.
+    real(8) :: Mn2                  ! Mn2+ (umol L-1) 
+    real(8) :: MnO2                 ! MnO2 (nmol g-1 s-1) *solid
+    real(8) :: Fe2                  ! Fe2+ (umol L-1) 
+    real(8) :: FeS(N_Ssp)           ! FeS (nmol g(DW)-1 s-1)) *solid
+    real(8) :: FeS2(N_Ssp)          ! FeS2 (nmol g(DW)-1 s-1)) *solid
+    real(8) :: FeOOH                ! FeOOH (nmol g(DW)-1 s-1)) *solid
+    real(8) :: FeOOH_PO4(N_Psp)     ! FeOOH=PO4 (nmol g(DW)-1 s-1)) *solid
+    real(8) :: H2S(N_Ssp)           ! H2S (umol L-1) 
+    real(8) :: S0(N_Ssp)            ! S (nmol g(DW)-1 s-1)) *solid
+    real(8) :: SO4(N_Ssp)           ! SO42- (umol L-1) 
+    real(8) :: dMn2_dt              ! d[Mn2+]/dt (umol L-1 s-1)
+    real(8) :: dMnO2_dt             ! d[MnO2]/dt (nmol g(DW)-1 s-1) *solid
+    real(8) :: dFe2_dt              ! d[Fe2+]/dt (umol L-1 s-1)
+    real(8) :: dFeS_dt(N_Ssp)       ! d[FeS]/dt (nmol g(DW)-1 s-1) *solid
+    real(8) :: dFeS2_dt(N_Ssp)      ! d[FeS2]/dt (nmol g(DW)-1 s-1) *solid
+    real(8) :: dFeOOH_dt            ! d[FeOOH]/dt (nmol g(DW)-1 s-1) *solid
+    real(8) :: dFeOOH_PO4_dt(N_Psp) ! d[FeOOH=O4]/dt (nmol g(DW)-1 s-1) *solid
+    real(8) :: dH2S_dt(N_Ssp)       ! d[H2S]/dt (umol L-1 s-1)
+    real(8) :: dS0_dt(N_Ssp)        ! d[S]/dt (nmol g(DW)-1 s-1) *solid
+    real(8) :: dSO4_dt(N_Ssp)       ! d[SO42-]/dt (umol L-1 s-1)
+
 !===== Initiallize tracer parameters =================================
     dDIC_dt(:) = 0.0d0
     dTA_dt  = 0.0d0
@@ -334,6 +325,16 @@ CONTAINS
     dCOTe_dt = 0.0d0
     dCOTl_dt = 0.0d0
 # endif
+    dMn2_dt           = 0.0d0
+    dMnO2_dt          = 0.0d0
+    dFe2_dt           = 0.0d0
+    dFeS_dt(:)        = 0.0d0
+    dFeS2_dt(:)       = 0.0d0
+    dFeOOH_dt         = 0.0d0
+    dFeOOH_PO4_dt(:)  = 0.0d0
+    dH2S_dt(:)        = 0.0d0
+    dS0_dt(:)         = 0.0d0
+    dSO4_dt(:)        = 0.0d0
 
 !===== Calculate istope ratio =================================
     DO isp=1,N_Csp
@@ -431,24 +432,18 @@ CONTAINS
       Ap(k) = Ap(k) * Pp(k)
 
 !     === Mass balance ===
-      DO isp=1,N_Csp
-        dPHY_dt(isp,k) = dPHY_dt(isp,k) + Ap(k)*a_phot(isp)*rDIC(isp)
-        dDIC_dt(isp) = dDIC_dt(isp) - Ap(k) - Ap(k)*rCCp(k)*a_calc(isp)*rDIC(isp)      ! calcification
-      ENDDO
+      dPHY_dt(:,k) = dPHY_dt(:,k) + Ap(k)*aC_phot(1:N_Csp)*rDIC(:)
+      dDIC_dt(:) = dDIC_dt(:) - Ap(k) - Ap(k)*rCCp(k)*aC_calc(1:N_Csp)*rDIC(:)      ! calcification
       dTA_dt = dTA_dt - Ap(k)*rCCp(k)*2.0d0  ! calcification
       dDOx_dt = dDOx_dt + Ap(k)  !!!!!!**************
       if(Vp_NO3(k)+Vp_NH4(k) /= 0.0d0) then ! yt_edit prevent div by 0
-        DO isp=1,N_Nsp
-          dNO3_dt(isp) = dNO3_dt(isp) - Ap(k)*Vp_NO3(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)*rNO3(isp)
-          dNH4_dt(isp) = dNH4_dt(isp) - Ap(k)*Vp_NH4(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)*rNH4(isp)
-        ENDDO
+        dNO3_dt(:) = dNO3_dt(:) - Ap(k)*Vp_NO3(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)*rNO3(:)
+        dNH4_dt(:) = dNH4_dt(:) - Ap(k)*Vp_NH4(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)*rNH4(:)
         dDOx_dt = dDOx_dt + 2.0d0 * Ap(k)*Vp_NO3(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)  !!!*********************
         dTA_dt  = dTA_dt  + 1.0d0 * Ap(k)*Vp_NO3(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)  ! increase of alkalinity by 1 mole when nitrate or nitrite is the N source
         dTA_dt  = dTA_dt  - 1.0d0 * Ap(k)*Vp_NH4(k)/(Vp_NH4(k)+Vp_NO3(k))/rCNp(k)  ! decrease of alkalinity by 1 mole when ammonia is used
       endif
-      DO isp=1,N_Nsp
-        dPO4_dt(isp) = dPO4_dt(isp) - Ap(k)/rCPp(k)*rPO4(isp)
-      ENDDO
+      dPO4_dt(:) = dPO4_dt(:) - Ap(k)/rCPp(k)*rPO4(:)
       dTA_dt    = dTA_dt  + 2.0d0 * Ap(k)/rCPp(k)  ! increases alkalinity by 2 mole per mole HPO42-
 
 !----- Excretion rate (umolC L-1 s-1) -----------------
@@ -458,11 +453,9 @@ CONTAINS
 !     === Mass balance ===
 
       dDOx_dt = dDOx_dt + Ep(k)  !!!!!!**************
-      DO isp=1,N_Csp
-        dDIC_dt(isp) = dDIC_dt(isp) - Ep(k) *a_phot(isp)*rDIC(isp)
-        dDOC_dt(isp,iLDOM) = dDOC_dt(isp,iLDOM) + Ep(k)*rLDOMphy *a_phot(isp)*rDIC(isp)  !!!!!!**************
-        dDOC_dt(isp,iRDOM) = dDOC_dt(isp,iRDOM) + Ep(k)*(1.0d0-rLDOMphy*a_phot(isp))*rDIC(isp)  !!!!!!**************
-      ENDDO
+      dDIC_dt(:) = dDIC_dt(:) - Ep(k) *aC_phot(1:N_Csp)*rDIC(:)
+      dDOC_dt(:,iLDOM) = dDOC_dt(:,iLDOM) + Ep(k)*rLDOMphy *aC_phot(1:N_Csp)*rDIC(:)  !!!!!!**************
+      dDOC_dt(:,iRDOM) = dDOC_dt(:,iRDOM) + Ep(k)*(1.0d0-rLDOMphy*aC_phot(1:N_Csp))*rDIC(:)  !!!!!!**************
 !      dDON_dt(iLDOM) = dDON_dt(iLDOM) + Ep(k)*rLDOMphy/rCNp(k)  !!!!!!**************
 !      dDOP_dt(iLDOM) = dDOP_dt(iLDOM) + Ep(k)*rLDOMphy/rCPp(k)  !!!!!!**************
 !      dDON_dt(iRDOM) = dDON_dt(iRDOM) + Ep(k)*(1.0d0-rLDOMphy)/rCNp(k)  !!!!!!**************
@@ -479,17 +472,11 @@ CONTAINS
 !     === Mass balance ===
 
       dDOx_dt = dDOx_dt - Rp(k)
-      DO isp=1,N_Csp
-        dPHY_dt(isp,k) = dPHY_dt(isp,k) - Rp(k) *rPHY(isp,k)
-        dDIC_dt(isp) = dDIC_dt(isp) + Rp(k) *rPHY(isp,k)
-        dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Rp(k)*rCCp(k)!*rPIC(isp,k)  !!!??????????????? Check needed?????????????????????????????????
-      ENDDO
-      DO isp=1,N_Nsp
-        dNH4_dt(isp) = dNH4_dt(isp) + Rp(k)/rCNp(k) *rPHY(isp,k)  !!!??????????????? Check needed
-      ENDDO
-      DO isp=1,N_Psp
-        dPO4_dt(isp) = dPO4_dt(isp) + Rp(k)/rCPp(k) *rPHY(isp,k)  !!!??????????????? Check needed
-      ENDDO
+      dPHY_dt(:,k) = dPHY_dt(:,k) - Rp(k) *rPHY(:,k)
+      dDIC_dt(:) = dDIC_dt(:) + Rp(k) *rPHY(:,k)
+      dPIC_dt(:,iCaCO3) = dPIC_dt(:,iCaCO3) + Rp(k)*rCCp(k)!*rPIC(:,k)  !!!??????????????? Check needed?????????????????????????????????
+      dNH4_dt(:) = dNH4_dt(:) + Rp(k)/rCNp(k) *rPHY(:,k)  !!!??????????????? Check needed
+      dPO4_dt(:) = dPO4_dt(:) + Rp(k)/rCPp(k) *rPHY(:,k)  !!!??????????????? Check needed
       dTA_dt = dTA_dt + 1.0d0*Rp(k)/rCNp(k) - 2.0d0*Rp(k)/rCPp(k)
 
 !----- Mortality (umolC L-1 s-1) -----------------
@@ -500,17 +487,11 @@ CONTAINS
 
 !     === Mass balance ===
 
-      DO isp=1,N_Csp
-        dPHY_dt(isp,k) = dPHY_dt(isp,k) - Mp(k) *rPHY(isp,k)
-        dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Mp(k) *rPHY(isp,k)
-        dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Mp(k)*rCCp(k) *a_calc(isp)/a_phot(isp)*rPHY(isp,k)  !!!!!
-      ENDDO
-      DO isp=1,N_Nsp
-        dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Mp(k)/rCNp(k) *rPHY(isp,k)  !!!!!!**************
-      ENDDO
-      DO isp=1,N_Psp
-        dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Mp(k)/rCPp(k) *rPHY(isp,k)  !!!!!!**************
-      ENDDO
+      dPHY_dt(:,k) = dPHY_dt(:,k) - Mp(k) *rPHY(:,k)
+      dPOC_dt(:,iLPOM) = dPOC_dt(:,iLPOM) + Mp(k) *rPHY(:,k)
+      dPIC_dt(:,iCaCO3) = dPIC_dt(:,iCaCO3) + Mp(k)*rCCp(k) *aC_calc(1:N_Csp)/aC_phot(1:N_Csp)*rPHY(:,k)  !!!!!
+      dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Mp(k)/rCNp(k) *rPHY(:,k)  !!!!!!**************
+      dPOP_dt(:,iLPOM) = dPOP_dt(:,iLPOM) + Mp(k)/rCPp(k) *rPHY(:,k)  !!!!!!**************
     END DO
 
 !===== Zooplankton reaction ======================================
@@ -529,18 +510,12 @@ CONTAINS
 
 !     === Mass balance ===
 
-        DO isp=1,N_Csp
-          dPHY_dt(isp,m) = dPHY_dt(isp,m) - Gp2z(m,k) *rPHY(isp,m)
-          dZOO_dt(isp,k) = dZOO_dt(isp,k) + Gp2z(m,k)*e_Gp2z(m,k) *a_grz(isp) *rPHY(isp,m)
-          dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*a_grz(isp)) *rPHY(isp,m) !!!!****Need check
-          dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) + Gp2z(m,k)*rCCp(m)!*rPIC(isp,m) !!!!****Need check?????????????????????????????????????????
-        ENDDO
-        DO isp=1,N_Nsp
-          dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNp(m)*rPHY(isp,m) !!!!****Need check
-        ENDDO
-        DO isp=1,N_Psp
-          dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCPp(m)*rPHY(isp,m) !!!!****Need check
-        ENDDO
+        dPHY_dt(:,m) = dPHY_dt(:,m) - Gp2z(m,k) *rPHY(:,m)
+        dZOO_dt(:,k) = dZOO_dt(:,k) + Gp2z(m,k)*e_Gp2z(m,k) *aC_grz(1:N_Csp) *rPHY(:,m)
+        dPOC_dt(:,iLPOM) = dPOC_dt(:,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k)*aC_grz(1:N_Csp)) *rPHY(:,m) !!!!****Need check
+        dPIC_dt(:,iCaCO3) = dPIC_dt(:,iCaCO3) + Gp2z(m,k)*rCCp(m)!*rPIC(:,m) !!!!****Need check?????????????????????????????????????????
+        dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCNp(m)*rPHY(:,m) !!!!****Need check
+        dPOP_dt(:,iLPOM) = dPOP_dt(:,iLPOM) + Gp2z(m,k)*(1.0d0-e_Gp2z(m,k))/rCPp(m)*rPHY(:,m) !!!!****Need check
       END DO
 
 !!!------- Microbial loop (implicitly assumed) ---------------
@@ -554,19 +529,14 @@ CONTAINS
         Gdoc2z(m,k) = MAX( Gdoc2z(m,k), 0.0d0 )  !!! Error handling
 
 !     === Mass balance ===
-        DO isp=1,N_Csp
-          dZOO_dt(isp,k) = dZOO_dt(isp,k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)*a_grz(isp) *rDOC(isp,m)
-          dDOC_dt(isp,m) = dDOC_dt(isp,m) - Gdoc2z(m,k) *rDOC(isp,m)
-          dDOC_dt(isp,iLDOM) = dDOC_dt(isp,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k)*a_grz(isp)) *rDOC(isp,m)
-        ENDDO
-        DO isp=1,N_Nsp
-          dDON_dt(isp,m) = dDON_dt(isp,m) - Gdoc2z(m,k)/rCNz(k) *rDON(isp,m)
-          dDON_dt(isp,iLDOM) = dDON_dt(isp,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCNz(k) *rZOO(isp,k)  !!! ********** Check needed
-        ENDDO
-        DO isp=1,N_Psp
-          dDOP_dt(isp,m) = dDOP_dt(isp,m) - Gdoc2z(m,k)/rCPz(k) *rDOP(isp,m)
-          dDOP_dt(isp,iLDOM) = dDOP_dt(isp,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCPz(k)*rZOO(isp,k)
-        ENDDO
+
+        dZOO_dt(:,k) = dZOO_dt(:,k) + Gdoc2z(m,k)*e_Gdoc2z(m,k)*aC_grz(1:N_Csp) *rDOC(:,m)
+        dDOC_dt(:,m) = dDOC_dt(:,m) - Gdoc2z(m,k) *rDOC(:,m)
+        dDOC_dt(:,iLDOM) = dDOC_dt(:,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k)*aC_grz(1:N_Csp)) *rDOC(:,m)
+        dDON_dt(:,m) = dDON_dt(:,m) - Gdoc2z(m,k)/rCNz(k) *rDON(:,m)
+        dDON_dt(:,iLDOM) = dDON_dt(:,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCNz(k) *rZOO(:,k)  !!! ********** Check needed
+        dDOP_dt(:,m) = dDOP_dt(:,m) - Gdoc2z(m,k)/rCPz(k) *rDOP(:,m)
+        dDOP_dt(:,iLDOM) = dDOP_dt(:,iLDOM) + Gdoc2z(m,k)*(1.0d0-e_Gdoc2z(m,k))/rCPz(k)*rZOO(:,k)
       END DO
 
 !----- Grazing rate of POC by ZOO (umolC L-1 s-1) -----------------
@@ -578,19 +548,14 @@ CONTAINS
         Gpoc2z(m,k) = MAX( Gpoc2z(m,k), 0.0d0 )  !!! Error handling
 
 !     === Mass balance ===
-        DO isp=1,N_Csp
-          dZOO_dt(isp,k) = dZOO_dt(isp,k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)*a_grz(isp)*rPOC(isp,m) !!!!****Need check
-          dPOC_dt(isp,m) = dPOC_dt(isp,m) - Gpoc2z(m,k)*rPOC(isp,m)
-          dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k)*a_grz(isp))*rPOC(isp,m) !!!!****Need check
-        ENDDO
-        DO isp=1,N_Nsp
-          dPON_dt(isp,m) = dPON_dt(isp,m) - Gpoc2z(m,k)/rCNz(k) *rPON(isp,m)
-          dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCNz(k) *rPON(isp,m)
-        ENDDO
-        DO isp=1,N_Psp
-          dPOP_dt(isp,m) = dPOP_dt(isp,m) - Gpoc2z(m,k)/rCPz(k) *rPOP(isp,m)
-          dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCPz(k) *rPOP(isp,m)
-        ENDDO
+
+        dZOO_dt(:,k) = dZOO_dt(:,k) + Gpoc2z(m,k)*e_Gpoc2z(m,k)*aC_grz(1:N_Csp)*rPOC(:,m) !!!!****Need check
+        dPOC_dt(:,m) = dPOC_dt(:,m) - Gpoc2z(m,k)*rPOC(:,m)
+        dPOC_dt(:,iLPOM) = dPOC_dt(:,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k)*aC_grz(1:N_Csp))*rPOC(:,m) !!!!****Need check
+        dPON_dt(:,m) = dPON_dt(:,m) - Gpoc2z(m,k)/rCNz(k) *rPON(:,m)
+        dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCNz(k) *rPON(:,m)
+        dPOP_dt(:,m) = dPOP_dt(:,m) - Gpoc2z(m,k)/rCPz(k) *rPOP(:,m)
+        dPOP_dt(:,iLPOM) = dPOP_dt(:,iLPOM) + Gpoc2z(m,k)*(1.0d0-e_Gpoc2z(m,k))/rCPz(k) *rPOP(:,m)
       END DO
   
 !----- Respiration rate (umolC L-1 s-1) -----------------
@@ -604,16 +569,10 @@ CONTAINS
 !     === Mass balance ===
 
       dDOx_dt = dDOx_dt - Rz(k)
-      DO isp=1,N_Csp
-        dZOO_dt(isp,k) = dZOO_dt(isp,k) - Rz(k)*rZOO(isp,k)
-        dDIC_dt(isp) = dDIC_dt(isp) + Rz(k)*rZOO(isp,k)
-      ENDDO
-      DO isp=1,N_Nsp
-        dNH4_dt(isp) = dNH4_dt(isp) + Rz(k)/rCNz(k)*rZOO(isp,k) !!!??????????????????????????????????
-      ENDDO
-      DO isp=1,N_Psp
-        dPO4_dt(isp) = dPO4_dt(isp) + Rz(k)/rCPz(k)*rZOO(isp,k) !!!??????????????????????????????????
-      ENDDO
+      dZOO_dt(:,k) = dZOO_dt(:,k) - Rz(k)*rZOO(:,k)
+      dDIC_dt(:) = dDIC_dt(:) + Rz(k)*rZOO(:,k)
+      dNH4_dt(:) = dNH4_dt(:) + Rz(k)/rCNz(k)*rZOO(:,k) !!!??????????????????????????????????
+      dPO4_dt(:) = dPO4_dt(:) + Rz(k)/rCPz(k)*rZOO(:,k) !!!??????????????????????????????????
       dTA_dt = dTA_dt + 1.0d0*Rz(k)/rCNz(k) - 2.0d0*Rz(k)/rCPz(k)
   
 !----- Mortality (umolC L-1 s-1) -----------------
@@ -623,144 +582,13 @@ CONTAINS
 
 !     === Mass balance ===
 
-      DO isp=1,N_Csp
-        dZOO_dt(isp,k) = dZOO_dt(isp,k) - Mz(k)*rZOO(isp,k)
-        dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Mz(k)*rZOO(isp,k)
-      ENDDO
-      DO isp=1,N_Nsp
-        dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Mz(k)/rCNz(k)*rZOO(isp,k) !!!??????????????????????????????????
-      ENDDO
-      DO isp=1,N_Psp
-        dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Mz(k)/rCPz(k)*rZOO(isp,k) !!!??????????????????????????????????
-      ENDDO
+      dZOO_dt(:,k) = dZOO_dt(:,k) - Mz(k)*rZOO(:,k)
+      dPOC_dt(:,iLPOM) = dPOC_dt(:,iLPOM) + Mz(k)*rZOO(:,k)
+      dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Mz(k)/rCNz(k)*rZOO(:,k) !!!??????????????????????????????????
+      dPOP_dt(:,iLPOM) = dPOP_dt(:,iLPOM) + Mz(k)/rCPz(k)*rZOO(:,k) !!!??????????????????????????????????
     END DO
 
 !===== Decomposition ==================================================
-
-!----- Decomposition rate of DOM (umol L-1 s-1) -----------------
-
-    DO k=1, Ndom
-      Ddoc(k) = k_Ddoc(k) * exp(b_Ddoc(k)*Tmp) * DOC(iCt,k)
-      IF(DOx <= 0.0d0) THEN !-----For Error handling
-        Ddoc(k) = 0.0d0
-      ENDIF
-      Ddoc(k) = MAX( Ddoc(k), 0.0d0 )  !!! Error handling
-
-!     === Mass balance ===
-
-      dDOx_dt = dDOx_dt - Ddoc(k)
-      DO isp=1,N_Csp
-        dDOC_dt(isp,k) = dDOC_dt(isp,k) - Ddoc(k)*rDOC(isp,k)
-        dDIC_dt(isp)   = dDIC_dt(isp)   + Ddoc(k)*rDOC(isp,k)
-      ENDDO
-      Ddon(k) = k_Ddon(k) * exp(b_Ddon(k)*Tmp) * DON(iNt,k)
-      IF(DOx <= 0.0d0) THEN !-----For Error handling
-        Ddon(k) = 0.0d0
-      ENDIF
-      Ddon(k) = MAX( Ddon(k), 0.0d0 )  !!! Error handling
-
-      Ddop(k) = k_Ddop(k) * exp(b_Ddop(k)*Tmp) * DOP(iNt,k)
-      IF(DOx <= 0.0d0) THEN !-----For Error handling
-        Ddop(k) = 0.0d0
-      ENDIF
-      Ddop(k) = MAX( Ddop(k), 0.0d0 )  !!! Error handling
-
-!     === Mass balance ===
-
-      DO isp=1,N_Nsp
-        dDON_dt(isp,k) = dDON_dt(isp,k) - Ddon(k)*rDON(isp,k)
-        dNH4_dt(isp)   = dNH4_dt(isp)   + Ddon(k)*rDON(isp,k)
-      ENDDO
-      DO isp=1,N_Psp
-        dDOP_dt(isp,k) = dDOP_dt(isp,k) - Ddop(k)*rDOP(isp,k)
-        dPO4_dt(isp)   = dPO4_dt(isp)   + Ddop(k)*rDOP(isp,k)
-      ENDDO
-      dTA_dt = dTA_dt + 1.0d0*Ddon(k) - 2.0d0*Ddop(k)
-    END DO
-
-!----- Decomposition rate of POM (umol L-1 s-1) -----------------
-
-    DO k=1, Npom
-      Dpoc(k) = k_Dpoc(k) * exp(b_Dpoc(k)*Tmp) * POC(iCt,k)
-      IF(DOx <= 0.0d0) THEN !-----For Error handling
-        Dpoc(k) = 0.0d0
-      ENDIF
-      Dpoc(k) = MAX( Dpoc(k), 0.0d0 )  !!! Error handling
-
-!     === Mass balance ===
-
-      dDOx_dt = dDOx_dt - Dpoc(k)
-      DO isp=1,N_Csp
-        dPOC_dt(isp,k) = dPOC_dt(isp,k) - Dpoc(k)*rPOC(isp,k)
-        dDIC_dt(isp)   = dDIC_dt(isp)   + Dpoc(k)*rPOC(isp,k)
-      ENDDO
-
-      Dpon(k) = k_Dpon(k) * exp(b_Dpon(k)*Tmp) * PON(iNt,k)
-      IF(DOx <= 0.0d0) THEN !-----For Error handling
-        Dpon(k) = 0.0d0
-      ENDIF
-      Dpon(k) = MAX( Dpon(k), 0.0d0 )  !!! Error handling
-
-      Dpop(k) = k_Dpop(k) * exp(b_Dpop(k)*Tmp) * POP(iPt,k)
-      IF(DOx <= 0.0d0) THEN !-----For Error handling
-        Dpop(k) = 0.0d0
-      ENDIF
-      Dpop(k) = MAX( Dpop(k), 0.0d0 )  !!! Error handling
-
-!     === Mass balance ===
-
-      DO isp=1,N_Nsp
-        dPON_dt(isp,k) = dPON_dt(isp,k) - Dpon(k)*rPON(isp,k)
-        dNH4_dt(isp)   = dNH4_dt(isp)   + Dpon(k)*rPON(isp,k)
-      ENDDO
-      DO isp=1,N_Psp
-        dPOP_dt(isp,k) = dPOP_dt(isp,k) - Dpop(k)*rPOP(isp,k)
-        dPO4_dt(isp)   = dPO4_dt(isp)   + Dpop(k)*rPOP(isp,k)
-      ENDDO
-      dTA_dt = dTA_dt + 1.0d0*Dpon(k) - 2.0d0*Dpop(k)
-    END DO
-
-!----- Decomposition rate from POM to DOM (umol L-1 s-1) -----------------
-
-    DO k=1, Ndom
-      DO m=1, Npom
-        Dp2doc(m,k) = k_Dp2doc(m,k) * exp(b_Dp2doc(m,k)*Tmp) * MAX(POC(iCt,m),0.0d0)
-        IF(DOx <= 0.0d0) THEN !-----For Error handling
-          Dp2doc(m,k) = 0.0d0
-        ENDIF
-        Dp2doc(m,k) = MAX( Dp2doc(m,k), 0.0d0 )  !!! Error handling
-
-!     === Mass balance ===
-
-        DO isp=1,N_Csp
-          dDOC_dt(isp,k) = dDOC_dt(isp,k) + Dp2doc(m,k)*rPOC(isp,m)
-          dPOC_dt(isp,m) = dPOC_dt(isp,m) - Dp2doc(m,k)*rPOC(isp,m)
-        ENDDO
-        Dp2don(m,k) = k_Dp2don(m,k) * exp(b_Dp2don(m,k)*Tmp) * MAX(PON(iNt,m),0.0d0)
-        IF(DOx <= 0.0d0) THEN !-----For Error handling
-          Dp2don(m,k) = 0.0d0
-        ENDIF
-        Dp2don(m,k) = MAX( Dp2don(m,k), 0.0d0 )  !!! Error handling
-
-        Dp2dop(m,k) = k_Dp2dop(m,k) * exp(b_Dp2dop(m,k)*Tmp) * MAX(POP(iPt,m),0.0d0)
-        IF(DOx <= 0.0d0) THEN !-----For Error handling
-          Dp2dop(m,k) = 0.0d0
-        ENDIF
-        Dp2dop(m,k) = MAX( Dp2dop(m,k), 0.0d0 )  !!! Error handling
-
-!     === Mass balance ===
-
-        DO isp=1,N_Nsp
-          dDON_dt(isp,k) = dDON_dt(isp,k) + Dp2don(m,k)*rPON(isp,m)
-          dPON_dt(isp,m) = dPON_dt(isp,m) - Dp2don(m,k)*rPON(isp,m)
-        ENDDO
-        DO isp=1,N_Psp
-          dDOP_dt(isp,k) = dDOP_dt(isp,k) + Dp2dop(m,k)*rPOP(isp,m)
-          dPOP_dt(isp,m) = dPOP_dt(isp,m) - Dp2dop(m,k)*rPOP(isp,m)
-        ENDDO
-
-      END DO
-    END DO
 
 !----- Decomposition rate from CPOM to Detritus (umol L-1 s-1) -----------------
 
@@ -769,10 +597,8 @@ CONTAINS
 
   !     === Mass balance ===
   
-    DO isp=1,N_Csp
-      dPOC_dt(isp,iCPOM) = dPOC_dt(isp,iCPOM) - Dcpoc2dtr*rPOC(isp,iCPOM)
-      dPOC_dt(isp,iLPOM) = dPOC_dt(isp,iLPOM) + Dcpoc2dtr*rPOC(isp,iCPOM)
-    ENDDO
+    dPOC_dt(:,iCPOM) = dPOC_dt(:,iCPOM) - Dcpoc2dtr*rPOC(:,iCPOM)
+    dPOC_dt(:,iLPOM) = dPOC_dt(:,iLPOM) + Dcpoc2dtr*rPOC(:,iCPOM)
 
     Dcpon2dtr = k_Dcpon2dtr * exp(b_Dcpon2dtr*Tmp) * PON(iNt,iCPOM)
     Dcpon2dtr = MAX( Dcpon2dtr, 0.0d0 )  !!! Error handling
@@ -782,32 +608,79 @@ CONTAINS
   
   !     === Mass balance ===
   
-    DO isp=1,N_Nsp
-      dPON_dt(isp,iCPOM) = dPON_dt(isp,iCPOM) - Dcpon2dtr*rPON(isp,iCPOM)
-      dPON_dt(isp,iLPOM) = dPON_dt(isp,iLPOM) + Dcpon2dtr*rPON(isp,iCPOM)
-    ENDDO
-    DO isp=1,N_Psp
-      dPOP_dt(isp,iCPOM) = dPOP_dt(isp,iCPOM) - Dcpop2dtr*rPOP(isp,iCPOM)
-      dPOP_dt(isp,iLPOM) = dPOP_dt(isp,iLPOM) + Dcpop2dtr*rPOP(isp,iCPOM)
-    ENDDO
+    dPON_dt(:,iCPOM) = dPON_dt(:,iCPOM) - Dcpon2dtr*rPON(:,iCPOM)
+    dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Dcpon2dtr*rPON(:,iCPOM)
+    dPOP_dt(:,iCPOM) = dPOP_dt(:,iCPOM) - Dcpop2dtr*rPOP(:,iCPOM)
+    dPOP_dt(:,iLPOM) = dPOP_dt(:,iLPOM) + Dcpop2dtr*rPOP(:,iCPOM)
 
-  
-!===== Nitrification ==================================================== JS_edit find reference
 
-    Nit = k_Nit * exp(b_Nit*Tmp) * MAX( NH4(iNt), 0.0d0 )**2
-    IF(DOx <= 0.0d0) THEN !-----For Error handling
-        Nit = 0.0d0
-    ENDIF
-    Nit = MAX( Nit, 0.0d0 )  !!! Error handling
+!----- Decomposition rate DOM and POM (umol L-1 s-1) -----------------
+    Mn2          = 0.0d0   ! Mn2+ (umol L-1) 
+    MnO2         = 0.0d0   ! MnO2 (nmol g-1 s-1) *solid
+    Fe2          = 0.0d0   ! Fe2+ (umol L-1) 
+    FeS(:)       = 0.0d0   ! FeS (nmol g(DW)-1 s-1)) *solid
+    FeS2(:)      = 0.0d0   ! FeS2 (nmol g(DW)-1 s-1)) *solid
+    FeOOH        = 0.0d0   ! FeOOH (nmol g(DW)-1 s-1)) *solid
+    FeOOH_PO4(:) = 0.0d0   ! FeOOH=PO4 (nmol g(DW)-1 s-1)) *solid
+    H2S(:)       = 0.0d0   ! H2S (umol L-1) 
+    S0(:)        = 0.0d0   ! S (nmol g(DW)-1 s-1)) *solid
+    SO4(iSt)       = 0.02824d0*Sal/35.0d0*rho_sw *1.0d6   ! SO42- (umol L-1) 
+!   SO4(iS34) = SO4(iSt)
 
-!     === Mass balance ===
+    CALL decomposition  &
+    ! input parameters
+    ( 1                 &   ! 0: Sediment column, 1: Water column
+    , Tmp               &   ! Temperature (oC)
+    , Sal               &   ! Salinity (PSU)
+    , 0.0d0             &   ! Dry soil density (g cm-3)
+    , 1.0d0             &   ! Soil porosity (= Vwater/(Vwater+Vsed) (non-dimensional: 0.0-1.0)
+    , DOx               &   ! Dissolved oxygen (umol L-1)
+    , TA                &   ! Total alkalinity (TA: umol L-1)
+    , DIC(:)            &   ! Total dissolved inorganic carbon (DIC: umol L-1)
+    , DOC(:,:)          &   ! DOC(Ndom): Dissolved organic carbon (DOC: umol L-1)
+    , POC(:,:)          &   ! POC(Npom): Particulate organic carbon (POC: umol L-1 or nmol g(DW)-1 *solid)
+    , NO3(:)            &   ! NO3 (umol L-1)
+    , NH4(:)            &   ! NH4 (umol L-1)
+    , PO4(:)            &   ! PO4 (umol L-1)
+    , DON(:,:)          &   ! Dissolved organic nitrogen (DON: umol L-1)
+    , PON(:,:)          &   ! Particulate organic nitrogen (PON: umol L-1 or nmol g(DW)-1 *solid)
+    , DOP(:,:)          &   ! Dissolved organic phosporius (DOP: umol L-1)
+    , POP(:,:)          &   ! Particulate organic phosporius (POP: umol L-1 or nmol g(DW)-1 *solid)
+    , Mn2               &   ! Mn2+ (umol L-1) 
+    , MnO2              &   ! MnO2 (nmol g-1 s-1) *solid
+    , Fe2               &   ! Fe2+ (umol L-1) 
+    , FeS(:)            &   ! FeS (nmol g(DW)-1 s-1)) *solid
+    , FeS2(:)           &   ! FeS2 (nmol g(DW)-1 s-1)) *solid
+    , FeOOH             &   ! FeOOH (nmol g(DW)-1 s-1)) *solid
+    , FeOOH_PO4(:)      &   ! FeOOH=PO4 (nmol g(DW)-1 s-1)) *solid
+    , H2S(:)            &   ! H2S (umol L-1) 
+    , S0(:)             &   ! S (nmol g(DW)-1 s-1)) *solid
+    , SO4(:)            &   ! SO42- (umol L-1) 
+   ! input and output parameters
+    , dDOx_dt           &   ! d[O2]/dt  (umol L-1 s-1) 
+    , dTA_dt            &   ! dTA/dt  (umol L-1 s-1) 
+    , dDIC_dt(:)        &   ! dDIC/dt (umol L-1 s-1) 
+    , dDOC_dt(:,:)      &   ! dDOC/dt (umol L-1 s-1) 
+    , dPOC_dt(:,:)      &   ! dPOC/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
+    , dNO3_dt(:)        &   ! d[NO3]/dt (umol L-1 s-1)
+    , dNH4_dt(:)        &   ! d[NH4]/dt (umol L-1 s-1)
+    , dPO4_dt(:)        &   ! d[PO4]/dt (umol L-1 s-1)
+    , dDON_dt(:,:)      &   ! dDON/dt (umol L-1 s-1)
+    , dPON_dt(:,:)      &   ! dPON/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
+    , dDOP_dt(:,:)      &   ! dDOP/dt (umol L-1 s-1)
+    , dPOP_dt(:,:)      &   ! dPOP/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
+    , dMn2_dt           &   ! d[Mn2+]/dt (umol L-1 s-1)
+    , dMnO2_dt          &   ! d[MnO2]/dt (nmol g(DW)-1 s-1) *solid
+    , dFe2_dt           &   ! d[Fe2+]/dt (umol L-1 s-1)
+    , dFeS_dt(:)        &   ! d[FeS]/dt (nmol g(DW)-1 s-1) *solid
+    , dFeS2_dt(:)       &   ! d[FeS2]/dt (nmol g(DW)-1 s-1) *solid
+    , dFeOOH_dt         &   ! d[FeOOH]/dt (nmol g(DW)-1 s-1) *solid
+    , dFeOOH_PO4_dt(:)  &   ! d[FeOOH=O4]/dt (nmol g(DW)-1 s-1) *solid
+    , dH2S_dt(:)        &   ! d[H2S]/dt (umol L-1 s-1)
+    , dS0_dt(:)         &   ! d[S]/dt (nmol g(DW)-1 s-1) *solid
+    , dSO4_dt(:)        &   ! d[SO42-]/dt (umol L-1 s-1)
+    )
 
-    DO isp=1,N_Nsp
-      dNO3_dt(isp) = dNO3_dt(isp) + Nit*rNH4(isp)
-      dNH4_dt(isp) = dNH4_dt(isp) - Nit*rNH4(isp)
-    ENDDO
-    dDOx_dt = dDOx_dt - Nit*2.0d0
-    dTA_dt = dTA_dt - Nit*2.0d0
 
 !===== Carbonate dissolution ==============================================
 
@@ -825,10 +698,8 @@ CONTAINS
 
 !     === Mass balance ===
 
-    DO isp=1,N_Csp
-      dPIC_dt(isp,iCaCO3) = dPIC_dt(isp,iCaCO3) - Dissol*rPIC(isp,iCaCO3)
-      dDIC_dt(isp) = dDIC_dt(isp) + Dissol*rPIC(isp,iCaCO3)
-    ENDDO
+    dPIC_dt(:,iCaCO3) = dPIC_dt(:,iCaCO3) - Dissol*rPIC(:,iCaCO3)
+    dDIC_dt(:) = dDIC_dt(:) + Dissol*rPIC(:,iCaCO3)
     dTA_dt = dTA_dt + Dissol*2.0d0
 
 !===== Unit adjustment ===========================================
