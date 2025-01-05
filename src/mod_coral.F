@@ -131,9 +131,6 @@ CONTAINS
     allocate( ZOOX(ng)%SOx(Ncl,LBi:UBi,LBj:UBj)  )
     allocate( ZOOX(ng)%NADPHn(Ncl,LBi:UBi,LBj:UBj) )
     allocate( ZOOX(ng)%RuBPn(Ncl,LBi:UBi,LBj:UBj)  )
-#  if defined CARBON_ISOTOPE
-    allocate( ZOOX(ng)%Q13C(Ncl,LBi:UBi,LBj:UBj)  )
-#  endif
 #  if defined CORAL_NUTRIENTS
     allocate( ZOOX(ng)%NO3(N_Nsp,Ncl,LBi:UBi,LBj:UBj)  )
     allocate( ZOOX(ng)%NH4(N_Nsp,Ncl,LBi:UBi,LBj:UBj)  )
@@ -303,20 +300,18 @@ CONTAINS
     , rho_sw         &   ! Density of seawater (g cm-3)
     , Tamb           &   ! Temperature (oC)
     , Samb           &   ! Salinity (PSU)
-    , DICamb         &   ! Total dissolved inorganic carbon (DIC: umol kg-1)
-    , TAamb          &   ! Total alkalinity (TA: umol kg-1)
     , DOamb          &   ! Dissolved oxygen (umol L-1)
-# if defined CORAL_INGESTION
-    , ZOOc           &   ! zooplankton C bomass(umol C L-1)
-# endif
+    , TAamb          &   ! Total alkalinity (TA: umol kg-1)
+    , DICamb         &   ! Total dissolved inorganic carbon (DIC: umol kg-1)
 # if defined CORAL_NUTRIENTS         
     , NO3amb         &   ! NO3 (umol L-1)
     , NH4amb         &   ! NH4 (umol L-1)
     , PO4amb         &   ! PO4 (umol L-1)
-#  if defined CORAL_INGESTION
-    , ZOOn           &   ! zooplankton N bomass (umol N L-1)
-    , ZOOp           &   ! zooplankton P bomass (umol P L-1)
-#  endif
+# endif
+# if defined CORAL_INGESTION
+    , ZooC           &   ! zooplankton C bomass(umol C L-1)
+    , ZooN           &   ! zooplankton N bomass (umol N L-1)
+    , ZooP           &   ! zooplankton P bomass (umol P L-1)
 # endif
     , tau_amb        &   ! bottom shear stress (N m-2)
     , Fsed           &   ! sedimentation rate (??)
@@ -326,9 +321,6 @@ CONTAINS
     , Flux_DO        &   ! DO  flux (nmol cm-2 s-1)  * direction of water column to coral is positive
     , Flux_DOC       &   ! DOC flux (nmol cm-2 s-1) * direction of water column to coral is positive
     , Flux_POC       &   ! POC flux (nmol cm-2 s-1) * direction of water column to coral is positive
-# if defined CORAL_INGESTION
-    , Flux_ZOOc      &   ! Zooplankton ingestion rate (nmol C cm-2 s-1)  * direction of water column to coral is positive
-# endif
 # if defined CORAL_NUTRIENTS
     , Flux_NO3       &   ! NO3 flux (nmol cm-2 s-1)  * direction of water column to coral is positive
     , Flux_NH4       &   ! NH4 flux (nmol cm-2 s-1)  * direction of water column to coral is positive
@@ -337,10 +329,11 @@ CONTAINS
     , Flux_PON       &   ! PON flux (nmol cm-2 s-1) * direction of water column to coral is positive
     , Flux_DOP       &   ! DOP flux (nmol cm-2 s-1) * direction of water column to coral is positive
     , Flux_POP       &   ! POP flux (nmol cm-2 s-1) * direction of water column to coral is positive
-#  if defined CORAL_INGESTION
-    , Flux_ZOOn      &   ! Zooplankton ingestion rate (nmol N cm-2 s-1)  * direction of water column to coral is positive
-    , Flux_ZOOp      &   ! Zooplankton ingestion rate (nmol P cm-2 s-1)  * direction of water column to coral is positive
-#  endif
+# endif
+# if defined CORAL_INGESTION
+    , Flux_ZooC      &   ! Zooplankton ingestion rate (nmol C cm-2 s-1)  * direction of water column to coral is positive
+    , Flux_ZooN      &   ! Zooplankton ingestion rate (nmol N cm-2 s-1)  * direction of water column to coral is positive
+    , Flux_ZooP      &   ! Zooplankton ingestion rate (nmol P cm-2 s-1)  * direction of water column to coral is positive
 # endif
     )
 
@@ -359,44 +352,42 @@ CONTAINS
     real(8), intent(in) :: rho_sw   
     real(8), intent(in) :: Tamb     
     real(8), intent(in) :: Samb     
-    real(8), intent(in) :: DICamb(N_Csp)   
-    real(8), intent(in) :: TAamb    
     real(8), intent(in) :: DOamb    
-# if defined CORAL_INGESTION
-    real(8), intent(in) :: ZOOc(N_Csp)
-# endif
+    real(8), intent(in) :: TAamb    
+    real(8), intent(in) :: DICamb(N_Csp)   
 # if defined CORAL_NUTRIENTS
     real(8), intent(in) :: NO3amb(N_Nsp)
     real(8), intent(in) :: NH4amb(N_Nsp)   
     real(8), intent(in) :: PO4amb(N_Psp)
-#  if defined CORAL_INGESTION
-    real(8), intent(in) :: ZOOn(N_Nsp)
-    real(8), intent(in) :: ZOOp(N_Psp)
-#  endif
+# endif
+# if defined CORAL_INGESTION
+    real(8), intent(in) :: ZooC(N_Csp,Nzoo)
+    real(8), intent(in) :: ZooN(N_Nsp,Nzoo)
+    real(8), intent(in) :: ZooP(N_Psp,Nzoo)
 # endif
     real(8), intent(in) :: tau_amb  
     real(8), intent(in) :: Fsed
 ! output parameters
-    real(8), intent(out) :: Flux_DIC(N_Csp)
-    real(8), intent(out) :: Flux_TA 
     real(8), intent(out) :: Flux_DO 
-    real(8), intent(out) :: Flux_DOC(N_Csp)
-    real(8), intent(out) :: Flux_POC(N_Csp)
-# if defined CORAL_INGESTION
-    real(8), intent(out) :: Flux_ZOOc(N_Csp)
-# endif
+    real(8), intent(out) :: Flux_TA 
+    real(8), intent(out) :: Flux_DIC(N_Csp)
 # if defined CORAL_NUTRIENTS
     real(8), intent(out) :: Flux_NO3(N_Nsp)
     real(8), intent(out) :: Flux_NH4(N_Nsp)
     real(8), intent(out) :: Flux_PO4(N_Psp)
-    real(8), intent(out) :: Flux_DON(N_Nsp)
-    real(8), intent(out) :: Flux_PON(N_Nsp)
-    real(8), intent(out) :: Flux_DOP(N_Psp)
-    real(8), intent(out) :: Flux_POP(N_Psp)
-#  if defined CORAL_INGESTION
-    real(8), intent(out) :: Flux_ZOOn(N_Nsp)
-    real(8), intent(out) :: Flux_ZOOp(N_Psp)
-#  endif
+# endif
+    real(8), intent(out) :: Flux_DOC(N_Csp,Ndom)
+    real(8), intent(out) :: Flux_POC(N_Csp,Npom)
+# if defined CORAL_NUTRIENTS
+    real(8), intent(out) :: Flux_DON(N_Nsp,Ndom)
+    real(8), intent(out) :: Flux_PON(N_Nsp,Npom)
+    real(8), intent(out) :: Flux_DOP(N_Psp,Ndom)
+    real(8), intent(out) :: Flux_POP(N_Psp,Npom)
+# endif
+# if defined CORAL_INGESTION
+    real(8), intent(out) :: Flux_ZooC(N_Csp,Nzoo)
+    real(8), intent(out) :: Flux_ZooN(N_Nsp,Nzoo)
+    real(8), intent(out) :: Flux_ZooP(N_Psp,Nzoo)
 # endif
 
 !!!------------Set parameters  ----------------------------------
@@ -546,7 +537,7 @@ CONTAINS
     real(8) :: rCO2coe(N_Csp)
     real(8) :: rCO2amb(N_Csp)
 # if defined CORAL_INGESTION
-    real(8) :: rZOOc(N_Csp)
+    real(8) :: rZooC(N_Csp)
 # endif
 # if defined CORAL_NUTRIENTS
 !--- Variables of isotope ratio (R15N = 15N/14N) -----------------
@@ -558,8 +549,8 @@ CONTAINS
     real(8) :: rPO4amb(N_Psp)
     real(8) :: rQP(N_Psp)
 #  if defined CORAL_INGESTION
-    real(8) :: rZOOn(N_Nsp)
-    real(8) :: rZOOp(N_Psp)
+    real(8) :: rZooN(N_Nsp)
+    real(8) :: rZooP(N_Psp)
 #  endif
 # endif
 # if defined CORAL_ZOOXANTHELLAE
@@ -691,7 +682,7 @@ CONTAINS
     Flux_POC = 0.0d0
 # if defined CORAL_INGESTION
 !    Flux_PHY = 0.0d0
-    Flux_ZOOc = 0.0d0
+    Flux_ZooC = 0.0d0
 # endif
 # if defined CORAL_NUTRIENTS
     Flux_NO3 = 0.0d0
@@ -814,7 +805,7 @@ CONTAINS
       rCO2amb(isp) = Iso_ratio( CO2amb(isp), CO2amb(iCt) )
 !      rHCO3cal(isp) = Iso_ratio( cH13CO3cal(isp), HCO3cal(isp) )  !!!!!!!!!!!!!????????
 # if defined CORAL_INGESTION
-      rZOOc(isp)  = Iso_ratio( ZOOc(isp), ZOOc(iCt) )
+      rZooC(isp)  = Iso_ratio( ZooC(isp), ZooC(iCt) )
 # endif
     END DO
 # if defined CORAL_NUTRIENTS
@@ -827,7 +818,7 @@ CONTAINS
       rNH4amb(isp) = Iso_ratio( NH4amb(isp), NH4amb(iNt) ) 
     END DO
 #  if defined CORAL_INGESTION
-      rZOOn(isp)  = Iso_ratio( ZOOn(isp), ZOOn(iNt) )  !!!!!!!!!!!!!!!!!!!!!!!
+      rZooN(isp)  = Iso_ratio( ZooN(isp), ZooN(iNt) )  !!!!!!!!!!!!!!!!!!!!!!!
 #  endif
 !--- Phosphrous tracer ratio (R15N = 15N/14N) -----------------
 DO isp=1,N_Psp
@@ -836,7 +827,7 @@ DO isp=1,N_Psp
     rPO4amb(isp) = Iso_ratio( PO4amb(isp), PO4amb(iPt) ) 
   END DO
 #  if defined CORAL_INGESTION
-    rZOOp(isp)  = Iso_ratio( ZOOp(isp), ZOOp(iPt) )  !!!!!!!!!!!!!!!!!!!!!!!
+    rZooP(isp)  = Iso_ratio( ZooP(isp), ZooP(iPt) )  !!!!!!!!!!!!!!!!!!!!!!!
 #  endif
 
 # endif
@@ -930,13 +921,13 @@ DO isp=1,N_Psp
 !----- Plankton ingestion (nmol cm-2 s-1)--------------------------
 # if defined CORAL_INGESTION
 !
-    Flux_ZOOc(:) = Si_ZOO * ZOOc(:)
-    Flux_POC(:)  = Flux_ZOOc(:)*(1.0d0 - r_assim)
+    Flux_ZooC(:) = Si_ZOO * ZooC(:)
+    Flux_POC(:)  = Flux_ZooC(:)*(1.0d0 - r_assim)
 #  if defined CORAL_NUTRIENTS
-    Flux_ZOOn(:) = Si_ZOO * ZOOn(:)
-    Flux_PON(:)  = Flux_ZOOn(:)*(1.0d0 - r_assim)
-    Flux_ZOOp(:) = Si_ZOO * ZOOp(:)
-    Flux_POP(:)  = Flux_ZOOp(:)*(1.0d0 - r_assim)
+    Flux_ZooN(:) = Si_ZOO * ZooN(:)
+    Flux_PON(:)  = Flux_ZooN(:)*(1.0d0 - r_assim)
+    Flux_ZooP(:) = Si_ZOO * ZooP(:)
+    Flux_POP(:)  = Flux_ZooP(:)*(1.0d0 - r_assim)
 #  endif
 # endif
 
@@ -947,13 +938,13 @@ DO isp=1,N_Psp
 # if defined CORAL_NONE_CO2_EQ
     F_CO2coe(:) = F_CO2coe(:) + Flux_CO2(:)
 # endif
-    F_QC(:)  = F_QC(:) - F_Cmucus *rQC(:) + Flux_ZOOc(:) * r_assim
+    F_QC(:)  = F_QC(:) - F_Cmucus *rQC(:) + Flux_ZooC(:) * r_assim
 # if defined CORAL_NUTRIENTS
     F_NH4(:) = F_NH4(:) + Flux_NH4(:)
     F_NO3(:) = F_NO3(:) + Flux_NO3(:)
     F_PO4(:) = F_PO4(:) + Flux_PO4(:)
-    F_QN(:)  = F_QN(:) - F_Nmucus *rQN(:) + Flux_ZOOn(:) * r_assim 
-    F_QP(:)  = F_QP(:) - F_Pmucus *rQP(:) + Flux_ZOOp(:) * r_assim
+    F_QN(:)  = F_QN(:) - F_Nmucus *rQN(:) + Flux_ZooN(:) * r_assim 
+    F_QP(:)  = F_QP(:) - F_Pmucus *rQP(:) + Flux_ZooP(:) * r_assim
 # endif
 
 
@@ -1420,7 +1411,7 @@ DO isp=1,N_Psp
 #  endif
        , Flux_DOC(iCt)                                                           &
 #  if defined CORAL_INGESTION
-       , Flux_ZOOc(iCt)                                                          &
+       , Flux_ZooC(iCt)                                                          &
 #  endif
 #  if defined CORAL_SIZE_DYNAMICS
        , CORAL(ng)%growth(n,i,j), CORAL(ng)%mort(n,i,j)                          &

@@ -70,8 +70,17 @@ MODULE mod_reef_ecosys_param
   integer, parameter :: Nzoo   = 1    ! Number of Zooplankton types
   integer, parameter ::  iGzoo = 1    !  1: General Zooplankton
 
-  integer, parameter :: Npim    = 1   ! Number of Particulate Inorganic Matter types
-  integer, parameter ::  iCaCO3 = 1   !  1: Coccolith (CaCO3)
+  integer, parameter :: Npim    = 2   ! Number of Particulate Inorganic Matter types
+  integer, parameter ::  iLive = 1    !  1: Living Coccolith shell (CaCO3)
+  integer, parameter ::  iDead = 2    !  2: Dead Coccolith shell (CaCO3)
+
+!---- POM sinking parameters           LPOM    RPOM    CPOM    
+  real(8), parameter :: rho_POM(3) = [ 1.1d0,  1.1d0,  0.99d0 ]  ! ***** POM density [g/cm3] 
+  real(8), parameter :: D_POM(3)   = [ 1.0d-1, 1.0d-1, 10.0d0 ]  ! ***** POM diameter [mm] 
+
+!---- PIM sinking parameters           iLive   iDead
+  real(8), parameter :: rho_PIM(2) = [ 1.4d0 , 1.4d0  ]  ! ***** PIM density [g/cm3] 
+  real(8), parameter :: D_PIM(2)   = [ 1.0d-2, 1.0d-2 ]  ! ***** PIM diameter [mm] 
 
 
 ! ==== SEDECOSYS MODEL PARAMETER SETTINGS ===========================================================

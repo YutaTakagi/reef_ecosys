@@ -27,11 +27,11 @@ CONTAINS
     , O2             &   ! Dissolved oxygen (umol L-1)
     , TA             &   ! Total alkalinity (TA: umol L-1)
     , DIC            &   ! Total dissolved inorganic carbon (DIC: umol L-1)
-    , DOC            &   ! DOC(Ndom): Dissolved organic carbon (DOC: umol L-1)
-    , POC            &   ! POC(Npom): Particulate organic carbon (POC: umol L-1 or nmol g(DW)-1 *solid)
     , NO3            &   ! NO3 (umol L-1)
     , NH4            &   ! NH4 (umol L-1)
     , PO4            &   ! PO4 (umol L-1)
+    , DOC            &   ! DOC(Ndom): Dissolved organic carbon (DOC: umol L-1)
+    , POC            &   ! POC(Npom): Particulate organic carbon (POC: umol L-1 or nmol g(DW)-1 *solid)
     , DON            &   ! Dissolved organic nitrogen (DON: umol L-1)
     , PON            &   ! Particulate organic nitrogen (PON: umol L-1 or nmol g(DW)-1 *solid)
     , DOP            &   ! Dissolved organic phosporius (DOP: umol L-1)
@@ -50,11 +50,11 @@ CONTAINS
     , R_O2           &   ! d[O2]/dt  (umol L-1 s-1) 
     , R_TA           &   ! dTA/dt  (umol L-1 s-1) 
     , R_DIC          &   ! dDIC/dt (umol L-1 s-1) 
-    , R_DOC          &   ! dDOC/dt (umol L-1 s-1) 
-    , R_POC          &   ! dPOC/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
     , R_NO3          &   ! d[NO3]/dt (umol L-1 s-1)
     , R_NH4          &   ! d[NH4]/dt (umol L-1 s-1)
     , R_PO4          &   ! d[PO4]/dt (umol L-1 s-1)
+    , R_DOC          &   ! dDOC/dt (umol L-1 s-1) 
+    , R_POC          &   ! dPOC/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
     , R_DON          &   ! dDON/dt (umol L-1 s-1)
     , R_PON          &   ! dPON/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
     , R_DOP          &   ! dDOP/dt (umol L-1 s-1)
@@ -86,11 +86,11 @@ CONTAINS
     real(8), intent(in) :: O2 
     real(8), intent(in) :: TA 
     real(8), intent(in) :: DIC(N_Csp)
-    real(8), intent(in) :: DOC(N_Csp,Ndom)   
-    real(8), intent(in) :: POC(N_Csp,Npom-1) 
     real(8), intent(in) :: NO3(N_Nsp)
     real(8), intent(in) :: NH4(N_Nsp)
     real(8), intent(in) :: PO4(N_Psp)
+    real(8), intent(in) :: DOC(N_Csp,Ndom)   
+    real(8), intent(in) :: POC(N_Csp,Npom-1) 
     real(8), intent(in) :: DON(N_Nsp,Ndom)   
     real(8), intent(in) :: PON(N_Nsp,Npom-1) 
     real(8), intent(in) :: DOP(N_Psp,Ndom)   
@@ -111,11 +111,11 @@ CONTAINS
     real(8), intent(inout) :: R_O2 
     real(8), intent(inout) :: R_TA 
     real(8), intent(inout) :: R_DIC(N_Csp)
-    real(8), intent(inout) :: R_DOC(N_Csp,Ndom)   
-    real(8), intent(inout) :: R_POC(N_Csp,Npom-1) 
     real(8), intent(inout) :: R_NO3(N_Nsp)
     real(8), intent(inout) :: R_NH4(N_Nsp)
     real(8), intent(inout) :: R_PO4(N_Psp)
+    real(8), intent(inout) :: R_DOC(N_Csp,Ndom)   
+    real(8), intent(inout) :: R_POC(N_Csp,Npom-1) 
     real(8), intent(inout) :: R_DON(N_Nsp,Ndom)   
     real(8), intent(inout) :: R_PON(N_Nsp,Npom-1) 
     real(8), intent(inout) :: R_DOP(N_Psp,Ndom)   
@@ -190,13 +190,15 @@ CONTAINS
     ! real(8),parameter :: kpoms = 7.0d-12   ! For  poms (s-1)
 
 !                                    LDOM    RDOM
-    real(8),parameter :: kdom(2) = [ 1.0d-4, 5.0d-8 ]  ! For  dom (s-1)           
+!    real(8),parameter :: kdom(2) = [ 1.0d-4, 5.0d-8 ]  ! For  dom (s-1)           
+    real(8),parameter :: kdom(2) = [ 1.0d-5, 1.0d-8 ]  ! For  dom (s-1)           
 !                                    LPOM    RPOM
-    real(8),parameter :: kpom(2) = [ 2.5d-6, 6.0d-10 ]  ! For  pom (s-1)
+    real(8),parameter :: kpom(2) = [ 1.0d-6, 1.0d-10 ]  ! For  pom (s-1)
 
     !! Reaction rate constants
-    real(8),parameter :: k6  = 2.5d-6  ! For R6  (uM-1 s-1)           Fossing(2004)
-    ! real(8),parameter :: k6  = 2.5d-7  ! For R6  (uM-1 s-1)           Berg(2003),Kasih2004
+    ! real(8),parameter :: k6  = 2.5d-6  ! For R6  (uM-1 s-1)           Fossing(2004)
+    real(8),parameter :: k6  = 2.5d-7  ! For R6  (uM-1 s-1)           Berg(2003),Kasih2004
+!    real(8),parameter :: k6  = 1.0d-7  ! For R6  (uM-1 s-1) 
     real(8),parameter :: k7  = 5.0d-14 ! For R7  (s-1)                Kasih2009
     ! real(8),parameter :: k7  = 5.0d-11 ! For R7  (s-1)                Fossing2004
     ! real(8),parameter :: k8  = 7.5d-11 ! For R8  (uM-1 s-1)           Berg2003
@@ -221,13 +223,6 @@ CONTAINS
     !! Temperature coefficient Q10
     real(8),parameter :: Q10_pri = 3.8d0   !  For primary reactions    Fossing (2004)
     real(8),parameter :: Q10_sec = 2.0d0   !  For secondary reactions  Fossing (2004)
-
-
-    !! C:N:P ratio
-    ! real(8), parameter :: rCNph = 106.0d0/16.0d0   ! (no dim.) algal C:N ratio (Redfield ratio)
-    real(8), parameter :: rCPph = 106.0d0/1.0d0    ! (no dim.) algal C:P ratio (Redfield ratio)
-    real(8), parameter :: rCNph = 11.0d0   ! (no dim.) algal C:N ratio (Redfield ratio)        from analysis
-    ! real(8), parameter :: rCPph = 80.0d0    ! (no dim.) algal C:P ratio (Redfield ratio)     Fossing2004
 
     !! OM ratio
     real(8), parameter :: OMFratio = 0.6d0    ! (no dim.) OMf/OM ratio       Irie 0.57 / Kasih0.4 / Fossing 0.42
@@ -265,14 +260,15 @@ CONTAINS
 
     real(8) :: r1,  r2, r3, r4, r5
     
-    real(8) :: cff, cff2, cff3, cfdd, cfsd, cfss
+    real(8) :: cff, cff2, cff3
+    real(8) :: cfd, cfs, cfdd, cfsd, cfss
 
 !    real(8) :: rDIC(N_Csp)
-    real(8) :: rDOC(N_Csp,Ndom)  
-    real(8) :: rPOC(N_Csp,Npom-1)
     real(8) :: rNO3(N_Nsp)
     real(8) :: rNH4(N_Nsp)
     real(8) :: rPO4(N_Psp)
+    real(8) :: rDOC(N_Csp,Ndom)  
+    real(8) :: rPOC(N_Csp,Npom-1)
     real(8) :: rDON(N_Nsp,Ndom)  
     real(8) :: rPON(N_Nsp,Npom-1)
     real(8) :: rDOP(N_Psp,Ndom)  
@@ -334,7 +330,7 @@ CONTAINS
     ENDDO
 
   !! Reaction rate constants depending on temperature
-    cff = Q10_pri**((Tmp-9d0)/10d0)
+    cff = Q10_pri**((Tmp-10d0)/10d0)
     DO m = 1,Ndom
       kdom_Q10(m) = kdom(m) * cff
     ENDDO
@@ -342,7 +338,7 @@ CONTAINS
       kpom_Q10(m) = kpom(m) * cff
     ENDDO
 
-    cff = Q10_sec**((Tmp-9d0)/10d0)
+    cff = Q10_sec**((Tmp-10d0)/10d0)
     k6_Q10  = k6  * cff     ! (Fossing2004)
     k7_Q10  = k7  * cff     ! (Berg2003)      (s-1)
     k8_Q10  = k8  * cff     ! (G.A.Anggra2009)
@@ -370,14 +366,15 @@ CONTAINS
       ! Vsd = rho_s * (1d0 - poro) * k * Cs1 * Cd1
       ! Vss = ((rho_s * (1d0 - poro))**2) * k * Cs1 * Cs2
     IF(Flag_SW==0) THEN
-      cfdd = poro
-      cfsd = rhos_d * (1.0d0 - poro)
-      cfss = cfsd*cfsd
+      cfd  = poro
+      cfs  = rhos_d*(1.0d0 - poro)
     ELSE
-      cfdd = 1.0d0
-      cfsd = 1.0d0
-      cfss = 1.0d0
+      cfd  = 1.0d0
+      cfs  = 1.0d0
     END IF
+    cfdd = cfd * cfd
+    cfsd = cfs * cfd
+    cfss = cfs * cfs
 
   !! PRIMARY REACTIONS
 
@@ -401,76 +398,59 @@ CONTAINS
       r3 = 0.0d0
       r4 = 0.0d0
       r5 = 0.0d0
-      ! redoxlevel = 1d0 !!for debug
-    else if(NO3(iNt) > NO3lim) then      !! -- Denitrification     (NO3)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 > NO3lim
-      r1 = O2/O2lim
-      r2 = 1.0d0 - r1
-      r3 = 0.0d0
-      r4 = 0.0d0
-      r5 = 0.0d0       
-      ! redoxlevel = 2d0 !!for debug
-    else if(MnO2 > MnO2lim) then    !! -- Manganese reduction (MnO2)  (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 > MnO2lim
-      r1 = O2/O2lim
-      r2 =(1.0d0-r1)                          &
-          *NO3(iNt)/NO3lim
-      r3 = 1.0d0-r1-r2
-      r4 = 0.0d0
-      r5 = 0.0d0       
-      ! redoxlevel = 3d0 !!for debug
-    else if(FeOOH > FeOOHlim) then  !! -- Iron reduction      (FeOOH) (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH > FeOOHlim
-      r1 = O2/O2lim
-      r2 =(1.0d0-r1)                          &
-          *NO3(iNt)/NO3lim
-      r3 =(1.0d0-r1-r2)                       &
-          *MnO2/MnO2lim
-      r4 = 1.0d0-r1-r2-r3
-      r5 = 0.0d0       
-      ! redoxlevel = 4d0 !!for debug
-    else if(SO4(iSt) > SO4lim) then      !! -- Sulfate reduction   (SO4)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
-      r1 = O2/O2lim
-      r2 =(1.0d0-r1)                          &
-          *NO3(iNt)/NO3lim
-      r3 =(1.0d0-r1-r2)                       &
-          *MnO2/MnO2lim
-      r4 =(1.0d0-r1-r2-r3)                    &
-          *FeOOH/FeOOHlim
-      r5 = 1.0d0-r1-r2-r3-r4
-      ! redoxlevel = 5d0 !!for debug
-    else                                              !! limit OM decomposition if SO4 < SO4lim    -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 < SO4lim
-      r1 = O2/O2lim
-      r2 =(1.0d0-r1)                          &
-          *NO3(iNt)/NO3lim
-      r3 =(1.0d0-r1-r2)                       &
-          *MnO2/MnO2lim
-      r4 =(1.0d0-r1-r2-r3)                    &
-          *FeOOH/FeOOHlim
-      r5 =(1.0d0-r1-r2-r3-r4)                 &
-          *SO4(iSt)/SO4lim
-      ! redoxlevel = 5d0 !!for debug
+    else
+      r1 = O2/O2lim 
+      if(NO3(iNt) > NO3lim) then      !! -- Denitrification     (NO3)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 > NO3lim
+        r2 = 1.0d0-r1
+        r3 = 0.0d0
+        r4 = 0.0d0
+        r5 = 0.0d0       
+      else
+        r2 =(1.0d0-r1)*NO3(iNt)/NO3lim      
+        if(MnO2 > MnO2lim) then    !! -- Manganese reduction (MnO2)  (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 > MnO2lim
+          r3 = 1.0d0-r1-r2
+          r4 = 0.0d0
+          r5 = 0.0d0       
+        else 
+          r3 =(1.0d0-r1-r2)*MnO2/MnO2lim
+          if(FeOOH > FeOOHlim) then  !! -- Iron reduction      (FeOOH) (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH > FeOOHlim
+            r4 = 1.0d0-r1-r2-r3
+            r5 = 0.0d0       
+          else
+            r4 =(1.0d0-r1-r2-r3)*FeOOH/FeOOHlim
+            if(SO4(iSt) > SO4lim) then      !! -- Sulfate reduction   (SO4)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
+              r5 = 1.0d0-r1-r2-r3-r4
+            else                                              !! limit OM decomposition if SO4 < SO4lim    -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 < SO4lim
+              r5 =(1.0d0-r1-r2-r3-r4)*SO4(iSt)/SO4lim
+            endif
+          endif
+        endif
+      endif
     endif
+
 # endif
     ! POM remineralization
     DO m = 1,Npom-1
-      cff = cfsd * kpom_Q10(m) * POC(iCt,m)
-      v1c = r1*cff
-      v2c = r2*cff
-      v3c = r3*cff
-      v4c = r4*cff
-      v5c = r5*cff
+      cff = kpom_Q10(m) * POC(iCt,m)
+      v1c = r1*cfsd * cff
+      v2c = r2*cfsd * cff
+      v3c = r3*cfss * cff
+      v4c = r4*cfss * cff
+      v5c = r5*cfsd * cff
 
-      cff = cfsd * kpom_Q10(m) * PON(iNt,m)
-      v1n = r1*cff
-      v2n = r2*cff
-      v3n = r3*cff
-      v4n = r4*cff
-      v5n = r5*cff
+      cff = kpom_Q10(m) * PON(iNt,m)
+      v1n = r1*cfsd * cff
+      v2n = r2*cfsd * cff
+      v3n = r3*cfss * cff
+      v4n = r4*cfss * cff
+      v5n = r5*cfsd * cff
 
-      cff = cfsd * kpom_Q10(m) * POP(iPt,m)
-      v1p = r1*cff
-      v2p = r2*cff
-      v3p = r3*cff
-      v4p = r4*cff
-      v5p = r5*cff
+      cff = kpom_Q10(m) * POP(iPt,m)
+      v1p = r1*cfsd * cff
+      v2p = r2*cfsd * cff
+      v3p = r3*cfss * cff
+      v4p = r4*cfss * cff
+      v5p = r5*cfsd * cff
 
       R_POC(:,m) = R_POC(:,m) - (v1c +v2c +v3c +v4c +v5c)*rPOC(:,m)
       R_DIC(:)   = R_DIC(:)   + (v1c +v2c +v3c +v4c +v5c)*rPOC(:,m)
@@ -494,26 +474,26 @@ CONTAINS
 
     ! DOM remineralization
     DO m = 1,Ndom
-      cff = cfdd * kdom_Q10(m) * DOC(iCt,m)
-      v1c = r1*cff
-      v2c = r2*cff
-      v3c = r3*cff
-      v4c = r4*cff
-      v5c = r5*cff
+      cff = kdom_Q10(m) * DOC(iCt,m)
+      v1c = r1*cfdd * cff
+      v2c = r2*cfdd * cff
+      v3c = r3*cfsd * cff
+      v4c = r4*cfsd * cff
+      v5c = r5*cfdd * cff
 
-      cff = cfdd * kdom_Q10(m) * DON(iNt,m)
-      v1n = r1*cff
-      v2n = r2*cff
-      v3n = r3*cff
-      v4n = r4*cff
-      v5n = r5*cff
+      cff = kdom_Q10(m) * DON(iNt,m)
+      v1n = r1*cfdd * cff
+      v2n = r2*cfdd * cff
+      v3n = r3*cfsd * cff
+      v4n = r4*cfsd * cff
+      v5n = r5*cfdd * cff
 
-      cff = cfdd * kdom_Q10(m) * DOP(iPt,m)
-      v1p = r1*cff
-      v2p = r2*cff
-      v3p = r3*cff
-      v4p = r4*cff
-      v5p = r5*cff
+      cff = kdom_Q10(m) * DOP(iPt,m)
+      v1p = r1*cfdd * cff
+      v2p = r2*cfdd * cff
+      v3p = r3*cfsd * cff
+      v4p = r4*cfsd * cff
+      v5p = r5*cfdd * cff
 
       R_DOC(:,m) = R_DOC(:,m) - (v1c +v2c +v3c +v4c +v5c)*rDOC(:,m)
       R_DIC(:)   = R_DIC(:)   + (v1c +v2c +v3c +v4c +v5c)*rDOC(:,m)
@@ -614,7 +594,7 @@ CONTAINS
     R_SO4(:) = R_SO4(:) - v15*rSO4(:)
     R_H2S(:) = R_H2S(:) - v15*rH2S(:)
     R_FeS(:) = R_FeS(:) - v15*rFeS(:)
-    R_FeS2(:) = R_FeS2(:) + v15*(rSO4(:)+rH2S(:)+rFeS(:))/3.0d0 !!?????????????????????????????????????Check needed!!!
+    R_FeS2(:)= R_FeS2(:) + v15*(rSO4(:)+rH2S(:)+rFeS(:))/3.0d0 !!?????????????????????????????????????Check needed!!!
 
     ! R16:  H2S + 2O2 --> SO42- + 2H+
     v16  = cfdd * k16_Q10*H2S(iSt)*O2 
@@ -640,8 +620,7 @@ CONTAINS
 
     ! R19:  4S0 + 4H2O --> 3H2S + SO42- + 2H+
     if (H2S(iSt) <= H2Sstop) then  
-      v19  = cfsd * k19_Q10                                                  & 
-              *S0(iSt)*(1d0 - (H2S(iSt)/H2Sstop))  !!??????????????????????
+      v19  = cfsd * k19_Q10 *S0(iSt)*(1d0 - (H2S(iSt)/H2Sstop))  !!??????????????????????
     else
       v19  = 0.0d0
     endif

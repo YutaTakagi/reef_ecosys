@@ -1,8 +1,3 @@
-/*#define USE_HEAT*/
-/*#define LONGWAVE_IN*/
-/*#define INPUT_BOTTOM_PFD*/
-
-/*#define REEF_FLOW*/
 
 #define SEDIMENT
 
@@ -82,6 +77,7 @@
 /*** Sediment model options. ***/
 /*#  define SEDIMENT_EMPIRICAL*/     /* USE empirical sediment module  */
 # if defined SEDIMENT_ECOSYS  /* Masa_edits */
+#  define SEDECO_CSV_RESTART  /* Restart from sedeco_rst.csv file if start_of_new_run = .true. */
 #  if defined SEDIMENT
 #   define SEDECO_BURIAL    /* For Burial term in sediment transport (massbalance) */
 #  endif
@@ -94,6 +90,13 @@
 
 /*----------------------------------------------------*/
 /*** Box model option ***/
+
+/*#define USE_HEAT*/
+/*#define LONGWAVE_IN*/
+/*#define INPUT_BOTTOM_PFD*/
+#define ANA_SWRAD_ZILLMAN
+
+/*#define REEF_FLOW*/
 
 #define ECOSYS_TESTMODE
 

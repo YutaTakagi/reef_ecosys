@@ -89,22 +89,22 @@ CONTAINS
     , dt             &   ! Time step (sec)
     , PFD            &   ! Photon flux density (umol m-2 s-1)
     , rho_sw         &   ! Density of seawater (g cm-3)
-    , DICamb         &   ! DIC (umol kg-1)
     , DOamb          &   ! DO (umol L-1)
+    , DICamb         &   ! DIC (umol kg-1)
     , NO3amb         &   ! NO3 concentration (umol L-1)
     , NH4amb         &   ! NH4 concentration (umol L-1)
     , PO4amb         &   ! NH4 concentration (umol L-1)
 !   output parameters
-    , Flux_DIC       &   ! DIC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     , Flux_DO        &   ! DO  uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
-    , Flux_DOC       &   ! DOC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
-    , Flux_POC       &   ! POC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
+    , Flux_DIC       &   ! DIC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     , Flux_NO3       &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     , Flux_NH4       &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     , Flux_PO4       &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
+    , Flux_DOC       &   ! DOC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
+    , Flux_POC       &   ! POC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     , Flux_DON       &   ! DON uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
-    , Flux_DOP       &   ! DOP uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     , Flux_PON       &   ! PON uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
+    , Flux_DOP       &   ! DOP uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     , Flux_POP       &   ! POP uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     )
 
@@ -120,22 +120,22 @@ CONTAINS
     real(8), intent(in) :: dt
     real(8), intent(in) :: PFD
     real(8), intent(in) :: rho_sw   
-    real(8), intent(in) :: DICamb(N_Csp)
     real(8), intent(in) :: DOamb
+    real(8), intent(in) :: DICamb(N_Csp)
     real(8), intent(in) :: NO3amb(N_Nsp)
     real(8), intent(in) :: NH4amb(N_Nsp)
     real(8), intent(in) :: PO4amb(N_Psp)
 ! output parameters
-    real(8), intent(out) :: Flux_DIC(N_Csp)
     real(8), intent(out) :: Flux_DO
-    real(8), intent(out) :: Flux_DOC(N_Csp,Ndom)  ! DOC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
-    real(8), intent(out) :: Flux_POC(N_Csp,Npom)  ! POC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
+    real(8), intent(out) :: Flux_DIC(N_Csp)
     real(8), intent(out) :: Flux_NO3(N_Nsp)
     real(8), intent(out) :: Flux_NH4(N_Nsp)
     real(8), intent(out) :: Flux_PO4(N_Psp)
+    real(8), intent(out) :: Flux_DOC(N_Csp,Ndom)  ! DOC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
+    real(8), intent(out) :: Flux_POC(N_Csp,Npom)  ! POC uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     real(8), intent(out) :: Flux_DON(N_Nsp,Ndom)   ! DON uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
-    real(8), intent(out) :: Flux_DOP(N_Psp,Ndom)   ! DOP uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     real(8), intent(out) :: Flux_PON(N_Nsp,Npom)   ! PON uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
+    real(8), intent(out) :: Flux_DOP(N_Psp,Ndom)   ! DOP uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
     real(8), intent(out) :: Flux_POP(N_Psp,Npom)   ! POP uptake rate (mmol m-2 s-1)  * direction of water column to algae is positive
 
 ! --- C:N:P ratio of seagrass ---

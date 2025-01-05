@@ -792,9 +792,9 @@ contains
     if(in_file(iwtemp)>0) then
       CALL lin_interpol(time, wtemp_time, wtemp_data, num_wtemp, wtemp, id_wtemp)   !data from file
       if(nSetting==4) then
-        Co(1,1,iTemp) = wtemp
+        t(2,:,:,:,iTemp) = wtemp
       else
-        C(1,1,:,iTemp) = wtemp
+        t(1,:,:,:,iTemp) = wtemp
       endif
     else
       wtemp = 25.0d0

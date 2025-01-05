@@ -145,14 +145,25 @@ MODULE mod_param
   integer :: idd13C                 ! d13C of DIC
 
   integer, allocatable :: idbio(:)  ! Biological tracers
-  integer :: iTIC_                  ! Total inorganic carbon
-  integer :: iTAlk                  ! Total alkalinity
   integer :: iOxyg                  ! Dissolved oxygen concentration
-  integer :: iDOC(Ndom)            ! Dissolved organic C-concentration
-  integer :: iPOC(Npom)            ! Particulate organic C-concentration
-  integer :: iPhyt(Nphy)          ! Phytoplankton1 density
-  integer :: iZoop(Nzoo)          ! Zooplankton density
-  integer :: iPIC(Npim)            ! Particulate inorganic C-concentration
+  integer :: iTAlk                  ! Total alkalinity
+  integer :: iTIC(N_Csp)                  ! Total inorganic carbon
+  integer :: iNO3(N_Nsp)                  ! Nitrate concentration
+  integer :: iNH4(N_Nsp)                  ! Ammonium concentration
+  integer :: iPO4(N_Psp)                  ! Ammonium concentration
+  integer :: iDOC(N_Csp,Ndom)            ! Dissolved organic C-concentration
+  integer :: iPOC(N_Csp,Npom)            ! Particulate organic C-concentration
+  integer :: iDON(N_Nsp,Ndom)            ! Dissolved organic N-concentration
+  integer :: iPON(N_Nsp,Npom)            ! Particulate organic N-concentration
+  integer :: iDOP(N_Psp,Ndom)            ! Dissolved organic P-concentration
+  integer :: iPOP(N_Psp,Npom)            ! Particulate organic P-concentration
+  integer :: iPhyC(N_Csp,Nphy)          ! Phytoplankton1 density
+  integer :: iZooC(N_Csp,Nzoo)          ! Zooplankton density
+  integer :: iPhyN(N_Nsp,Nphy)          ! Phytoplankton1 density
+  integer :: iZooN(N_Nsp,Nzoo)          ! Zooplankton density
+  integer :: iPhyP(N_Psp,Nphy)          ! Phytoplankton1 density
+  integer :: iZooP(N_Psp,Nzoo)          ! Zooplankton density
+  integer :: iPIC(N_Csp,Npim)            ! Particulate inorganic C-concentration
 #if defined CARBON_ISOTOPE
   integer :: iT13C                  ! Corbon 13 of total inorganic carbon
   integer :: iDO13C(Ndom)          ! Dissolved organic 13C-concentration
@@ -161,13 +172,6 @@ MODULE mod_param
   integer :: iZoop13C(Nzoo)       ! Zooplankton 13C-concentration
   integer :: iPI13C(Npim)          ! Particulate inorganic 13C-concentration
 #endif
-  integer :: iNO3_                  ! Nitrate concentration
-  integer :: iNH4_                  ! Ammonium concentration
-  integer :: iPO4_                  ! Ammonium concentration
-  integer :: iDON(Ndom)            ! Dissolved organic N-concentration
-  integer :: iPON(Npom)            ! Particulate organic N-concentration
-  integer :: iDOP(Ndom)            ! Dissolved organic P-concentration
-  integer :: iPOP(Npom)            ! Particulate organic P-concentration
 #if defined NITROGEN_ISOTOPE
   integer :: i15NO3                  ! Nitrogen isotope concentration in Nitrate 
 !  integer :: i15NO2                  ! Nitrogen isotope concentration in Nitrite
@@ -183,12 +187,14 @@ MODULE mod_param
 #endif
 
   real(8), allocatable :: dz(:,:,:)    
-  real(8), allocatable :: C(:,:,:,:)
-  real(8), allocatable :: dC_dt(:,:,:,:)
-  real(8), allocatable :: Co(:,:,:)
+  real(8), allocatable :: t(:,:,:,:,:)
+  real(8), allocatable :: dtrc_dt(:,:)
   real(8), allocatable :: pH(:,:,:)
   real(8), allocatable :: Warg(:,:,:)
   real(8), allocatable :: Wcal(:,:,:)
+#if defined LIGHT_MODEL
+  real(8), allocatable :: PFDk(:,:,:)  
+#endif
   
   real(8), allocatable :: p_coral(:,:,:)
   real(8), allocatable :: p_sgrass(:,:,:)
@@ -226,33 +232,35 @@ contains
     integer, intent(in) :: LBi, UBi, LBj, UBj, N
     integer, intent(out) :: Nid
     real(8)  R13C
-    integer i,j,k
+    integer i,j,k,nstp,m,isp
 !  Local variable declarations JS_edit
 !
     integer :: ic
 
-    real(8) :: d0, T0, S0
-    real(8) :: TAlk0, TIC_0, Oxyg0, Sed1_0
-    real(8) :: DOC1_0, DOC2_0, POC1_0, POC2_0, POC3_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
-    real(8) :: d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
-    real(8) :: d13C_Phyt1_0, d13C_Phyt2_0, d13C_Phyt3_0, d13C_Zoop1_0, d13C_PIC1_0
+    real(8) :: d0, T0, S0, Sed1_0
+    real(8) :: TAlk0, TIC_0, Oxyg0
     real(8) :: NO3_0, NH4_0, PO4_0
-    real(8) :: DON1_0, DON2_0, PON1_0, PON2_0, PON3_0, DOP1_0, DOP2_0, POP1_0, POP2_0, POP3_0
-    real(8) :: d15N_NO3_0, d15N_NH4_0, d15N_DON1_0, d15N_DON2_0, d15N_PON1_0, d15N_PON2_0
-    real(8) :: d15N_Phyt1_0, d15N_Phyt2_0, d15N_Phyt3_0, d15N_Zoop1_0
-    real(8) :: p_coral1_0, p_coral2_0, p_algae_0, p_sgrass_0, p_sand_0
+    real(8) :: DOC_0(Ndom), POC_0(Npom), PhyC_0(Nphy), ZooC_0(Nzoo), PIC_0(Npim)
+    real(8) :: DON_0(Ndom), PON_0(Npom), PhyN_0(Nphy), ZooN_0(Nzoo)
+    real(8) :: DOP_0(Ndom), POP_0(Npom), PhyP_0(Nphy), ZooP_0(Nzoo)
+    real(8) :: d13C_TIC0, d13C_DOC_0(Ndom), d13C_POC_0(Npom)
+    real(8) :: d13C_PhyC_0(Nphy), d13C_ZooC_0(Nzoo), d13C_PIC_0(Npim)
+    real(8) :: d15N_NO3_0, d15N_NH4_0, d15N_DON_0(Ndom), d15N_PON_0(Npom)
+    real(8) :: d15N_PhyN_0(Nphy), d15N_ZooN_0(Nzoo)
+    real(8) :: p_coral_0(Ncl), p_algae_0(Nag), p_sgrass_0(Nsg), p_sand_0
 
-    namelist/initial/d0, T0, S0
-    namelist/initial/TAlk0, TIC_0, Oxyg0, Sed1_0
-    namelist/initial/DOC1_0, DOC2_0, POC1_0, POC2_0, POC3_0, Phyt1_0, Phyt2_0, Phyt3_0, Phyt4_0, Zoop1_0, PIC1_0
-    namelist/initial/d13C_TIC0, d13C_DOC1_0, d13C_DOC2_0, d13C_POC1_0, d13C_POC2_0
-    namelist/initial/d13C_Phyt1_0, d13C_Phyt2_0, d13C_Phyt3_0, d13C_Zoop1_0, d13C_PIC1_0
+    namelist/initial/d0, T0, S0, Sed1_0
+    namelist/initial/TAlk0, TIC_0, Oxyg0
     namelist/initial/NO3_0, NH4_0, PO4_0
-    namelist/initial/DON1_0, DON2_0, PON1_0, PON2_0, PON3_0, DOP1_0, DOP2_0, POP1_0, POP2_0, POP3_0
-    namelist/initial/d15N_NO3_0, d15N_NH4_0, d15N_DON1_0, d15N_DON2_0, d15N_PON1_0, d15N_PON2_0
-    namelist/initial/d15N_Phyt1_0, d15N_Phyt2_0, d15N_Phyt3_0, d15N_Zoop1_0
-    namelist/initial/p_coral1_0, p_coral2_0, p_algae_0, p_sgrass_0, p_sand_0
-  
+    namelist/initial/DOC_0, POC_0, PhyC_0, ZooC_0, PIC_0
+    namelist/initial/DON_0, PON_0, PhyN_0, ZooN_0
+    namelist/initial/DOP_0, POP_0, PhyP_0, ZooP_0
+    namelist/initial/d13C_TIC0, d13C_DOC_0, d13C_POC_0
+    namelist/initial/d13C_PhyC_0, d13C_ZooC_0, d13C_PIC_0
+    namelist/initial/d15N_NO3_0, d15N_NH4_0, d15N_DON_0, d15N_PON_0
+    namelist/initial/d15N_PhyN_0, d15N_ZooN_0
+    namelist/initial/p_coral_0, p_algae_0, p_sgrass_0, p_sand_0
+ 
     read (5, nml=initial)
     rewind(5)
 !
@@ -270,104 +278,105 @@ contains
     i=i+1
     iSedi=ic+i
 
+! REEF_ECOSYS parameter IDs
     i=i+1
-    iTIC_=ic+i
+    iOxyg=ic+i
     i=i+1
     iTAlk=ic+i
-    i=i+1
-    iOxyg=ic+i  !  4
-    DO j=1,Ndom
+    DO isp=1,N_Csp     
       i=i+1
-      iDOC(j)=ic+i
+      iTIC(isp)=ic+i
+    END DO       
+    DO isp=1,N_Nsp
+      i=i+1     
+      iNO3(isp)=ic+i
+    END DO       
+    DO isp=1,N_Nsp
+      i=i+1    
+      iNH4(isp)=ic+i       
+    END DO       
+    DO isp=1,N_Psp     
+      i=i+1    
+      iPO4(isp)=ic+i       
     END DO
-    DO j=1,Npom
-      i=i+1
-      iPOC(j)=ic+i
-    END DO
-    DO j=1,Nphy
-      i=i+1
-      iPhyt(j)=ic+i
-    END DO
-    DO j=1,Nzoo
-      i=i+1
-      iZoop(j)=ic+i
-    END DO
-    DO j=1,Npim
-      i=i+1
-      iPIC(j)=ic+i
-    END DO
-#if defined CARBON_ISOTOPE
-    i=i+1
-    iT13C=ic+i  ! +1
-    DO j=1,Ndom
-      i=i+1
-      iDO13C(j)=ic+i
-    END DO
-    DO j=1,Npom
-      i=i+1
-      iPO13C(j)=ic+i
-    END DO
-    DO j=1,Nphy
-      i=i+1
-      iPhyt13C(j)=ic+i
-    END DO
-    DO j=1,Nzoo
-      i=i+1
-      iZoop13C(j)=ic+i
-    END DO
-    DO j=1,Npim
-      i=i+1
-      iPI13C(j)=ic+i
-    END DO
-#endif
-    i=i+1
-    iNO3_=ic+i
-!    i=i+1
-!    iNO2_=ic+i
-    i=i+1
-    iNH4_=ic+i
-    i=i+1
-    iPO4_=ic+i
-    DO j=1,Ndom
-      i=i+1
-      iDON(j)=ic+i
-    END DO
-    DO j=1,Npom
-      i=i+1
-      iPON(j)=ic+i
-    END DO
-    DO j=1,Ndom
-      i=i+1
-      iDOP(j)=ic+i
-    END DO
-    DO j=1,Npom
-      i=i+1
-      iPOP(j)=ic+i
-    END DO
-#if defined NITROGEN_ISOTOPE
-    i=i+1
-    i15NO3=ic+i  ! +1
-!    i=i+1
-!    i15NO2=ic+i  ! +1
-    i=i+1
-    i15NH4=ic+i  ! +1
-    DO j=1,Ndom
-      i=i+1
-      iDO15N(j)=ic+i
-    END DO
-    DO j=1,Npom
-      i=i+1
-      iPO15N(j)=ic+i
-    END DO
-    DO j=1,Nphy
-      i=i+1
-      iPhyt15N(j)=ic+i
-    END DO
-    DO j=1,Nzoo
-      i=i+1
-      iZoop15N(j)=ic+i
-    END DO
-#endif
+    DO m=1,Ndom    
+      DO isp=1,N_Csp     
+        i=i+1    
+        iDOC(isp,m)=ic+i
+      END DO
+    END DO 
+    DO m=1,Ndom    
+      DO isp=1,N_Nsp     
+        i=i+1    
+        iDON(isp,m)=ic+i 
+      END DO
+    END DO 
+    DO m=1,Ndom    
+      DO isp=1,N_Psp     
+        i=i+1    
+        iDOP(isp,m)=ic+i  
+      END DO
+    END DO 
+    DO m=1,Npom    
+      DO isp=1,N_Csp     
+        i=i+1    
+        iPOC(isp,m)=ic+i  
+      END DO
+    END DO 
+    DO m=1,Npom    
+      DO isp=1,N_Nsp     
+        i=i+1    
+        iPON(isp,m)=ic+i  
+      END DO
+    END DO 
+    DO m=1,Npom    
+      DO isp=1,N_Psp     
+        i=i+1    
+        iPOP(isp,m)=ic+i  
+      END DO
+    END DO 
+    DO m=1,Nphy    
+      DO isp=1,N_Csp     
+        i=i+1    
+        iPhyC(isp,m)=ic+i
+      END DO
+    END DO 
+    DO m=1,Nphy    
+      DO isp=1,N_Nsp     
+        i=i+1    
+        iPhyN(isp,m)=ic+i
+      END DO
+    END DO 
+    DO m=1,Nphy    
+      DO isp=1,N_Psp     
+        i=i+1    
+        iPhyP(isp,m)=ic+i
+      END DO
+    END DO 
+    DO m=1,Nzoo    
+      DO isp=1,N_Csp     
+        i=i+1    
+        iZooC(isp,m)=ic+i
+      END DO
+    END DO 
+    DO m=1,Nzoo    
+      DO isp=1,N_Nsp     
+        i=i+1    
+        iZooN(isp,m)=ic+i
+      END DO
+    END DO 
+    DO m=1,Nzoo    
+      DO isp=1,N_Psp     
+        i=i+1    
+        iZooP(isp,m)=ic+i
+      END DO
+    END DO 
+    DO m=1,Npim    
+      DO isp=1,N_Csp     
+        i=i+1    
+        iPIC(isp,m)=ic+i 
+      END DO
+    END DO 
 #if defined COT_STARFISH
     i=i+1
     iCOTe=ic+i
@@ -386,12 +395,14 @@ contains
 
    allocate( dz(LBi:UBi,LBj:UBj,N) )
 
-   allocate( C(LBi:UBi, LBj:UBj, N, Nid) , &
-             dC_dt(LBi:UBi, LBj:UBj, N, Nid)   )
-   allocate( Co(LBi:UBi, LBj:UBj, Nid) )
+   allocate( t(LBi:UBi, LBj:UBj, N, 1, Nid) , &
+             dtrc_dt(N, Nid)   )
    allocate( pH(LBi:UBi, LBj:UBj, N) )
    allocate( Warg(LBi:UBi, LBj:UBj, N) )
    allocate( Wcal(LBi:UBi, LBj:UBj, N) )
+#if defined LIGHT_MODEL
+   allocate( PFDk(LBi:UBi, LBj:UBj, N) )
+#endif
    
    allocate( p_coral (2,LBi:UBi, LBj:UBj) , &  !!! To be updated... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
              p_sgrass(1,LBi:UBi, LBj:UBj) , &  !!! To be updated... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -402,6 +413,7 @@ contains
 !-----------------------------------------------------------------------
 !  Set initial conditions
 !-----------------------------------------------------------------------
+    nstp=1
 
     do j=LBj,UBj
       do i=LBi,UBi
@@ -409,152 +421,90 @@ contains
         
           dz(i,j,k)=1.0d0 !(m)
         
-          C(i,j,k,iTemp) = T0       
-          C(i,j,k,iSalt) = S0
+          t(i,j,k,nstp,iTemp) = T0       
+          t(i,j,k,nstp,iSalt) = S0
 
-          C(i,j,k,iSedi) = Sed1_0    !Sediment concentration (g m-3) 0.e0, 1.e0
+          t(i,j,k,nstp,iSedi) = Sed1_0    !Sediment concentration (g m-3) 0.e0, 1.e0
 
-          C(i,j,k,iTIC_) = TIC_0     !DIC  (umol kg-1) 1915.0d0 1930.0d0, 1700.0d0, 2100.0d0, 2300.0d0, 2500.0d0, 2700.0d0, 3000.0d0 
-          C(i,j,k,iTAlk) = TAlk0      !TA  (umol kg-1)  2232.0d0 2275.0d0, 2500.0d0, 2150.0d0, 2000.0d0, 1800.0d0, 1700.0d0, 1600.0d0 
-
-!          C(i,j,k,iOxyg) = Oxyg0      !DO  (umol L-1)
-          C(i,j,k,iOxyg) = O2satu(C(i,j,k,iTemp)+273.15d0, C(i,j,k,iSalt))
-
-! Offshore values
-          Co(i,j,iTemp) = T0   !27.0d0 32.0d0
-          Co(i,j,iSalt) = S0
-
-          Co(i,j,iSedi) = 0.0d0    !Sediment concentration (g m-3) 0.e0, 1.e0
-
-          Co(i,j,iTIC_) = TIC_0     !DIC  (umol kg-1) 1915.0d0 1930.0d0, 1700.0d0, 2100.0d0, 2300.0d0, 2500.0d0, 2700.0d0, 3000.0d0 
-          Co(i,j,iTAlk) = TAlk0     !TA  (umol kg-1)  2232.0d0 2275.0d0, 2500.0d0, 2150.0d0, 2000.0d0, 1800.0d0, 1700.0d0, 1600.0d0 
-
-          Co(i,j,iOxyg) = O2satu(C(i,j,k,iTemp)+273.15d0, C(i,j,k,iSalt))
-          C(i,j,k,iDOC(1)) = DOC1_0       !DOC  (umol L-1) 
-          C(i,j,k,iDOC(2)) = DOC2_0       !DOC  (umol L-1) 
-          C(i,j,k,iPOC(1)) = POC1_0       !POC  (umol L-1) 
-          C(i,j,k,iPOC(2)) = POC2_0       !POC  (umol L-1) 
-          C(i,j,k,iPOC(3)) = POC3_0       !POC  (umol L-1) 
-          C(i,j,k,iPhyt(1)) = Phyt1_0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-          C(i,j,k,iPhyt(2)) = Phyt2_0     !Phytoplankton2 0.3(umolC L-1) 							diatom
-          C(i,j,k,iPhyt(3)) = Phyt3_0     !Phytoplankton3 0.3(umolC L-1) 							coccolith
-          C(i,j,k,iPhyt(4)) = Phyt4_0     !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
-          C(i,j,k,iZoop(1)) = Zoop1_0     !Zooplankton (umol L-1)1.3
-          C(i,j,k,iPIC(1)) =  PIC1_0      !Particulated inorganic carbon (umol L-1)1.3
-! Offshore values
-          Co(i,j,iDOC(1)) = DOC1_0       !DOC  (umol L-1) 
-          Co(i,j,iDOC(2)) = DOC2_0       !DOC  (umol L-1) 
-          Co(i,j,iPOC(1)) = POC1_0       !POC  (umol L-1) 
-          Co(i,j,iPOC(2)) = POC2_0       !POC  (umol L-1) 
-          Co(i,j,iPOC(3)) = POC3_0       !POC  (umol L-1) 
-          Co(i,j,iPhyt(1)) = Phyt1_0       !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-          Co(i,j,iPhyt(2)) = Phyt2_0       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          Co(i,j,iPhyt(3)) = Phyt3_0       !Phytoplankton2 0.3(umolC L-1)
-          Co(i,j,iPhyt(4)) = Phyt4_0       !Phytoplankton4 0.3(umolC L-1) 							cyanobacteria
-          Co(i,j,iZoop(1)) = Zoop1_0       !Zooplankton (umol L-1)1.3
-          Co(i,j,iPIC(1)) =  PIC1_0        !Particulated inorganic carbon (umol L-1)1.3
+!          t(i,j,k,nstp,iOxyg) = Oxyg0      !DO  (umol L-1)
+          t(i,j,k,nstp,iOxyg) = O2satu(t(i,j,k,nstp,iTemp)+273.15d0, t(i,j,k,nstp,iSalt))
+          t(i,j,k,nstp,iTAlk) = TAlk0      !TA  (umol kg-1)  2232.0d0 2275.0d0, 2500.0d0, 2150.0d0, 2000.0d0, 1800.0d0, 1700.0d0, 1600.0d0 
+          t(i,j,k,nstp,iTIC(iCt)) = TIC_0     !DIC  (umol kg-1) 1915.0d0 1930.0d0, 1700.0d0, 2100.0d0, 2300.0d0, 2500.0d0, 2700.0d0, 3000.0d0 
+          t(i,j,k,nstp,iNO3(iNt)) = NO3_0      !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
+          t(i,j,k,nstp,iNH4(iNt)) = NH4_0      !NH4  (umol L-1) 
+          t(i,j,k,nstp,iPO4(iPt)) = PO4_0      !PO4  (umol L-1) 0.03d0 0.05d0, 2.0d0 control0.04d0 P0.2d0
+          DO m=1,Ndom
+            t(i,j,k,nstp,iDOC(iCt,m)) = DOC_0(m)       !DOC  (umol L-1) 
+!            t(i,j,k,nstp,iDON(iNt,m)) = DON_0(m)     !DON  (umol L-1) 
+!            t(i,j,k,nstp,iDOP(iPt,m)) = DOP_0(m)     !DOP  (umol L-1) 
+            t(i,j,k,nstp,iDON(iNt,m)) = DOC_0(m)*16d0/106d0     !DON  (umol L-1) 
+            t(i,j,k,nstp,iDOP(iPt,m)) = DOC_0(m)/106d0     !DOP  (umol L-1) 
+          END DO
+          write(*,*) 'DEBUG0',iDOC(1,1),iDOC(N_Csp,Ndom),t(i,j,k,nstp,iDOC(1,1):iDOC(N_Csp,Ndom))
+          DO m=1,Npom
+            t(i,j,k,nstp,iPOC(iCt,m)) = POC_0(m)       !POC  (umol L-1) 
+!            t(i,j,k,nstp,iPON(iNt,m)) = PON_0(m)     !PON  (umol L-1) 
+!            t(i,j,k,nstp,iPOP(iPt,m)) = POP_0(m)      !POP  (umol L-1) 
+            t(i,j,k,nstp,iPON(iNt,m)) = POC_0(m)*16d0/106d0     !PON  (umol L-1) 
+            t(i,j,k,nstp,iPOP(iPt,m)) = POC_0(m)/106d0      !POP  (umol L-1) 
+          END DO
+          DO m=1,Nphy
+            t(i,j,k,nstp,iPhyC(iCt,m)) = PhyC_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+!            t(i,j,k,nstp,iPhyN(iNt,m)) = PhyN_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+!            t(i,j,k,nstp,iPhyP(iPt,m)) = PhyP_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+            t(i,j,k,nstp,iPhyN(iNt,m)) = PhyC_0(m)*16d0/106d0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+            t(i,j,k,nstp,iPhyP(iPt,m)) = PhyC_0(m)/106d0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+          END DO
+          DO m=1,Nzoo
+            t(i,j,k,nstp,iZooC(iCt,m)) = ZooC_0(m)     !Zooplankton (umol L-1)1.3
+!            t(i,j,k,nstp,iZooN(iNt,m)) = ZooN_0(m)     !Zooplankton (umol L-1)1.3
+!            t(i,j,k,nstp,iZooP(iPt,m)) = ZooP_0(m)     !Zooplankton (umol L-1)1.3
+            t(i,j,k,nstp,iZooN(iNt,m)) = ZooC_0(m)*16d0/106d0     !Zooplankton (umol L-1)1.3
+            t(i,j,k,nstp,iZooP(iPt,m)) = ZooC_0(m)/106d0     !Zooplankton (umol L-1)1.3
+          END DO
+          DO m=1,Npim
+            t(i,j,k,nstp,iPIC (iCt,m)) = PIC_0 (m)     !Particulated inorganic carbon (umol L-1)1.3
+          END DO
 #if defined CARBON_ISOTOPE
           R13C=R13C_fromd13C(d13C_TIC0)
-!          Ci(nDI13C,i,j,k)=R13C/(1.+R13C)*Ci(nDIC,i,j,k) !DI13C (umol kg-1)
-          C(i,j,k,iT13C) =R13C*C(i,j,k,iTIC_) !DI13C (umol kg-1) 
-! Offshore values
-          Co(i,j,iT13C) =R13C*C(i,j,k,iTIC_) !DI13C (umol kg-1) 
+          t(i,j,k,nstp,iT13C) =R13C*t(i,j,k,nstp,iTIC_) !DI13C (umol kg-1) 
           R13C=R13C_fromd13C(d13C_DOC1_0)
-          C(i,j,k,iDO13C(1)) = R13C*C(i,j,k,iDO13C(1))       !DOC  (umol L-1) 
+          t(i,j,k,nstp,iDO13C(1)) = R13C*t(i,j,k,nstp,iDO13C(1))       !DOC  (umol L-1) 
           R13C=R13C_fromd13C(d13C_DOC2_0)
-          C(i,j,k,iDO13C(2)) = R13C*C(i,j,k,iDO13C(2))      !DOC  (umol L-1) 
+          t(i,j,k,nstp,iDO13C(2)) = R13C*t(i,j,k,nstp,iDO13C(2))      !DOC  (umol L-1) 
           R13C=R13C_fromd13C(d13C_POC1_0)
-          C(i,j,k,iPO13C(1)) = R13C*C(i,j,k,iPO13C(1))        !POC  (umol L-1) 
+          t(i,j,k,nstp,iPO13C(1)) = R13C*t(i,j,k,nstp,iPO13C(1))        !POC  (umol L-1) 
           R13C=R13C_fromd13C(d13C_POC2_0)
-          C(i,j,k,iPO13C(2)) = R13C*C(i,j,k,iPO13C(2))        !POC  (umol L-1) 
+          t(i,j,k,nstp,iPO13C(2)) = R13C*t(i,j,k,nstp,iPO13C(2))        !POC  (umol L-1) 
           R13C=R13C_fromd13C(d13C_Phyt1_0)
-          C(i,j,k,iPhyt13C(1)) = R13C*C(i,j,k,iPhyt13C(1))     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+          t(i,j,k,nstp,iPhyt13C(1)) = R13C*t(i,j,k,nstp,iPhyt13C(1))     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           R13C=R13C_fromd13C(d13C_Phyt2_0)
-          C(i,j,k,iPhyt13C(2)) = R13C*C(i,j,k,iPhyt13C(2))       !Phytoplankton2 0.3(umolC L-1) 							diatom
+          t(i,j,k,nstp,iPhyt13C(2)) = R13C*t(i,j,k,nstp,iPhyt13C(2))       !Phytoplankton2 0.3(umolC L-1) 							diatom
           R13C=R13C_fromd13C(d13C_Phyt3_0)
-          C(i,j,k,iPhyt13C(3)) = R13C*C(i,j,k,iPhyt13C(3))       !Phytoplankton3 0.3(umolC L-1) 							diatom
+          t(i,j,k,nstp,iPhyt13C(3)) = R13C*t(i,j,k,nstp,iPhyt13C(3))       !Phytoplankton3 0.3(umolC L-1) 							diatom
           R13C=R13C_fromd13C(d13C_Zoop1_0)
-          C(i,j,k,iZoop13C(1)) = R13C*C(i,j,k,iZoop13C(1))       !Zooplankton (umol L-1)1.3
+          t(i,j,k,nstp,iZoop13C(1)) = R13C*t(i,j,k,nstp,iZoop13C(1))       !Zooplankton (umol L-1)1.3
           R13C=R13C_fromd13C(d13C_PIC1_0)
-          C(i,j,k,iPI13C(1)) = R13C*C(i,j,k,iPI13C(1))       !Particulated inorganic carbon (umol L-1)1.3
-! Offshore values
-          R13C=R13C_fromd13C(d13C_DOC1_0)
-          Co(i,j,iDO13C(1)) = R13C*Co(i,j,iDO13C(1))       !DOC  (umol L-1) 
-          R13C=R13C_fromd13C(d13C_DOC2_0)
-          Co(i,j,iDO13C(2)) = R13C*Co(i,j,iDO13C(2))       !DOC  (umol L-1) 
-          R13C=R13C_fromd13C(d13C_POC1_0)
-          Co(i,j,iPO13C(1)) = R13C*Co(i,j,iPO13C(1))        !POC  (umol L-1) 
-          R13C=R13C_fromd13C(d13C_POC2_0)
-          Co(i,j,iPO13C(2)) = R13C*Co(i,j,iPO13C(2))        !POC  (umol L-1) 
-          R13C=R13C_fromd13C(d13C_Phyt1_0)
-          Co(i,j,iPhyt13C(1)) = R13C*Co(i,j,iPhyt13C(1))       !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-          R13C=R13C_fromd13C(d13C_Phyt2_0)
-          Co(i,j,iPhyt13C(2)) = R13C*Co(i,j,iPhyt13C(2))       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          R13C=R13C_fromd13C(d13C_Phyt3_0)
-          Co(i,j,iPhyt13C(3)) = R13C*Co(i,j,iPhyt13C(3))       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          R13C=R13C_fromd13C(d13C_Zoop1_0)
-          Co(i,j,iZoop13C(1)) = R13C*Co(i,j,iZoop13C(1))       !Zooplankton (umol L-1)1.3
-          R13C=R13C_fromd13C(d13C_PIC1_0)
-          Co(i,j,iPI13C(1)) =  R13C*Co(i,j,iPI13C(1))       !Particulated inorganic carbon (umol L-1)1.3
+          t(i,j,k,nstp,iPI13C(1)) = R13C*t(i,j,k,nstp,iPI13C(1))       !Particulated inorganic carbon (umol L-1)1.3
 #endif
 !!!!!!!!!!!!
-          C(i,j,k,iNO3_) = NO3_0      !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
-          C(i,j,k,iPO4_) = PO4_0      !PO4  (umol L-1) 0.03d0 0.05d0, 2.0d0 control0.04d0 P0.2d0
-          C(i,j,k,iNH4_) = NH4_0      !NH4  (umol L-1) 
-! Offshore values
-          Co(i,j,iNO3_) = NO3_0      !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
-          Co(i,j,iPO4_) = PO4_0      !PO4  (umol L-1) 0.03d0 0.05d0, 2.0d0 control0.04d0 P0.2d0
-          Co(i,j,iNH4_) = NH4_0       !NH4  (umol L-1) 
-
-          C(i,j,k,iDON(1)) = DON1_0     !DON  (umol L-1) 
-          C(i,j,k,iDON(2)) = DON2_0     !DON  (umol L-1) 
-          C(i,j,k,iPON(1)) = PON1_0     !PON  (umol L-1) 
-          C(i,j,k,iPON(2)) = PON2_0    !PON  (umol L-1) 
-          C(i,j,k,iPON(3)) = PON3_0    !PON  (umol L-1) 
-          C(i,j,k,iDOP(1)) = DOP1_0     !DOP  (umol L-1) 
-          C(i,j,k,iDOP(2)) = DOP2_0    !DOP  (umol L-1) 
-          C(i,j,k,iPOP(1)) = POP1_0      !POP  (umol L-1) 
-          C(i,j,k,iPOP(2)) = POP2_0     !POP  (umol L-1) 
-          C(i,j,k,iPOP(3)) = POP3_0     !POP  (umol L-1) 
-! Offshore values
-          Co(i,j,iDON(1)) = DON1_0     !DON  (umol L-1) 
-          Co(i,j,iDON(2)) = DON2_0     !DON  (umol L-1) 
-          Co(i,j,iPON(1)) = PON1_0     !PON  (umol L-1) 
-          Co(i,j,iPON(2)) = PON2_0    !PON  (umol L-1) 
-          Co(i,j,iPON(3)) = PON3_0    !PON  (umol L-1) 
-          Co(i,j,iDOP(1)) = DOP1_0     !DOP  (umol L-1) 
-          Co(i,j,iDOP(2)) = DOP2_0    !DOP  (umol L-1) 
-          Co(i,j,iPOP(1)) = POP1_0      !POP  (umol L-1) 
-          Co(i,j,iPOP(2)) = POP2_0     !POP  (umol L-1) 
-          Co(i,j,iPOP(3)) = POP3_0     !POP  (umol L-1) 
 #if defined NITROGEN_ISOTOPE            
 !!!!!!!!!!!!
-          C(i,j,k,i15NO3) =  0.2d0       !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
-          C(i,j,k,i15NH4) =  0.26d0       !NH4  (umol L-1) 
-! Offshore values
-          Co(i,j,i15NO3) =  0.2d0       !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
-          Co(i,j,i15NH4) =  0.26d0       !NH4  (umol L-1) 
-          C(i,j,k,iDO15N(1)) =   1.0d0 !3.0d0       !DON  (umol L-1) 
-          C(i,j,k,iDO15N(2)) =  10.0d0 !3.0d0       !DON  (umol L-1) 
-          C(i,j,k,iPO15N(1)) =  0.06d0 !0.05d0      !PON  (umol L-1) 
-          C(i,j,k,iPO15N(2)) =  0.6d0 !0.05d0      !PON  (umol L-1) 
-          C(i,j,k,iPhyt15N(1)) = 0.0d0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-          C(i,j,k,iPhyt15N(2)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          C(i,j,k,iPhyt15N(3)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          C(i,j,k,iZoop15N(1)) = 0.0d0       !Zooplankton (umol L-1)1.3
-! Offshore values
-          Co(i,j,iDO15N(1)) =   1.0d0 !3.0d0       !DON  (umol L-1) 
-          Co(i,j,iDO15N(2)) =  10.0d0 !3.0d0       !DON  (umol L-1) 
-          Co(i,j,iPO15N(1)) =  0.06d0 !0.05d0      !PON  (umol L-1) 
-          Co(i,j,iPO15N(2)) =  0.6d0 !0.05d0      !PON  (umol L-1) 
-          Co(i,j,iPhyt15N(1)) = 0.0d0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-          Co(i,j,iPhyt15N(2)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          Co(i,j,iPhyt15N(3)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
-          Co(i,j,iZoop15N(1)) = 0.0d0       !Zooplankton (umol L-1)1.3
+          t(i,j,k,nstp,i15NO3) =  0.2d0       !NO3  (umol L-1)  0.5d0, 10.0d0 control0.2d0 N1.8d0 N*2 3.5d0
+          t(i,j,k,nstp,i15NH4) =  0.26d0       !NH4  (umol L-1) 
+
+          t(i,j,k,nstp,iDO15N(1)) =   1.0d0 !3.0d0       !DON  (umol L-1) 
+          t(i,j,k,nstp,iDO15N(2)) =  10.0d0 !3.0d0       !DON  (umol L-1) 
+          t(i,j,k,nstp,iPO15N(1)) =  0.06d0 !0.05d0      !PON  (umol L-1) 
+          t(i,j,k,nstp,iPO15N(2)) =  0.6d0 !0.05d0      !PON  (umol L-1) 
+          t(i,j,k,nstp,iPhyt15N(1)) = 0.0d0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+          t(i,j,k,nstp,iPhyt15N(2)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
+          t(i,j,k,nstp,iPhyt15N(3)) = 0.0d0       !Phytoplankton2 0.3(umolC L-1) 							diatom
+          t(i,j,k,nstp,iZoop15N(1)) = 0.0d0       !Zooplankton (umol L-1)1.3
 #endif
 #if defined COT_STARFISH
-          C(i,j,k,iCOTe) =  0.0d0       !COTS eggs (umol L-1) 
-          C(i,j,k,iCOTl) =  0.0d0       !COTS larvae (umol L-1) 
+          t(i,j,k,nstp,iCOTe) =  0.0d0       !COTS eggs (umol L-1) 
+          t(i,j,k,nstp,iCOTl) =  0.0d0       !COTS larvae (umol L-1) 
 #endif
         enddo
           
@@ -584,12 +534,12 @@ contains
         p_sand(i,j)  = 0.0d0
 
 #else
-        p_coral(1,i,j) = p_coral1_0
-        p_coral(2,i,j) = p_coral2_0
+        p_coral(1,i,j) = p_coral_0(1)
+        p_coral(2,i,j) = p_coral_0(2)
         p_sand(i,j)  = p_sand_0
 #endif
-        p_algae(1,i,j) = p_algae_0
-        p_sgrass(1,i,j)= p_sgrass_0
+        p_algae(1,i,j) = p_algae_0(1)
+        p_sgrass(1,i,j)= p_sgrass_0(1)
         
         
       enddo

@@ -126,7 +126,7 @@ contains
 #endif
       
 #if defined SEDIMENT_TESTMODE
-    open(50,file=trim(OUTFILE_prefix)//'-sed_last_data.csv')!!!!!!!!!!!!!!!!!!!for debug
+    open(50,file='output/sedeco_rst.csv')!!!!!!!!!!!!!!!!!!!for debug
     open(62,file=trim(OUTFILE_prefix)//'-sedTmp_his.csv')!!!!!!!!!!!!!!!!!!!for debug
     open(80,file=trim(OUTFILE_prefix)//'-sedSal_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
     open(56,file=trim(OUTFILE_prefix)//'-sedDIC_his.csv')!!!!!!!!!!!!!!!!!!!for debug
@@ -290,7 +290,7 @@ END SUBROUTINE files_close
         ,'Temp','Salt','TA','DIC','DO'                                     &
         ,'DOC1','DOC2','POC1','POC2','POC3','Phyt1'                        &
         ,'Phyt2','Phyt3', 'Phyt4'                                          &
-        ,'TotalPhy', 'Zoop','PIC'                                          &
+        ,'TotalPhy', 'Zoop','PIC1','PIC2'                                  &
         ,'NO3','NH4','PO4'                                                 &
         ,'DON1','DON2','PON1','PON2','PON3'                                &
         ,'DOP1','DOP2','POP1','POP2','POP3'                                &
@@ -362,34 +362,43 @@ END SUBROUTINE files_close
     integer, intent(in) :: fid
 #if defined CARBON_ISOTOPE
     real(8) :: d13C_DIC
+#endif
+    integer :: i,j,k,nstp
 
-    d13C_DIC=d13C_fromR13C(C(1,1,1,iT13C)/C(1,1,1,iTIC_))
+    i=1
+    j=1
+    k=1
+    nstp=1
+
+#if defined CARBON_ISOTOPE
+    d13C_DIC=d13C_fromR13C(t(i,j,k,nstp,iT13C)/t(i,j,k,nstp,iTIC_))
 #endif
         
-    write(fid,'(*(g0:,", "))') time, PFDsurf                           &
-           , C(1,1,1,iTemp), C(1,1,1,iSalt)                            &
-           , C(1,1,1,iTAlk), C(1,1,1,iTIC_), C(1,1,1,iOxyg)            &
-           , C(1,1,1,iDOC(1)), C(1,1,1,iDOC(2))                        &
-           , C(1,1,1,iPOC(1)), C(1,1,1,iPOC(2)), C(1,1,1,iPOC(3))      &
-           , C(1,1,1,iPhyt(1)), C(1,1,1,iPhyt(2)), C(1,1,1,iPhyt(3))   &
-           , C(1,1,1,iPhyt(4))                                         &
-           , C(1,1,1,iPhyt(1))+C(1,1,1,iPhyt(2))+C(1,1,1,iPhyt(3))+C(1,1,1,iPhyt(4)) &
-           , C(1,1,1,iZoop(1)), C(1,1,1,iPIC(1))                       &
-           , C(1,1,1,iNO3_), C(1,1,1,iNH4_), C(1,1,1,iPO4_)            &
-           , C(1,1,1,iDON(1)), C(1,1,1,iDON(2))                        &
-           , C(1,1,1,iPON(1)), C(1,1,1,iPON(2)), C(1,1,1,iPON(3))      &
-           , C(1,1,1,iDOP(1)), C(1,1,1,iDOP(2))                        &
-           , C(1,1,1,iPOP(1)), C(1,1,1,iPOP(2)), C(1,1,1,iPOP(3))      &
+    write(fid,'(*(g0:,", "))') time, PFDsurf                                                &
+           , t(i,j,k,nstp,iTemp), t(i,j,k,nstp,iSalt)                                       &
+           , t(i,j,k,nstp,iTAlk), t(i,j,k,nstp,iTIC(1)), t(i,j,k,nstp,iOxyg)                &
+           , t(i,j,k,nstp,iDOC(1,1)), t(i,j,k,nstp,iDOC(1,2))                               &
+           , t(i,j,k,nstp,iPOC(1,1)), t(i,j,k,nstp,iPOC(1,2)), t(i,j,k,nstp,iPOC(1,3))      &
+           , t(i,j,k,nstp,iPhyC(1,1)), t(i,j,k,nstp,iPhyC(1,2)), t(i,j,k,nstp,iPhyC(1,3))   &
+           , t(i,j,k,nstp,iPhyC(1,4))                                                       &
+           , t(i,j,k,nstp,iPhyC(1,1))+t(i,j,k,nstp,iPhyC(1,2))+t(i,j,k,nstp,iPhyC(1,3))     &
+            +t(i,j,k,nstp,iPhyC(1,4))                                                       &
+           , t(i,j,k,nstp,iZooC(1,1)), t(i,j,k,nstp,iPIC(1,1)), t(i,j,k,nstp,iPIC(1,2))     &
+           , t(i,j,k,nstp,iNO3(1)), t(i,j,k,nstp,iNH4(1)), t(i,j,k,nstp,iPO4(1))            &
+           , t(i,j,k,nstp,iDON(1,1)), t(i,j,k,nstp,iDON(1,2))                               &
+           , t(i,j,k,nstp,iPON(1,1)), t(i,j,k,nstp,iPON(1,2)), t(i,j,k,nstp,iPON(1,3))      &
+           , t(i,j,k,nstp,iDOP(1,1)), t(i,j,k,nstp,iDOP(1,2))                               &
+           , t(i,j,k,nstp,iPOP(1,1)), t(i,j,k,nstp,iPOP(1,2)), t(i,j,k,nstp,iPOP(1,3))      &
 #if defined CARBON_ISOTOPE
            , d13C_DIC                                                      &
 #endif
 #if defined COT_STARFISH
-           , C(1,1,1,iCOTe), C(1,1,1,iCOTl)                            &
+           , t(i,j,k,nstp,iCOTe), t(i,j,k,nstp,iCOTl)                      &
 #endif
 #if defined REEF_FLOW
            , REEF(1)%Qrc(1,1), REEF(1)%Qch(1,1), REEF(1)%el (1,1)          &
 #endif
-           , dz(1,1,1), tide 
+           , dz(i,j,k), tide 
 
 
     RETURN
@@ -595,7 +604,8 @@ END SUBROUTINE write_crl_ave_lavel
 ! **********************************************************************
 !  Write last sediment data
 ! **********************************************************************
-SUBROUTINE write_sedeco_last_label(fid)
+
+  SUBROUTINE write_sedeco_last_data(fid)
   
     USE mod_reef_ecosys_param
 #ifdef SEDIMENT_ECOSYS
@@ -605,18 +615,27 @@ SUBROUTINE write_sedeco_last_label(fid)
     implicit none
       
     integer, intent(in) :: fid
+    real(8) :: zr(0:Nsed)
+    integer :: i,j,k,ng
+
+    i=1
+    j=1
+    ng=1
+
+    zr(0) = -1.0d0
+    zr(1:Nsed) = SEDECO(1)%zr(:)
 
     write(fid,'(*(g0:,", "))') 'zr'   &
       , 'Tmp'                         &
       , 'Sal'                         & 
-      , 'TA '                         & 
       , 'O2 '                         & 
+      , 'TA '                         & 
       , 'DIC'                         & 
-      , 'LDOC', 'RDOC'                &
-      , 'LPOC', 'RPOC'                &
       , 'NO3'                         &
       , 'NH4'                         &
       , 'PO4'                         &
+      , 'LDOC', 'RDOC'                &
+      , 'LPOC', 'RPOC'                &
       , 'LDON', 'RDON'                &
       , 'LDOP', 'RDOP'                &
       , 'LPON', 'RPON'                &
@@ -631,52 +650,31 @@ SUBROUTINE write_sedeco_last_label(fid)
       , 'SO4'                         &
       , 'S0 '   
     
-    RETURN
-
-  END SUBROUTINE write_sedeco_last_label
-
-
-  SUBROUTINE write_sedeco_last_data(fid)
-  
-    USE mod_reef_ecosys_param
-#ifdef SEDIMENT_ECOSYS
-    USE mod_sedecosys
-#endif
-      
-    implicit none
-      
-    integer, intent(in) :: fid
-    real(8) :: zr(0:Nsed)
-    integer :: i
-
-    zr(0) = -1.0d0
-    zr(1:Nsed) = SEDECO(1)%zr(:)
-    
-    DO i=0,Nsed
-      write(fid,'(*(g0:,", "))') zr(i)   &
-      , SEDECO(1)%Tmp(i,1,1)         &
-      , SEDECO(1)%Sal(i,1,1)         & 
-      , SEDECO(1)%TA (i,1,1)         & 
-      , SEDECO(1)%O2 (i,1,1)         & 
-      , SEDECO(1)%DIC(:,i,1,1)       & 
-      , SEDECO(1)%DOC(:,:,i,1,1)     &
-      , SEDECO(1)%POC(:,:,i,1,1)     &
-      , SEDECO(1)%NO3(:,i,1,1)       &
-      , SEDECO(1)%NH4(:,i,1,1)       &
-      , SEDECO(1)%PO4(:,i,1,1)       &
-      , SEDECO(1)%DON(:,:,i,1,1)     &
-      , SEDECO(1)%DOP(:,:,i,1,1)     &
-      , SEDECO(1)%PON(:,:,i,1,1)     &
-      , SEDECO(1)%POP(:,:,i,1,1)     &
-      , SEDECO(1)%Mn2 (i,1,1)        &
-      , SEDECO(1)%MnO2(i,1,1)        &
-      , SEDECO(1)%Fe2 (i,1,1)        &
-      , SEDECO(1)%FeS2(:,i,1,1)      &
-      , SEDECO(1)%FeOOH(i,1,1)       &
-      , SEDECO(1)%FeOOH_PO4(:,i,1,1) &
-      , SEDECO(1)%H2S(:,i,1,1)       &
-      , SEDECO(1)%SO4(:,i,1,1)       &
-      , SEDECO(1)%S0 (:,i,1,1)   
+    DO k=0,Nsed
+      write(fid,'(*(g0:,", "))') zr(k)   &
+      , SEDECO(ng)%Tmp(k,i,j)         &
+      , SEDECO(ng)%Sal(k,i,j)         & 
+      , SEDECO(ng)%O2 (k,i,j)         & 
+      , SEDECO(ng)%TA (k,i,j)         & 
+      , SEDECO(ng)%DIC(:,k,i,j)       & 
+      , SEDECO(ng)%NO3(:,k,i,j)       &
+      , SEDECO(ng)%NH4(:,k,i,j)       &
+      , SEDECO(ng)%PO4(:,k,i,j)       &
+      , SEDECO(ng)%DOC(:,:,k,i,j)     &
+      , SEDECO(ng)%POC(:,:,k,i,j)     &
+      , SEDECO(ng)%DON(:,:,k,i,j)     &
+      , SEDECO(ng)%DOP(:,:,k,i,j)     &
+      , SEDECO(ng)%PON(:,:,k,i,j)     &
+      , SEDECO(ng)%POP(:,:,k,i,j)     &
+      , SEDECO(ng)%Mn2 (k,i,j)        &
+      , SEDECO(ng)%MnO2(k,i,j)        &
+      , SEDECO(ng)%Fe2 (k,i,j)        &
+      , SEDECO(ng)%FeS2(:,k,i,j)      &
+      , SEDECO(ng)%FeOOH(k,i,j)       &
+      , SEDECO(ng)%FeOOH_PO4(:,k,i,j) &
+      , SEDECO(ng)%H2S(:,k,i,j)       &
+      , SEDECO(ng)%SO4(:,k,i,j)       &
+      , SEDECO(ng)%S0 (:,k,i,j)   
     END DO
     
     RETURN
