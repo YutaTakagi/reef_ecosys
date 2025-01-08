@@ -402,15 +402,15 @@ CONTAINS
     DO m = 1,Npom-1
       v0 = kcpom_Q10(m) *cfs* POC(iCt,iCPOM)
       R_POC(:,iCPOM) = R_POC(:,iCPOM) - v0 *rPOC(:,iCPOM)
-      R_POC(:,m)     = R_POC(:,m)     + v0 *rPOC(:,m)
+      R_POC(:,m)     = R_POC(:,m)     + v0 *rPOC(:,iCPOM)
       
-      v0 = kcpom_Q10(m) *cfs* PON(iCt,iCPOM)
+      v0 = kcpom_Q10(m) *cfs* PON(iNt,iCPOM)
       R_PON(:,iCPOM) = R_PON(:,iCPOM) - v0 *rPON(:,iCPOM)
-      R_PON(:,m)     = R_PON(:,m)     + v0 *rPON(:,m)
+      R_PON(:,m)     = R_PON(:,m)     + v0 *rPON(:,iCPOM)
 
-      v0 = kcpom_Q10(m) *cfs* POP(iCt,iCPOM)
+      v0 = kcpom_Q10(m) *cfs* POP(iPt,iCPOM)
       R_POP(:,iCPOM) = R_POP(:,iCPOM) - v0 *rPOP(:,iCPOM)
-      R_POP(:,m)     = R_POP(:,m)     + v0 *rPOP(:,m)
+      R_POP(:,m)     = R_POP(:,m)     + v0 *rPOP(:,iCPOM)
     END DO
 
   !! ----------------------------------------------------------------------------------- !!
@@ -508,7 +508,7 @@ CONTAINS
       R_O2       = R_O2       - v1c
 
       ! R2:   4/5 NO3- + CH2O + 4/5 H+ --> 4/5 N2 + CO2 + 7/5 H2O
-      R_NO3(:)   = R_NO3(:)   - v2c*0.8d0 *rNO3(:)
+      R_NO3(:)   = R_NO3(:)   - v2c*0.8d0 *aN_denitr(1:N_Nsp)*rNO3(:)
       R_TA       = R_TA       + v2c*0.8d0
 
       ! R3:   2MnO2 + CH2O + 4H+ --> 2Mn2+ + CO2 + 3H2O
@@ -569,7 +569,7 @@ CONTAINS
       R_O2       = R_O2       - v1c
 
       ! R2:   4/5 NO3- + CH2O + 4/5 H+ --> 4/5 N2 + CO2 + 7/5 H2O
-      R_NO3(:)   = R_NO3(:)   - v2c*0.8d0 *rNO3(:)
+      R_NO3(:)   = R_NO3(:)   - v2c*0.8d0 *aN_denitr(1:N_Nsp)*rNO3(:)
       R_TA       = R_TA       + v2c*0.8d0
 
       ! R3:   2MnO2 + CH2O + 4H+ --> 2Mn2+ + CO2 + 3H2O
@@ -593,9 +593,9 @@ CONTAINS
 
     ! R6:   NH4+ + 2O2 --> NO3- + H2O + 2H+
     v6 = cfdd * k6_Q10*cNH4*cO2
+    R_NH4(:) = R_NH4(:) - v6        *aN_nitr(1:N_Nsp)*rNH4(:)
     R_O2     = R_O2     - v6*2.0d0
-    R_NO3(:) = R_NO3(:) + v6        *rNH4(:)
-    R_NH4(:) = R_NH4(:) - v6        *rNH4(:)
+    R_NO3(:) = R_NO3(:) + v6        *aN_nitr(1:N_Nsp)*rNH4(:)
     R_TA     = R_TA     - v6*2.0d0
 
     ! R7:   FeOOH + PO43- --> FeOOH=PO43-

@@ -6,7 +6,7 @@
 &ecosys_config
 ! Simulation period     
 !  Tmax = 365.0d0 ! days    ! 3years: 1095 / 5years: 1825 / 40years: 14600 / 100years: 36500
-  Tmax = 10.0d0 ! days    ! 3years: 1095 / 5years: 1825 / 40years: 14600 / 100years: 36500
+  Tmax = 1.0d0 ! days    ! 3years: 1095 / 5years: 1825 / 40years: 14600 / 100years: 36500
 !  ymax = 1.0d0 !years
 ! Start time
   time0 = 0.0d0 ! day
@@ -19,16 +19,25 @@
 !                4: Inner-reef box model simulation
 !                5: Incubation chamber simulation of Nakamura & Nakamori (2009) experiments
 !                6: Flume simulation of Comeau et al. (2016) experiments   
-  nSetting = 2
+!                7: Vertical profile simulation   
+  nSetting = 7
 
   Im = 1
   Jm = 1
-  N  = 2
+  N  = 10
 
-  dt = 1.0d0
+  dt = 1.0d0 ! Time step (sec)
+
+  depth = 1.0d0 ! Set depth (m)
 
   isplitc  = 20
-  isplitsed  = 20
+
+!** For stabilize sediment model ****
+! isplitsed > 1.0d3 * sgd_flux_in * dt
+!    because  Courant Number: C = v*dt/dz < 1 
+!      -> sgd_flux_in*dt/isplitsed/dz_min < 1 (dz_min = 0.001 m)
+  isplitsed = 2
+!  isplitsed = 20  
 /
 
 
@@ -77,7 +86,7 @@
 /
 
 &output   
-  OUTFILE_prefix = 'output/sedecoNP'
+  OUTFILE_prefix = 'output/vprof'
 /
 
 &sedeco_config
@@ -87,11 +96,16 @@
   FeS2_sed_in  = 1.0d2   ! Iron sulfide (FeS2) concentration in sediments [nmol/g(DW)]
 /
 
+&vprof_config
+
+  Diff_w = 1.0d-5  ! Vertical diffusion coefficient (m2 s-1)
+/
+
 !--- Initial Condition -----------------------------------------------------
 &initial
 
   d0 = 3.0d0           ! Depth (m)
-  T0 = 25.0d0          ! Water temperature (oC)
+  T0 = 28.0d0          ! Water temperature (oC)
   S0 = 34.0d0          ! Salinity (PSU)
   Sed1_0  = 0.0d0      ! Sediment concentration (g m-3)
 
@@ -100,23 +114,24 @@
   Oxyg0 = 250.0d0      ! DO  (umol L-1)
   TAlk0 = 2232.0d0     ! TA  (umol kg-1) 
   TIC_0 = 1915.0d0     ! DIC (umol kg-1)  !!! 2050.0d0 @ fCO2=800uatm;  2030.0d0 @ fCO2=700uatm 
-  NO3_0 = 20.5d0        ! NO3  (umol L-1)  control: 0.2d0, N: 1.8d0, N*2: 3.5d0
+  NO3_0 = 0.2d0        ! NO3  (umol L-1)  control: 0.2d0, N: 1.8d0, N*2: 3.5d0
   NH4_0 = 0.26d0       ! NH4  (umol L-1) 
-  PO4_0 = 2.0d0       ! PO4  (umol L-1)  control: 0.04d0, P: 0.2d0
+  PO4_0 = 0.04d0       ! PO4  (umol L-1)  control: 0.04d0, P: 0.2d0
 
   DOC_0 = 10.0d0, 50.0d0         ! DOC (umol C L-1); Labile, Refractory
   POC_0 = 1.0d0,  0.1d0, 0.1d0  ! POC (umol C L-1); Labile, Refractory, Coarse 
-  DON_0 = 5.0d0, 50.0d0         ! DON (umol N L-1); Labile, Refractory
-  PON_0 = 1.0d0,  0.1d0, 0.1d0  ! PON (umol N L-1); Labile, Refractory, Coarse 
-  DOP_0 = 5.0d0, 50.0d0         ! DOP (umol P L-1); Labile, Refractory
-  POP_0 = 1.0d0,  0.1d0, 0.1d0  ! POP (umol P L-1); Labile, Refractory, Coarse 
+!  DON_0 = 5.0d0, 50.0d0         ! DON (umol N L-1); Labile, Refractory
+!  PON_0 = 1.0d0,  0.1d0, 0.1d0  ! PON (umol N L-1); Labile, Refractory, Coarse 
+!  DOP_0 = 5.0d0, 50.0d0         ! DOP (umol P L-1); Labile, Refractory
+!  POP_0 = 1.0d0,  0.1d0, 0.1d0  ! POP (umol P L-1); Labile, Refractory, Coarse 
  PhyC_0 = 1.0d0,  2.0d0, 0.1d0, 1.0d0   ! PhyC (umolC L-1): Dinoflagellate, Diatom, Coccolithophorids,  
- ZooC_0 = 0.0d0 !0.1d0       ! ZooC (umol L-1)
- PhyN_0 = 1.0d0,  2.0d0, 0.1d0, 1.0d0   ! PhyC (umolC L-1): Dinoflagellate, Diatom, Coccolithophorids,  
- ZooN_0 = 0.1d0       ! ZooC (umol L-1)
- PhyP_0 = 1.0d0,  2.0d0, 0.1d0, 1.0d0   ! PhyC (umolC L-1): Dinoflagellate, Diatom, Coccolithophorids,  
- ZooP_0 = 0.1d0       ! ZooC (umol L-1)
-  PIC_0 = 0.05d0, 0.05d0       ! PIC (umol L-1) 
+ ZooC_0 = 0.3d0 !0.1d0       ! ZooC (umol L-1)
+! PhyN_0 = 1.0d0,  2.0d0, 0.1d0, 1.0d0   ! PhyC (umolC L-1): Dinoflagellate, Diatom, Coccolithophorids,  
+! ZooN_0 = 0.1d0       ! ZooC (umol L-1)
+! PhyP_0 = 1.0d0,  2.0d0, 0.1d0, 1.0d0   ! PhyC (umolC L-1): Dinoflagellate, Diatom, Coccolithophorids,  
+! ZooP_0 = 0.1d0       ! ZooC (umol L-1)
+  PIC_0 = 0.00d0, 0.05d0       ! PIC (umol L-1) 
+                               ! *PIC_0(1)=PIC_0(iLive) is dummy data. Internally calculated from rCaCp (Ca:OrgC) value.
 
 d13C_TIC0 = 0.7d0      ! d13C_TIC (permill VPDB)
 d13C_DOC_0 = -15.0d0, -15.0d0 ! d13C_DOC (permill VPDB)

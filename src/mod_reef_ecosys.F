@@ -1138,23 +1138,25 @@ END SUBROUTINE allocate_reef_ecosys
 #   ifndef BLUE_TIDE
       H2S(:,:) = 0.0d0
 #   endif
-
+      SO4(:) = 0.0d0 ! (umol L-1)
       SO4(iSt) = 0.02824d0*Sal(1)/35.0d0*rho_sw(1) *1.0d6 ! (umol L-1)
-!      SO4(iS34) = SO4(iSt)
-#   if defined SEDECO_BURIAL
-      Fdep_MnO2  = Fdep_sed * MnO2_sed !!!! Check needed
-      Fdep_FeOOH = Fdep_sed * FeOOH_sed !!!! Check needed
-      Fdep_FeOOH_PO4(:) = Fdep_sed * 0.0d0 !!!! Check needed
-      Fdep_FeS(:) = Fdep_sed * 0.0d0 !!!! Check needed
-      Fdep_FeS2(:)= Fdep_sed * FeS2_sed !!!! Check needed
-      Fdep_S0(:)  = Fdep_sed * 0.0d0 !!!! Check needed
-#   else
+#   if defined SULFUR_ISOTOPE
+      SO4(iS34) = Ci_from_Ct_delta(SO4(iSt), 21.0d0, R34S_VCDT)
+#   endif
+
       Fdep_MnO2  = 10d0  / 86400d0 !!!! Check needed
       Fdep_FeOOH = 100d0 / 86400d0 !!!! Check needed
       Fdep_FeOOH_PO4(:) = 0.0d0 !!!! Check needed
       Fdep_FeS(:) = 0.0d0 !!!! Check needed
       Fdep_FeS2(:)= 0.0d0 !!!! Check needed
       Fdep_S0(:)  = 0.0d0 !!!! Check needed
+#   if defined SEDECO_BURIAL
+      Fdep_MnO2  = Fdep_sed * MnO2_sed !!!! Check needed
+      Fdep_FeOOH = Fdep_sed * FeOOH_sed !!!! Check needed
+      Fdep_FeOOH_PO4(iPt) = Fdep_sed * 0.0d0 !!!! Check needed
+      Fdep_FeS(iSt) = Fdep_sed * 0.0d0 !!!! Check needed
+      Fdep_FeS2(iSt)= Fdep_sed * FeS2_sed !!!! Check needed
+      Fdep_S0(iSt)  = Fdep_sed * 0.0d0 !!!! Check needed
 #   endif
 
       DO m=1,isplitsed   !!! Loop for sediment model: dtc <= 0.05 sec

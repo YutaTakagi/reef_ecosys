@@ -104,7 +104,7 @@ PROGRAM main
   real(8) :: Tmax, time0
   integer :: nSetting
   integer :: Im, Jm, N
-  real(8) :: dt
+  real(8) :: dt, depth
   integer :: isplitc, isplitsed
 
   real(8) :: Fdep_sed_in
@@ -115,11 +115,13 @@ PROGRAM main
   real(8) :: sgd_PO4_in
   real(8) :: sgd_DOC_in(Ndom), sgd_DON_in(Ndom), sgd_DOP_in(Ndom)
 
+  real(8) :: Diff_w
+
   namelist/input_info/in_file
   namelist/ecosys_config/Tmax, time0
   namelist/ecosys_config/nSetting
   namelist/ecosys_config/Im, Jm, N
-  namelist/ecosys_config/dt, isplitc, isplitsed
+  namelist/ecosys_config/dt, depth, isplitc, isplitsed
 
   namelist/sedeco_config/Fdep_sed_in
   namelist/sedeco_config/MnO2_sed_in, FeOOH_sed_in, FeS2_sed_in
@@ -128,6 +130,8 @@ PROGRAM main
   namelist/sedeco_config/sgd_TA_in, sgd_DIC_in, sgd_NO3_in, sgd_NH4_in
   namelist/sedeco_config/sgd_PO4_in
   namelist/sedeco_config/sgd_DOC_in, sgd_DON_in, sgd_DOP_in
+  namelist/vprof_config/Diff_w
+
 
 
   read (5, nml=input_info)
@@ -137,12 +141,19 @@ PROGRAM main
   read (5, nml=sedeco_config)
   rewind(5)
 
+  if (nSetting .eq. 7) then
+
+    read (5, nml=vprof_config)
+    rewind(5)
+
+  endif
+  
 
   ng=1
   i=1
   j=1
   nstp=1
-
+        
   allocate( Tmp(N)             ) ! Temperature (oC)
   allocate( Sal(N)             ) ! Salinity (PSU)
   allocate( DOx(N)             ) ! Dissolved oxygen (umol L-1)
@@ -202,6 +213,8 @@ PROGRAM main
 !----- Set initial conditions -------------------------
 
   CALL initialize_params(1, Im, 1, Jm, N, Nid)
+
+  dz(:,:,:)=depth/dble(N) !(m)
 
 !----- Import data -----------------------------------
 
@@ -649,7 +662,7 @@ PROGRAM main
           t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt(k,id)*dt
 #if defined SEDECO_SGD && defined SGD_ON
           ! Overflowing of the SGD volume flux is assumed 
-          dtrc_dt_sgd = -0.01d0*sgd_flux *t(i,j,k,nstp,id)/dz(i,j,1)
+          dtrc_dt_sgd = -0.01d0*sgd_flux *t(i,j,k,nstp,id)/dz(i,j,1)/dble(N)
           t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt_sgd*dt
 #endif
         end do
@@ -657,12 +670,6 @@ PROGRAM main
 !---------- Constant Flow condition ------------------------------------
 
       else if (nSetting .eq. 3) then
-
-
-
-
-
-
 
 
 
@@ -805,6 +812,37 @@ PROGRAM main
           end do
         end if
 
+!---------- for Vertical profile simulation -------------------------
+
+      else if (nSetting .eq. 7) then
+               
+        do id=1,Nid
+          ! Difusion term
+          if(k==1) then
+             t(i,j,k,nstp,id)=t(i,j,k,nstp,id)                        &
+                             + (t(i,j,k,nstp,id)+t(i,j,k+1,nstp,id)   &
+                                - 2.0d0*t(i,j,k,nstp,id))             &
+                                *Diff_w/dz(i,j,k)/dz(i,j,k)*dt
+          else if(k==N) then
+             t(i,j,k,nstp,id)=t(i,j,k,nstp,id)                        &
+                             + (t(i,j,k-1,nstp,id)+t(i,j,k,nstp,id)   &
+                                - 2.0d0*t(i,j,k,nstp,id))             &
+                                *Diff_w/dz(i,j,k)/dz(i,j,k)*dt
+          else
+            t(i,j,k,nstp,id)=t(i,j,k,nstp,id)                         &
+                             + (t(i,j,k-1,nstp,id)+t(i,j,k+1,nstp,id) &
+                                - 2.0d0*t(i,j,k,nstp,id))             &
+                                *Diff_w/dz(i,j,k)/dz(i,j,k)*dt
+          end if
+
+          ! Reaction term
+          t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt(k,id)*dt
+#if defined SEDECO_SGD && defined SGD_ON
+          ! Overflowing of the SGD volume flux is assumed 
+          dtrc_dt_sgd = -0.01d0*sgd_flux *t(i,j,k,nstp,id)/dz(i,j,k)/dble(N)
+          t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt_sgd*dt
+#endif
+        end do
       end if
           
 !------------------------------------------------------------------------------

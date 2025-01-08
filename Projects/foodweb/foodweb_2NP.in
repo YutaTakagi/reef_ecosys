@@ -18,6 +18,7 @@
 !                4: Inner-reef box model simulation
 !                5: Incubation chamber simulation of Nakamura & Nakamori (2009) experiments
 !                6: Flume simulation of Comeau et al. (2016) experiments   
+!                7: Vertical profile simulation   
   nSetting = 2
 
   Im = 1
@@ -26,8 +27,16 @@
 
   dt = 1.0d0
 
+  depth = 1.0d0 ! Set depth (m)
+
   isplitc  = 20
-  isplitsed  = 1
+
+!** For stabilize sediment model ****
+! isplitsed > 1.0d3 * sgd_flux_in * dt
+!    because  Courant Number: C = v*dt/dz < 1 
+!      -> sgd_flux_in*dt/isplitsed/dz_min < 1 (dz_min = 0.001 m)
+  isplitsed = 2
+!  isplitsed = 20  
 /
 
 

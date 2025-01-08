@@ -466,10 +466,10 @@ CONTAINS
       dPhyC_dt(:,k) = dPhyC_dt(:,k) + Ap     *aC_phot(1:N_Csp)*rDIC(:)  ! Primary production
       dDOx_dt       = dDOx_dt       + Ap
 
-      dNO3_dt(:)    = dNO3_dt(:)    - Ap_NO3 *aN_phot(1:N_Nsp)*rNO3(:)
-      dNH4_dt(:)    = dNH4_dt(:)    - Ap_NH4 *aN_phot(1:N_Nsp)*rNH4(:)
-      dPhyN_dt(:,k) = dPhyN_dt(:,k) + Ap_NO3 *aN_phot(1:N_Nsp)*rNO3(:) &
-                                    + Ap_NH4 *aN_phot(1:N_Nsp)*rNH4(:)
+      dNO3_dt(:)    = dNO3_dt(:)    - Ap_NO3 *aNO3_phot(1:N_Nsp)*rNO3(:)
+      dNH4_dt(:)    = dNH4_dt(:)    - Ap_NH4 *aNH4_phot(1:N_Nsp)*rNH4(:)
+      dPhyN_dt(:,k) = dPhyN_dt(:,k) + Ap_NO3 *aNO3_phot(1:N_Nsp)*rNO3(:) &
+                                    + Ap_NH4 *aNH4_phot(1:N_Nsp)*rNH4(:)
       dDOx_dt       = dDOx_dt       + Ap_NO3*2.0d0  ! Assimilating ammonium is assumed: NO3- + H2O + 2H+ --> NH4+ + 2O2 
       dTA_dt        = dTA_dt        + Ap_NO3*1.0d0  ! increase of alkalinity by 1 mole when nitrate or nitrite is the N source
       dTA_dt        = dTA_dt        - Ap_NH4*1.0d0  ! decrease of alkalinity by 1 mole when ammonia is used
@@ -583,7 +583,7 @@ CONTAINS
                                               + dCp2z)                                 *rPhyC(:,m)
         
         dPhyN_dt(:,m)    = dPhyN_dt(:,m)    - Gp2z_p*rNCp(m)                                   *rPhyN(:,m)
-        dZooN_dt(:,k)    = dZooN_dt(:,k)    + Gp2z*rNCz(k)* e_Gp2z(m,k)*aN_grz(1:N_Csp)        *rPhyN(:,m)
+        dZooN_dt(:,k)    = dZooN_dt(:,k)    + Gp2z*rNCz(k)* e_Gp2z(m,k)*aN_grz(1:N_Nsp)        *rPhyN(:,m)
         dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) +(Gp2z*rNCz(k)*(1.0d0-e_Gp2z(m,k)*aN_grz(1:N_Nsp))             &
                                               + dNp2z)                                         *rPhyN(:,m)
 
@@ -615,8 +615,8 @@ CONTAINS
         dDOC_dt(:,iLDOM) = dDOC_dt(:,iLDOM) + Gdoc2z*(1.0d0-e_Gdoc2z(m,k)*aC_grz(1:N_Csp)) *rDOC(:,m)
 
         dDON_dt(:,m)     = dDON_dt(:,m)     - Gdoc2z*rNCz(k)                                       *rDON(:,m)
-        dZooN_dt(:,k)    = dZooN_dt(:,k)    + Gdoc2z*rNCz(k)*e_Gdoc2z(m,k)*aN_grz(1:N_Csp)         *rDON(:,m)
-        dDON_dt(:,iLDOM) = dDON_dt(:,iLDOM) + Gdoc2z*rNCz(k)*(1.0d0-e_Gdoc2z(m,k)*aN_grz(1:N_Csp)) *rDON(:,m)
+        dZooN_dt(:,k)    = dZooN_dt(:,k)    + Gdoc2z*rNCz(k)*e_Gdoc2z(m,k)*aN_grz(1:N_Nsp)         *rDON(:,m)
+        dDON_dt(:,iLDOM) = dDON_dt(:,iLDOM) + Gdoc2z*rNCz(k)*(1.0d0-e_Gdoc2z(m,k)*aN_grz(1:N_Nsp)) *rDON(:,m)
         
         dDOP_dt(:,m)     = dDOP_dt(:,m)     - Gdoc2z*rPCz(k)                       *rDOP(:,m)
         dZooP_dt(:,k)    = dZooP_dt(:,k)    + Gdoc2z*rPCz(k)*e_Gdoc2z(m,k)         *rDOP(:,m)
@@ -639,8 +639,8 @@ CONTAINS
         dPOC_dt(:,iLPOM) = dPOC_dt(:,iLPOM) + Gpoc2z*(1.0d0-e_Gpoc2z(m,k)*aC_grz(1:N_Csp)) *rPOC(:,m)
 
         dPON_dt(:,m)     = dPON_dt(:,m)     - Gpoc2z*rNCz(k)                                       *rPON(:,m)
-        dZooN_dt(:,k)    = dZooN_dt(:,k)    + Gpoc2z*rNCz(k)* e_Gpoc2z(m,k)*aN_grz(1:N_Csp)        *rPON(:,m)
-        dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Gpoc2z*rNCz(k)*(1.0d0-e_Gpoc2z(m,k)*aN_grz(1:N_Csp)) *rPON(:,m)
+        dZooN_dt(:,k)    = dZooN_dt(:,k)    + Gpoc2z*rNCz(k)* e_Gpoc2z(m,k)*aN_grz(1:N_Nsp)        *rPON(:,m)
+        dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Gpoc2z*rNCz(k)*(1.0d0-e_Gpoc2z(m,k)*aN_grz(1:N_Nsp)) *rPON(:,m)
 
         dPOP_dt(:,m)     = dPOP_dt(:,m)     - Gpoc2z*rPCz(k)                       *rPOP(:,m)
         dZooP_dt(:,k)    = dZooP_dt(:,k)    + Gpoc2z*rPCz(k)* e_Gpoc2z(m,k)        *rPOP(:,m)

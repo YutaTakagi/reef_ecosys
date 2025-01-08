@@ -14,23 +14,29 @@ module mod_geochem
   real(8), parameter :: aC_grz (3) = [ 1.0d0, 1.0d0, 1.0d0 ]
 #else
                                      ! iCt      iC13             iD47 (clumped isotope)              
-  real(8), parameter :: aC_phot(3) = [ 1.0d0, -20.0d-3+1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
-!  real(8), parameter :: aC_resp(3) = [ 1.0d0,   0.0d-3 + 1.0d0,   0.0d-3 + 1.0d0 ]
-  real(8), parameter :: aC_calc(3) = [ 1.0d0,   2.7d-3+1.0d0,   2.7d-3 + 1.0d0 ] 
-  real(8), parameter :: aC_co2 (3) = [ 1.0d0,  -7.0d-3+1.0d0,  -7.0d-3 + 1.0d0 ] !!!!! To Be Confirmed. Maybe ~-8-4.4
-  real(8), parameter :: aC_grz (3) = [ 1.0d0,   0.8d-3+1.0d0,            1.0d0 ]
+  real(8), parameter :: aC_phot(3) = [ 1.0d0, -20.0d-3 +1.0d0, -20.0d-3 +1.0d0 ] !!!!! To Be Confirmed
+!  real(8), parameter :: aC_resp(3) = [ 1.0d0,   0.0d-3 +1.0d0,   0.0d-3 +1.0d0 ]
+  real(8), parameter :: aC_calc(3) = [ 1.0d0,   2.7d-3 +1.0d0,   2.7d-3 +1.0d0 ] 
+  real(8), parameter :: aC_co2 (3) = [ 1.0d0,  -7.0d-3 +1.0d0,  -7.0d-3 +1.0d0 ] !!!!! To Be Confirmed. Maybe ~-8-4.4
+  real(8), parameter :: aC_grz (3) = [ 1.0d0,   0.8d-3 +1.0d0,           1.0d0 ]
 #endif
 
 !----- Nitrogen isotope fractionation ------------------------
 #if defined NITROGEN_TRACE
-  real(8), parameter :: aN_phot(2) = [ 1.0d0, 1.0d0, 1.0d0 ]
-  real(8), parameter :: aN_grz (2) = [ 1.0d0, 1.0d0, 1.0d0 ]
-  real(8), parameter :: aN_N2fix(2)= [ 1.0d0, 1.0d0, 1.0d0 ]
+  real(8), parameter :: aNO3_phot(2) = [ 1.0d0, 1.0d0 ]
+  real(8), parameter :: aNH4_phot(2) = [ 1.0d0, 1.0d0 ]
+  real(8), parameter :: aN_grz   (2) = [ 1.0d0, 1.0d0 ]
+  real(8), parameter :: aN_N2fix (2) = [ 1.0d0, 1.0d0 ]
+  real(8), parameter :: aN_nitr  (2) = [ 1.0d0, 1.0d0 ]
+  real(8), parameter :: aN_denitr(2) = [ 1.0d0, 1.0d0 ]
 #else
-                                     ! iNt      iN15         
-  real(8), parameter :: aN_phot(2) = [ 1.0d0, -20.0d-3+1.0d0 ] !!!!! To Be Confirmed
-  real(8), parameter :: aN_grz (2) = [ 1.0d0,   3.4d-3+1.0d0 ]
-  real(8), parameter :: aN_N2fix(2)= [ 1.0d0,  -2.0d-3+1.0d0 ]  !!!! To be confirmed
+                                        ! iNt         iN15         
+  real(8), parameter :: aNO3_phot(2) = [ 1.0d0,  -5.0d-3 +1.0d0 ] ! NO3 assimilation by phytoplankton !!!! To Be Confirmed
+  real(8), parameter :: aNH4_phot(2) = [ 1.0d0,   0.0d-3 +1.0d0 ] ! NH4 assimilation by phytoplankton !!!! To Be Confirmed
+  real(8), parameter :: aN_grz   (2) = [ 1.0d0,   3.4d-3 +1.0d0 ] ! condensation
+  real(8), parameter :: aN_N2fix (2) = [ 1.0d0,  -2.0d-3 +1.0d0 ] ! nitrogen fixation (N2 -> NH4) !!!! To be confirmed
+  real(8), parameter :: aN_nitr  (2) = [ 1.0d0, -35.0d-3 +1.0d0 ] ! nitrification (NH4 -> NO3) ! To be confirmed
+  real(8), parameter :: aN_denitr(2) = [ 1.0d0,  -4.1d-3 +1.0d0 ] ! denitrification (NO3 -> N2) ! To be confirmed
 #endif
 
 !----- Sulfur isotope fractionation ------------------------
@@ -38,7 +44,7 @@ module mod_geochem
   real(8), parameter :: aS_SO4red(2) = [ 1.0d0, 1.0d0 ]
 #else
                                          ! iSt      iS34         
-  real(8), parameter :: aS_SO4red(2) = [ 1.0d0, -50.0d-3+1.0d0 ] !!!!! To Be Confirmed
+  real(8), parameter :: aS_SO4red(2) = [ 1.0d0, -30.0d-3 +1.0d0 ] ! Sulfate reduction (SO42- -> H2S) !!!! To Be Confirmed
 #endif
 
 ! ------ Carbon Isotope related parameters -----

@@ -505,8 +505,8 @@ END SUBROUTINE files_close
            , t(i,j,k,nstp,iZooC(1,1):iZooC(N_Csp,Nzoo)) &
            , t(i,j,k,nstp,iPhyN(1,1):iPhyN(N_Nsp,Nphy)) &
            , t(i,j,k,nstp,iZooN(1,1):iZooN(N_Nsp,Nzoo)) &
-           , t(i,j,k,nstp,iPhyP(1,1):iPhyP(N_Csp,Nphy)) &
-           , t(i,j,k,nstp,iZooP(1,1):iZooP(N_Csp,Nzoo)) &
+           , t(i,j,k,nstp,iPhyP(1,1):iPhyP(N_Psp,Nphy)) &
+           , t(i,j,k,nstp,iZooP(1,1):iZooP(N_Psp,Nzoo)) &
            , t(i,j,k,nstp,iPIC(1,1):iPIC(N_Csp,Npim))   &
            , t(i,j,k,nstp,iPhyC(iCt,1))+t(i,j,k,nstp,iPhyC(iCt,2))  &
             +t(i,j,k,nstp,iPhyC(iCt,3))+t(i,j,k,nstp,iPhyC(iCt,4))  &
@@ -745,55 +745,123 @@ END SUBROUTINE write_crl_ave_lavel
     zr(1:Nsed) = SEDECO(1)%zr(:)
 
     write(fid,'(*(g0:,", "))') 'zr'   &
-      , 'Tmp'                         &
-      , 'Sal'                         & 
-      , 'O2 '                         & 
-      , 'TA '                         & 
-      , 'DIC'                         & 
-      , 'NO3'                         &
-      , 'NH4'                         &
-      , 'PO4'                         &
-      , 'LDOC', 'RDOC'                &
-      , 'LPOC', 'RPOC', 'CPOC'        &
-      , 'LDON', 'RDON'                &
-      , 'LPON', 'RPON', 'CPON'        &
-      , 'LDOP', 'RDOP'                &
-      , 'LPOP', 'RPOP', 'CPOP'        &
-      , 'Mn2 '                        &
-      , 'MnO2'                        &
-      , 'Fe2 '                        &
-      , 'FeS2'                        &
-      , 'FeOOH'                       &
-      , 'FeOOH_PO4'                   &
-      , 'H2S'                         &
-      , 'SO4'                         &
-      , 'S0 '   
+        , 'Tmp'                       &
+        , 'Sal'                       & 
+        , 'O2 '                       & 
+        , 'TA '                       & 
+#if defined CLUMPED_ISOTOPE 
+        ,'DIC','DIC_13C','DIC_47D'    &
+#elif defined CARBON_ISOTOPE  || defined CARBON_TRACE
+        ,'DIC','DIC_13C'              &
+#else
+        ,'DIC'                        &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'NO3','NO3_15N'  &
+        ,'NH4','NH4_15N'  &
+#else
+        ,'NO3'            &
+        ,'NH4'            &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'PO4','PO4_P1'   &
+#else
+        ,'PO4'            &
+#endif
+#if defined CLUMPED_ISOTOPE 
+        ,'LDOC','LDOC_13C','LDOC_47D' &
+        ,'RDOC','RDOC_13C','RDOC_47D' &
+        ,'LPOC','LPOC_13C','LPOC_47D' &
+        ,'RPOC','RPOC_13C','RPOC_47D' &
+        ,'CPOC','CPOC_13C','CPOC_47D' &
+#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+        ,'LDOC','LDOC_13C' &
+        ,'RDOC','RDOC_13C' &
+        ,'LPOC','LPOC_13C' &
+        ,'RPOC','RPOC_13C' &
+        ,'CPOC','CPOC_13C' &
+#else
+        ,'LDOC'            &
+        ,'RDOC'            &
+        ,'LPOC'            &
+        ,'RPOC'            &
+        ,'CPOC'            &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'LDON','LDON_15N' &
+        ,'RDON','RDON_15N' &
+        ,'LPON','LPON_15N' &
+        ,'RPON','RPON_15N' &
+        ,'CPON','CPON_15N' &
+#else
+        ,'LDON'            &
+        ,'RDON'            &
+        ,'LPON'            &
+        ,'RPON'            &
+        ,'CPON'            &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'LDOP','LDOP_P1'  &
+        ,'RDOP','RDOP_P1'  &
+        ,'LPOP','LPOP_P1'  &
+        ,'RPOP','RPOP_P1'  &
+        ,'CPOP','CPOP_P1'  &
+#else
+        ,'LDOP'            &
+        ,'RDOP'            &
+        ,'LPOP'            &
+        ,'RPOP'            &
+        ,'CPOP'            &
+#endif
+        , 'Mn2 '           &
+        , 'MnO2'           &
+        , 'Fe2 '           &
+#if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
+        ,'FeS2','FeS2_34S' &
+#else
+        ,'FeS2'            &
+#endif
+        , 'FeOOH'          &
+#if defined PHOSPHOROUS_TRACE
+        ,'FeOOH_PO4','FeOOH_PO4_P1'   &
+#else
+        ,'FeOOH_PO4'                  &
+#endif
+#if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
+        , 'H2S', 'H2S_34S' &
+        , 'SO4', 'SO4_34S' &
+        , 'S0 ', 'S0_34S'     
+#else
+        , 'H2S'            &
+        , 'SO4'            &
+        , 'S0 '   
+#endif
     
     DO k=0,Nsed
-      write(fid,'(*(g0:,", "))') zr(k)   &
-      , SEDECO(ng)%Tmp(k,i,j)         &
-      , SEDECO(ng)%Sal(k,i,j)         & 
-      , SEDECO(ng)%O2 (k,i,j)         & 
-      , SEDECO(ng)%TA (k,i,j)         & 
-      , SEDECO(ng)%DIC(:,k,i,j)       & 
-      , SEDECO(ng)%NO3(:,k,i,j)       &
-      , SEDECO(ng)%NH4(:,k,i,j)       &
-      , SEDECO(ng)%PO4(:,k,i,j)       &
-      , SEDECO(ng)%DOC(:,:,k,i,j)     &
-      , SEDECO(ng)%POC(:,:,k,i,j)     &
-      , SEDECO(ng)%DON(:,:,k,i,j)     &
-      , SEDECO(ng)%PON(:,:,k,i,j)     &
-      , SEDECO(ng)%DOP(:,:,k,i,j)     &
-      , SEDECO(ng)%POP(:,:,k,i,j)     &
-      , SEDECO(ng)%Mn2 (k,i,j)        &
-      , SEDECO(ng)%MnO2(k,i,j)        &
-      , SEDECO(ng)%Fe2 (k,i,j)        &
-      , SEDECO(ng)%FeS2(:,k,i,j)      &
-      , SEDECO(ng)%FeOOH(k,i,j)       &
-      , SEDECO(ng)%FeOOH_PO4(:,k,i,j) &
-      , SEDECO(ng)%H2S(:,k,i,j)       &
-      , SEDECO(ng)%SO4(:,k,i,j)       &
-      , SEDECO(ng)%S0 (:,k,i,j)   
+      write(fid,'(*(g0:,", "))') zr(k)  &
+        , SEDECO(ng)%Tmp(k,i,j)         &
+        , SEDECO(ng)%Sal(k,i,j)         & 
+        , SEDECO(ng)%O2 (k,i,j)         & 
+        , SEDECO(ng)%TA (k,i,j)         & 
+        , SEDECO(ng)%DIC(:,k,i,j)       & 
+        , SEDECO(ng)%NO3(:,k,i,j)       &
+        , SEDECO(ng)%NH4(:,k,i,j)       &
+        , SEDECO(ng)%PO4(:,k,i,j)       &
+        , SEDECO(ng)%DOC(:,:,k,i,j)     &
+        , SEDECO(ng)%POC(:,:,k,i,j)     &
+        , SEDECO(ng)%DON(:,:,k,i,j)     &
+        , SEDECO(ng)%PON(:,:,k,i,j)     &
+        , SEDECO(ng)%DOP(:,:,k,i,j)     &
+        , SEDECO(ng)%POP(:,:,k,i,j)     &
+        , SEDECO(ng)%Mn2 (k,i,j)        &
+        , SEDECO(ng)%MnO2(k,i,j)        &
+        , SEDECO(ng)%Fe2 (k,i,j)        &
+        , SEDECO(ng)%FeS2(:,k,i,j)      &
+        , SEDECO(ng)%FeOOH(k,i,j)       &
+        , SEDECO(ng)%FeOOH_PO4(:,k,i,j) &
+        , SEDECO(ng)%H2S(:,k,i,j)       &
+        , SEDECO(ng)%SO4(:,k,i,j)       &
+        , SEDECO(ng)%S0 (:,k,i,j)   
     END DO
     
     RETURN

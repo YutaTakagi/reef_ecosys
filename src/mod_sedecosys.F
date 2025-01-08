@@ -230,7 +230,7 @@ CONTAINS
     real(8), parameter :: rPCph =  1.0d0/106.0d0    ! (no dim.) algal C:P ratio (Redfield ratio)
     real(8), parameter :: rNCph = 16.0d0/106.0d0   ! (no dim.) algal C:N ratio (Redfield ratio)        from analysis
 
-    real(8) :: tmp
+    real(8) :: tmp,cSO4
 ! - - - - - - - - - - - - - - - - - - - - - - - -
 ! ********************************************************************* !
 !   physical properties of sediment layers 
@@ -362,6 +362,7 @@ CONTAINS
       SEDECO(ng)%Sal(:,:,:)  = 34.0d0
       SEDECO(ng)%O2 (:,:,:)  = 200.0d0        !DO  (umol L-1)
       SEDECO(ng)%TA(:,:,:)  = 2232.0d0 ! TA (umol kg-1)
+      cSO4 = 0.02824d0*34.0d0/35.0d0 *1.0d6  ! SO4 (umol L-1)
 
       ! initialize 
       SEDECO(ng)%DIC(:,:,:,:)   = 0.0d0        !DIC  (umol L-1)
@@ -388,6 +389,8 @@ CONTAINS
       SEDECO(ng)%POC(iCt,iLPOM,:,:,:)  = OrgC_sed*1.0d-6!LPOC (nmol g-1)
       SEDECO(ng)%POC(iCt,iRPOM,:,:,:)  = OrgC_sed   !RPOC (nmol g-1)
       SEDECO(ng)%POC(iCt,iCPOM,:,:,:)  = 0.0d0 !CPOC (nmol g-1)
+!      SEDECO(ng)%POC(iCt,iCPOM,:,:,:)  = 1.0d0 !CPOC (nmol g-1)   ! for CARBON_TRACE test
+!      SEDECO(ng)%POC(iC13,iCPOM,:,:,:)  = 1.0d0 !CPOC (nmol g-1)  ! for CARBON_TRACE test
 #  if defined CARBON_ISOTOPE || defined CLUMPED_ISOTOPE
       SEDECO(ng)%DIC(iC13,:,:,:)        = ???? !DIC  (umol L-1)
       SEDECO(ng)%DOC(iC13,iLDOM,:,:,:)  = ???? !LDOC (umol L-1) 
@@ -411,6 +414,7 @@ CONTAINS
       SEDECO(ng)%PON(iNt,iLPOM,:,:,:) = SEDECO(ng)%POC(iCt,iLPOM,:,:,:) * rNCph   !PON  (umol L-1) 
       SEDECO(ng)%PON(iNt,iRPOM,:,:,:) = SEDECO(ng)%POC(iCt,iRPOM,:,:,:) * rNCph   !PON  (umol L-1)
       SEDECO(ng)%PON(iNt,iCPOM,:,:,:) = SEDECO(ng)%POC(iCt,iCPOM,:,:,:) * rNCph   !PON  (umol L-1)
+!      SEDECO(ng)%PON(iN15,iCPOM,:,:,:) = SEDECO(ng)%POC(iCt,iCPOM,:,:,:) * rNCph   !PON  (umol L-1) ! for NITROGEN_TRACE test
 #  if defined NITROGEN_ISOTOPE
       SEDECO(ng)%NO3(iN15,:,:,:)       = ????    !NO3  (umol L-1) 
       SEDECO(ng)%NH4(iN15,:,:,:)       = ????    !NH4  (umol L-1) 
@@ -427,6 +431,7 @@ CONTAINS
       SEDECO(ng)%POP(iPt,iLPOM,:,:,:) = SEDECO(ng)%POC(iCt,iLPOM,:,:,:) * rPCph   !POP  (umol L-1) 
       SEDECO(ng)%POP(iPt,iRPOM,:,:,:) = SEDECO(ng)%POC(iCt,iRPOM,:,:,:) * rPCph   !POP  (umol L-1)
       SEDECO(ng)%POP(iPt,iCPOM,:,:,:) = SEDECO(ng)%POC(iCt,iCPOM,:,:,:) * rPCph   !POP  (umol L-1)
+!      SEDECO(ng)%POP(iP1,iCPOM,:,:,:) = SEDECO(ng)%POC(iCt,iCPOM,:,:,:) * rPCph   !POP  (umol L-1) ! for PHOSPHOROUS_TRACE test
 
       SEDECO(ng)%FeOOH_PO4(iPt,:,:,:) = 0.0d0    !FeOOH=PO4  (nmol g-1) 
 
@@ -438,13 +443,14 @@ CONTAINS
       SEDECO(ng)%FeS (iSt,:,:,:) = 0.0d0     !FeS  (nmol g-1) 
       SEDECO(ng)%FeS2(iSt,:,:,:) = FeS2_sed  !FeS2  (nmol g-1) 
       SEDECO(ng)%H2S (iSt,:,:,:) = 0.0d0     !H2S  (umol L-1)
-      SEDECO(ng)%SO4 (iSt,:,:,:) = 0.02824d0*SEDECO(ng)%Sal(:,:,:)/35.0d0 *1.0d6  ! SO4 (umol L-1)   !SO4  (umol L-1)
+      SEDECO(ng)%SO4 (iSt,:,:,:) = cSO4  ! SO4 (umol L-1)   !SO4  (umol L-1)
+!      SEDECO(ng)%SO4 (iS34,:,:,:) = cSO4  ! SO4 (umol L-1)   !SO4  (umol L-1) ! for SULFUR_TRACE test
       SEDECO(ng)%S0  (iSt,:,:,:) = 0.0d0     !S0  (nmol g-1)
 #  if defined SULFUR_ISOTOPE
       SEDECO(ng)%FeS (iS34,:,:,:) = 0.0d0     !FeS  (nmol g-1) 
       SEDECO(ng)%FeS2(iS34,:,:,:) = ????     !FeS2  (nmol g-1) 
       SEDECO(ng)%H2S (iS34,:,:,:) = 0.0d0     !H2S  (umol L-1)
-      SEDECO(ng)%SO4 (iS34,:,:,:) = ????      !SO4  (umol L-1)
+      SEDECO(ng)%SO4 (iS34,:,:,:) = Ci_from_Ct_delta(cSO4, 21.0d0, R34S_VCDT)  !SO4  (umol L-1)
       SEDECO(ng)%S0  (iS34,:,:,:) = 0.0d0     !S0  (nmol g-1)
 #  endif
 # endif

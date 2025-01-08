@@ -8,7 +8,6 @@ FFLAGS="-fbounds-check -ffree-form -O3"
 #FFLAGS="-fbounds-check -ffree-form -O0 -g -fcheck=array-temps,bounds,do,mem,pointer,recursion"
 
 gfortran ${FFLAGS} \
-gfortran ${FFLAGS} \
   ${SRC_DIR}/mod_calendar.f90 \
   ${SRC_DIR}/mod_geochem.F  \
   ${SRC_DIR}/mod_reef_ecosys_param.F \

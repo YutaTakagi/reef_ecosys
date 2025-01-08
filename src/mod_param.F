@@ -417,12 +417,11 @@ contains
 !  Set initial conditions
 !-----------------------------------------------------------------------
     nstp=1
+    t(:,:,:,:,:) = 0.0d0 ! Initialize all tracers to zero
 
     do j=LBj,UBj
       do i=LBi,UBi
         do k=1,N
-        
-          dz(i,j,k)=1.0d0 !(m)
         
           t(i,j,k,nstp,iTemp) = T0       
           t(i,j,k,nstp,iSalt) = S0
@@ -450,6 +449,13 @@ contains
             t(i,j,k,nstp,iPON(iNt,m)) = POC_0(m)*16d0/106d0     !PON  (umol L-1) 
             t(i,j,k,nstp,iPOP(iPt,m)) = POC_0(m)/106d0      !POP  (umol L-1) 
           END DO
+
+#if defined TRACER_TEST
+          ! ***TRACER TEST****
+          t(i,j,k,nstp,iPOC(iC13,iCPOM)) = POC_0(iCPOM)       !POC  (umol L-1) 
+          t(i,j,k,nstp,iPON(iN15,iCPOM)) = POC_0(iCPOM)*16d0/106d0     !PON  (umol L-1) 
+          t(i,j,k,nstp,iPOP(iP1, iCPOM)) = POC_0(iCPOM)/106d0      !POP  (umol L-1)
+#endif
           DO m=1,Nphy
             t(i,j,k,nstp,iPhyC(iCt,m)) = PhyC_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
 !            t(i,j,k,nstp,iPhyN(iNt,m)) = PhyN_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
