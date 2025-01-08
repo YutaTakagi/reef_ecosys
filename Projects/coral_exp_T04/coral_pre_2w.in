@@ -66,8 +66,7 @@
 
 !--- Initial Condition -----------------------------------------------------
 &initial
-
-  d0 = 3.0d0           ! Depth (m)
+  
   T0 = 26.0d0          ! Water temperature (oC)
   S0 = 34.0d0          ! Salinity (PSU)
 

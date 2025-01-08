@@ -98,7 +98,6 @@
 !--- Initial Condition -----------------------------------------------------
 &initial
 
-  d0 = 3.0d0           ! Depth (m)
   T0 = 28.0d0          ! Water temperature (oC)
   S0 = 34.0d0          ! Salinity (PSU)
   Sed1_0  = 0.0d0      ! Sediment concentration (g m-3)

@@ -891,6 +891,7 @@ PROGRAM main
 #if defined SEDIMENT_TESTMODE
   CALL write_sedeco_last_data(50)
 #endif
+  CALL write_env_vprof(46, N)
 
 !----- Close output files --------------------------------------
 

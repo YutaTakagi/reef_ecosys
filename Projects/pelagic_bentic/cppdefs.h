@@ -119,12 +119,12 @@
 /*** Chamber experiments option ***/
 /*#define CHAMBER_SITE4*/
 
-/*# define TRACER_TEST*/ 
+# define TRACER_TEST
 #if defined TRACER_TEST
 # define CARBON_TRACE
 # define NITROGEN_TRACE
 # define PHOSPHOROUS_TRACE
-/*# define SULFUR_TRACE*/
+# define SULFUR_TRACE
 #endif
 
 /*----------------------------------------------------*/

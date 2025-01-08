@@ -24,11 +24,11 @@
 
   Im = 1
   Jm = 1
-  N  = 10
+  N  = 20
 
-  dt = 1.0d0 ! Time step (sec)
+  dt = 1.5d0 ! Time step (sec)
 
-  depth = 1.0d0 ! Set depth (m)
+  depth = 10.0d0 ! Set depth (m)
 
   isplitc  = 20
 
@@ -104,7 +104,6 @@
 !--- Initial Condition -----------------------------------------------------
 &initial
 
-  d0 = 3.0d0           ! Depth (m)
   T0 = 28.0d0          ! Water temperature (oC)
   S0 = 34.0d0          ! Salinity (PSU)
   Sed1_0  = 0.0d0      ! Sediment concentration (g m-3)

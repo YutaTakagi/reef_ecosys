@@ -240,7 +240,7 @@ contains
 !
     integer :: ic
 
-    real(8) :: d0, T0, S0, Sed1_0
+    real(8) :: T0, S0, Sed1_0
     real(8) :: TAlk0, TIC_0, Oxyg0
     real(8) :: NO3_0, NH4_0, PO4_0
     real(8) :: DOC_0(Ndom), POC_0(Npom), PhyC_0(Nphy), ZooC_0(Nzoo), PIC_0(Npim)
@@ -252,7 +252,7 @@ contains
     real(8) :: d15N_PhyN_0(Nphy), d15N_ZooN_0(Nzoo)
     real(8) :: p_coral_0(Ncl), p_algae_0(Nag), p_sgrass_0(Nsg), p_sand_0
 
-    namelist/initial/d0, T0, S0, Sed1_0
+    namelist/initial/T0, S0, Sed1_0
     namelist/initial/TAlk0, TIC_0, Oxyg0
     namelist/initial/NO3_0, NH4_0, PO4_0
     namelist/initial/DOC_0, POC_0, PhyC_0, ZooC_0, PIC_0

@@ -124,6 +124,7 @@ contains
 # endif
 
 #endif
+    open(46,file=trim(OUTFILE_prefix)//'-vprof.csv') !!!! for vertical profile output
       
 #if defined SEDIMENT_TESTMODE
     open(50,file='output/sedeco_rst.csv')!!!!!!!!!!!!!!!!!!!for debug
@@ -423,6 +424,215 @@ END SUBROUTINE files_close
     RETURN
 
   END SUBROUTINE write_env_lavel
+
+! **********************************************************************
+!  Write vertical profile of environmental data
+! **********************************************************************
+
+  SUBROUTINE write_env_vprof(fid, N)
+  
+    USE mod_param
+    
+    implicit none
+    
+    integer, intent(in) :: fid
+    integer, intent(in) :: N
+    real(8) :: depth_r
+#if defined CARBON_ISOTOPE
+    real(8) :: d13C_DIC
+#endif
+    integer :: i,j,k,nstp
+
+    i=1
+    j=1
+!    k=1
+    nstp=1
+    
+    write(fid,'(*(g0:,", "))') 'Depth', 'PFDsurf'  &
+        ,'Temp','Salt','DO','TA'   &
+#if defined CLUMPED_ISOTOPE 
+        ,'DIC','DIC_13C','DIC_47D'    &
+#elif defined CARBON_ISOTOPE  || defined CARBON_TRACE
+        ,'DIC','DIC_13C'              &
+#else
+        ,'DIC'                        &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'NO3','NO3_15N'  &
+        ,'NH4','NH4_15N'  &
+#else
+        ,'NO3'            &
+        ,'NH4'            &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'PO4','PO4_P1'   &
+#else
+        ,'PO4'            &
+#endif
+#if defined CLUMPED_ISOTOPE 
+        ,'LDOC','LDOC_13C','LDOC_47D' &
+        ,'RDOC','RDOC_13C','RDOC_47D' &
+        ,'LPOC','LPOC_13C','LPOC_47D' &
+        ,'RPOC','RPOC_13C','RPOC_47D' &
+        ,'CPOC','CPOC_13C','CPOC_47D' &
+#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+        ,'LDOC','LDOC_13C' &
+        ,'RDOC','RDOC_13C' &
+        ,'LPOC','LPOC_13C' &
+        ,'RPOC','RPOC_13C' &
+        ,'CPOC','CPOC_13C' &
+#else
+        ,'LDOC'            &
+        ,'RDOC'            &
+        ,'LPOC'            &
+        ,'RPOC'            &
+        ,'CPOC'            &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'LDON','LDON_15N' &
+        ,'RDON','RDON_15N' &
+        ,'LPON','LPON_15N' &
+        ,'RPON','RPON_15N' &
+        ,'CPON','CPON_15N' &
+#else
+        ,'LDON'            &
+        ,'RDON'            &
+        ,'LPON'            &
+        ,'RPON'            &
+        ,'CPON'            &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'LDOP','LDOP_P1'  &
+        ,'RDOP','RDOP_P1'  &
+        ,'LPOP','LPOP_P1'  &
+        ,'RPOP','RPOP_P1'  &
+        ,'CPOP','CPOP_P1'  &
+#else
+        ,'LDOP'            &
+        ,'RDOP'            &
+        ,'LPOP'            &
+        ,'RPOP'            &
+        ,'CPOP'            &
+#endif
+#if defined CLUMPED_ISOTOPE 
+        ,'PhyC1','PhyC1_13C','PhyC1_47D' &
+        ,'PhyC2','PhyC2_13C','PhyC2_47D' &
+        ,'PhyC3','PhyC3_13C','PhyC3_47D' &
+        ,'PhyC4','PhyC4_13C','PhyC4_47D' &
+        ,'ZooC1','ZooC1_13C','ZooC1_47D' &
+#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+        ,'PhyC1','PhyC1_13C' &
+        ,'PhyC2','PhyC2_13C' &
+        ,'PhyC3','PhyC3_13C' &
+        ,'PhyC4','PhyC4_13C' &
+        ,'ZooC1','ZooC1_13C' &
+#else
+        ,'PhyC1'             &
+        ,'PhyC2'             &
+        ,'PhyC3'             &
+        ,'PhyC4'             &
+        ,'ZooC1'             &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'PhyN1','PhyN1_15N' &
+        ,'PhyN2','PhyN2_15N' &
+        ,'PhyN3','PhyN3_15N' &
+        ,'PhyN4','PhyN4_15N' &
+        ,'ZooN1','ZooN1_15N' &
+#else
+        ,'PhyN1'             &
+        ,'PhyN2'             &
+        ,'PhyN3'             &
+        ,'PhyN4'             &
+        ,'ZooN1'             &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'PhyP1','PhyP1_P1' &
+        ,'PhyP2','PhyP2_P1' &
+        ,'PhyP3','PhyP3_P1' &
+        ,'PhyP4','PhyP4_P1' &
+        ,'ZooP1','ZooP1_P1' &
+#else
+        ,'PhyP1'             &
+        ,'PhyP2'             &
+        ,'PhyP3'             &
+        ,'PhyP4'             &
+        ,'ZooP1'             &
+#endif
+#if defined CLUMPED_ISOTOPE 
+        ,'PIC1','PIC1_13C','PIC1_47D' &
+        ,'PIC2','PIC2_13C','PIC2_47D' &
+#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+        ,'PIC1','PIC1_13C' &
+        ,'PIC2','PIC2_13C' &
+#else
+        ,'PIC1'             &
+        ,'PIC2'             &
+#endif
+        ,'PhyC_Total'       &
+#if defined CARBON_ISOTOPE
+        ,'d13C_DIC'                                                        &
+#endif
+#if defined COT_STARFISH
+        ,'COT','COTl'                                                      &
+#endif
+#if defined REEF_FLOW
+        ,'Q_rc', 'Q_ch','el_reef'                                          &
+#endif
+        ,'dz', 'el'
+
+!-----------------------------------------------------------------------
+#if defined CARBON_ISOTOPE
+    d13C_DIC=d13C_fromR13C(t(i,j,k,nstp,iTIC(iC13))/t(i,j,k,nstp,iTIC(iCt)))
+#endif
+
+!    depth = 0.0d0
+    Do k=N,1,-1
+
+      if (k==N) then
+        depth_r = dz(i,j,k)*0.5d0
+      else
+        depth_r = depth_r + dz(i,j,k)
+      endif
+
+      write(fid,'(*(g0:,", "))') depth_r, PFDsurf           &
+           , t(i,j,k,nstp,iTemp), t(i,j,k,nstp,iSalt)  &
+           , t(i,j,k,nstp,iOxyg), t(i,j,k,nstp,iTAlk)  &
+           , t(i,j,k,nstp,iTIC(1):iTIC(N_Csp))          &
+           , t(i,j,k,nstp,iNO3(1):iNO3(N_Nsp))          &
+           , t(i,j,k,nstp,iNH4(1):iNH4(N_Nsp))          &
+           , t(i,j,k,nstp,iPO4(1):iPO4(N_Psp))          &
+           , t(i,j,k,nstp,iDOC(1,1):iDOC(N_Csp,Ndom))   &
+           , t(i,j,k,nstp,iPOC(1,1):iPOC(N_Csp,Npom))   &
+           , t(i,j,k,nstp,iDON(1,1):iDON(N_Nsp,Ndom))   &
+           , t(i,j,k,nstp,iPON(1,1):iPON(N_Nsp,Npom))   &
+           , t(i,j,k,nstp,iDOP(1,1):iDOP(N_Psp,Ndom))   &
+           , t(i,j,k,nstp,iPOP(1,1):iPOP(N_Psp,Npom))   &
+           , t(i,j,k,nstp,iPhyC(1,1):iPhyC(N_Csp,Nphy)) &
+           , t(i,j,k,nstp,iZooC(1,1):iZooC(N_Csp,Nzoo)) &
+           , t(i,j,k,nstp,iPhyN(1,1):iPhyN(N_Nsp,Nphy)) &
+           , t(i,j,k,nstp,iZooN(1,1):iZooN(N_Nsp,Nzoo)) &
+           , t(i,j,k,nstp,iPhyP(1,1):iPhyP(N_Psp,Nphy)) &
+           , t(i,j,k,nstp,iZooP(1,1):iZooP(N_Psp,Nzoo)) &
+           , t(i,j,k,nstp,iPIC(1,1):iPIC(N_Csp,Npim))   &
+           , t(i,j,k,nstp,iPhyC(iCt,1))+t(i,j,k,nstp,iPhyC(iCt,2))  &
+            +t(i,j,k,nstp,iPhyC(iCt,3))+t(i,j,k,nstp,iPhyC(iCt,4))  &
+#if defined CARBON_ISOTOPE
+           , d13C_DIC                                                      &
+#endif
+#if defined COT_STARFISH
+           , t(i,j,k,nstp,iCOTe), t(i,j,k,nstp,iCOTl)                      &
+#endif
+#if defined REEF_FLOW
+           , REEF(1)%Qrc(1,1), REEF(1)%Qch(1,1), REEF(1)%el (1,1)          &
+#endif
+           , dz(i,j,k), tide
+
+      END DO      
+
+    RETURN
+
+  END SUBROUTINE write_env_vprof
 
 ! **********************************************************************
 !  Write lavel of reef_flow data
@@ -749,93 +959,93 @@ END SUBROUTINE write_crl_ave_lavel
         , 'Sal'                       & 
         , 'O2 '                       & 
         , 'TA '                       & 
-#if defined CLUMPED_ISOTOPE 
+# if defined CLUMPED_ISOTOPE 
         ,'DIC','DIC_13C','DIC_47D'    &
-#elif defined CARBON_ISOTOPE  || defined CARBON_TRACE
+# elif defined CARBON_ISOTOPE  || defined CARBON_TRACE
         ,'DIC','DIC_13C'              &
-#else
+# else
         ,'DIC'                        &
-#endif
-#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+# endif
+# if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
         ,'NO3','NO3_15N'  &
         ,'NH4','NH4_15N'  &
-#else
+# else
         ,'NO3'            &
         ,'NH4'            &
-#endif
-#if defined PHOSPHOROUS_TRACE
+# endif
+# if defined PHOSPHOROUS_TRACE
         ,'PO4','PO4_P1'   &
-#else
+# else
         ,'PO4'            &
-#endif
-#if defined CLUMPED_ISOTOPE 
+# endif
+# if defined CLUMPED_ISOTOPE 
         ,'LDOC','LDOC_13C','LDOC_47D' &
         ,'RDOC','RDOC_13C','RDOC_47D' &
         ,'LPOC','LPOC_13C','LPOC_47D' &
         ,'RPOC','RPOC_13C','RPOC_47D' &
         ,'CPOC','CPOC_13C','CPOC_47D' &
-#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+# elif defined CARBON_ISOTOPE || defined CARBON_TRACE
         ,'LDOC','LDOC_13C' &
         ,'RDOC','RDOC_13C' &
         ,'LPOC','LPOC_13C' &
         ,'RPOC','RPOC_13C' &
         ,'CPOC','CPOC_13C' &
-#else
+# else
         ,'LDOC'            &
         ,'RDOC'            &
         ,'LPOC'            &
         ,'RPOC'            &
         ,'CPOC'            &
-#endif
-#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+# endif
+# if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
         ,'LDON','LDON_15N' &
         ,'RDON','RDON_15N' &
         ,'LPON','LPON_15N' &
         ,'RPON','RPON_15N' &
         ,'CPON','CPON_15N' &
-#else
+# else
         ,'LDON'            &
         ,'RDON'            &
         ,'LPON'            &
         ,'RPON'            &
         ,'CPON'            &
-#endif
-#if defined PHOSPHOROUS_TRACE
+# endif
+# if defined PHOSPHOROUS_TRACE
         ,'LDOP','LDOP_P1'  &
         ,'RDOP','RDOP_P1'  &
         ,'LPOP','LPOP_P1'  &
         ,'RPOP','RPOP_P1'  &
         ,'CPOP','CPOP_P1'  &
-#else
+# else
         ,'LDOP'            &
         ,'RDOP'            &
         ,'LPOP'            &
         ,'RPOP'            &
         ,'CPOP'            &
-#endif
+# endif
         , 'Mn2 '           &
         , 'MnO2'           &
         , 'Fe2 '           &
-#if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
+# if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
         ,'FeS2','FeS2_34S' &
-#else
+# else
         ,'FeS2'            &
-#endif
+# endif
         , 'FeOOH'          &
-#if defined PHOSPHOROUS_TRACE
+# if defined PHOSPHOROUS_TRACE
         ,'FeOOH_PO4','FeOOH_PO4_P1'   &
-#else
+# else
         ,'FeOOH_PO4'                  &
-#endif
-#if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
+# endif
+# if defined SULFUR_ISOTOPE || defined SULFUR_TRACE
         , 'H2S', 'H2S_34S' &
         , 'SO4', 'SO4_34S' &
         , 'S0 ', 'S0_34S'     
-#else
+# else
         , 'H2S'            &
         , 'SO4'            &
         , 'S0 '   
-#endif
+# endif
     
     DO k=0,Nsed
       write(fid,'(*(g0:,", "))') zr(k)  &
