@@ -91,10 +91,10 @@ MODULE mod_reef_ecosys_param
   real(8), parameter :: rPCp(4)  = [  1d0/106d0,  1d0/106d0,  1d0/106d0,  1d0/106d0 ] ! (no dim.) Phy P:C ratio
   real(8), parameter :: rCaCp(4) = [      0.0d0,      0.0d0,      0.5d0,      0.0d0 ]  ! ***** (no dim.) CaCO3:OrgC ratio !!! Need Ref!!!!!!!!!!
 !                                        Gzoo
-!  real(8), parameter :: rNCz(1)  = [ 16d0/106d0 ]    ! (no dim.) Zoo  N:C ratio
-!  real(8), parameter :: rPCz(1)  = [  1d0/106d0 ]    ! (no dim.) Zoo  P:C ratio
-  real(8), parameter :: rNCz(1)  = [ 16d0/300d0 ]    ! (no dim.) Zoo  N:C ratio
-  real(8), parameter :: rPCz(1)  = [  1d0/300d0 ]    ! (no dim.) Zoo  P:C ratio
+  real(8), parameter :: rNCz(1)  = [ 16d0/106d0 ]    ! (no dim.) Zoo  N:C ratio
+  real(8), parameter :: rPCz(1)  = [  1d0/106d0 ]    ! (no dim.) Zoo  P:C ratio
+!  real(8), parameter :: rNCz(1)  = [ 16d0/300d0 ]    ! (no dim.) Zoo  N:C ratio  !! For mass balance test
+!  real(8), parameter :: rPCz(1)  = [  1d0/300d0 ]    ! (no dim.) Zoo  P:C ratio  !! For mass balance test
 
 
 ! ==== SEDECOSYS MODEL PARAMETER SETTINGS ===========================================================
