@@ -181,6 +181,9 @@ END SUBROUTINE allocate_reef_ecosys
     , sgd_NO3        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
     , sgd_NH4        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
     , sgd_PO4        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+    , sgd_DOC        &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic carbon (DOC: umol L-1)
+    , sgd_DON        &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic nitrogen (DON: umol L-1)
+    , sgd_DOP        &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic phosphrous (DOP: umol L-1)
 # endif
 # if defined SEDECO_BURIAL
     , Fdep_sed       &   ! Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
@@ -338,6 +341,9 @@ END SUBROUTINE allocate_reef_ecosys
     real(8), intent(in) :: sgd_NO3(N_Nsp)  ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
     real(8), intent(in) :: sgd_NH4(N_Nsp)  ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
     real(8), intent(in) :: sgd_PO4(N_Psp)  ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+    real(8), intent(in) :: sgd_DOC(N_Csp,Ndom)  ! SGD concentration coming in through bottom: DOC: Total dissolved organic carbon (DOC: umol L-1)
+    real(8), intent(in) :: sgd_DON(N_Nsp,Ndom)  ! SGD concentration coming in through bottom: DOC: Total dissolved organic nitrogen (DON: umol L-1)
+    real(8), intent(in) :: sgd_DOP(N_Psp,Ndom)  ! SGD concentration coming in through bottom: DOC: Total dissolved organic phosphrous (DOP: umol L-1)
 # endif
 # if defined SEDECO_BURIAL
     real(8), intent(in) :: Fdep_sed        ! Sedimentation rate (cm s-1) (Positive: sedimentation; Negative: erosion)
@@ -456,7 +462,7 @@ END SUBROUTINE allocate_reef_ecosys
     real(8) :: Fdep_POP(N_Nsp,Npom)
 # if defined ECOSYS_TESTMODE
 !  Output
-    real(8), parameter :: OUTPUT_INTERVAL = 1.0d0     ! Output interval (min)
+!    real(8), parameter :: ECOSYS_OUTPUT_INTERVAL = 1.0d0     ! Output interval (min)
     real(8), save :: dsec = 0.0d0 !sec
 # endif
 
@@ -769,6 +775,7 @@ END SUBROUTINE allocate_reef_ecosys
     PFDbott = PFDsurf !!! Photon flux density at sea bottom
 # endif
 
+# if defined ECOSYS_PM_VADV
 !-----------------------------------------------------------------------
 ! Vertical advection (sinking/flaoting) of POM and PIM
 !-----------------------------------------------------------------------
@@ -810,6 +817,7 @@ END SUBROUTINE allocate_reef_ecosys
     dPON_dt(:,:,:) = dPON_dt(:,:,:) + dPON(:,:,:)
     dPOP_dt(:,:,:) = dPOP_dt(:,:,:) + dPOP(:,:,:)
     dPIC_dt(:,2:Npim,:) = dPIC_dt(:,2:Npim,:) + dPIC(:,2:Npim,:)
+# endif
 
 !!!---------------------------------------------------------------------
 !!!  Benthic interactions.
@@ -1134,12 +1142,12 @@ END SUBROUTINE allocate_reef_ecosys
       SO4(iSt) = 0.02824d0*Sal(1)/35.0d0*rho_sw(1) *1.0d6 ! (umol L-1)
 !      SO4(iS34) = SO4(iSt)
 #   if defined SEDECO_BURIAL
-      Fdep_MnO2  = Fdep_sed*1.0d4 !!!! Check needed
-      Fdep_FeOOH = Fdep_sed*1.0d5 !!!! Check needed
-      Fdep_FeOOH_PO4(:) = Fdep_sed*0.0d0 !!!! Check needed
-      Fdep_FeS(:) = Fdep_sed *0.0d0 !!!! Check needed
-      Fdep_FeS2(:)= Fdep_sed *1.0d4 !!!! Check needed
-      Fdep_S0(:)  = Fdep_sed *0.0d0 !!!! Check needed
+      Fdep_MnO2  = Fdep_sed * MnO2_sed !!!! Check needed
+      Fdep_FeOOH = Fdep_sed * FeOOH_sed !!!! Check needed
+      Fdep_FeOOH_PO4(:) = Fdep_sed * 0.0d0 !!!! Check needed
+      Fdep_FeS(:) = Fdep_sed * 0.0d0 !!!! Check needed
+      Fdep_FeS2(:)= Fdep_sed * FeS2_sed !!!! Check needed
+      Fdep_S0(:)  = Fdep_sed * 0.0d0 !!!! Check needed
 #   else
       Fdep_MnO2  = 10d0  / 86400d0 !!!! Check needed
       Fdep_FeOOH = 100d0 / 86400d0 !!!! Check needed
@@ -1166,11 +1174,11 @@ END SUBROUTINE allocate_reef_ecosys
           , NH4(:,1)         &   ! NH4: NH4 (umol L-1)
           , PO4(:,1)         &   ! PO4: PO4 (umol L-1)
           , DOC(:,:,1)      &   ! DOC: Dissolved organic carbon (µmol L-1)
-          , POC(:,1:Npom-1,1)      &   ! POC: Particulate organic carbon (DOC: umol L-1)
+          , POC(:,:,1)      &   ! POC: Particulate organic carbon (DOC: umol L-1)
           , DON(:,:,1)       &   ! DOC: Dissolved organic nitrogen (µmol L-1)
-          , PON(:,1:Npom-1,1)       &   ! PON: Particulate organic nitrogen (PON: umol L-1)
+          , PON(:,:,1)       &   ! PON: Particulate organic nitrogen (PON: umol L-1)
           , DOP(:,:,1)       &   ! DOC: Dissolved organic phosporius (µmol L-1)
-          , POP(:,1:Npom-1,1)       &   ! POP: Particulate organic phosporius (POP: umol L-1)
+          , POP(:,:,1)       &   ! POP: Particulate organic phosporius (POP: umol L-1)
           , Mn2              &  ! Mn2: Manganese ion    (µmol L-1)
           , Fe2              &  ! Fe2: iron(II)         (µmol L-1)
           , H2S(:,1)         &  ! H2S: hydrogen sulfide (µmol L-1)
@@ -1178,9 +1186,9 @@ END SUBROUTINE allocate_reef_ecosys
 #   if defined SEDECO_BURIAL
           , Fdep_sed         &  ! Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
 #   endif
-          , -Fdep_POC(:,1:Npom-1)*100.0d0  &   ! POC deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive ! yt_edit POC deposition flux   ! double check advection scheme
-          , -Fdep_PON(:,1:Npom-1)*100.0d0  &   ! PON deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
-          , -Fdep_POP(:,1:Npom-1)*100.0d0  &   ! POP deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , -Fdep_POC(:,:)*100.0d0  &   ! POC deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive ! yt_edit POC deposition flux   ! double check advection scheme
+          , -Fdep_PON(:,:)*100.0d0  &   ! PON deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , -Fdep_POP(:,:)*100.0d0  &   ! POP deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Fdep_MnO2         &  ! MnO2 deposition flux (nmol cm-2 s-1)
           , Fdep_FeOOH        &  ! FeOOH depositoin flux (nmol cm-2 s-1)
           , Fdep_FeOOH_PO4(:) &  ! FeOOH_PO4 depositoin flux (nmol cm-2 s-1)
@@ -1197,6 +1205,9 @@ END SUBROUTINE allocate_reef_ecosys
           , sgd_NO3(:)        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
           , sgd_NH4(:)        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
           , sgd_PO4(:)        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+          , sgd_DOC(:,:)      &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic carbon (DOC: umol L-1)
+          , sgd_DON(:,:)      &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic nitrogen (DON: umol L-1)
+          , sgd_DOP(:,:)      &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic phosphrous (DOP: umol L-1)
 #   endif
 !         output parameters
           , Flux_Tmp          &   ! Temperature flux (oC cm s-1)  * direction of water column to sediment is positive
@@ -1208,11 +1219,11 @@ END SUBROUTINE allocate_reef_ecosys
           , Flux_NH4(:)       &   ! NH4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_PO4(:)       &   ! PO4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_DOC(:,:)     &   ! DOC(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_POC(:,1:Npom-1) &   ! POC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_POC(:,:) &   ! POC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
           , Flux_DON(:,:)        &   ! DON(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_PON(:,1:Npom-1) &   ! PON flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_PON(:,:) &   ! PON flux (nmol cm-2 s-1) * direction of water column to sediment is positive
           , Flux_DOP(:,:)        &   ! DOP(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_POP(:,1:Npom-1) &   ! POP flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_POP(:,:) &   ! POP flux (nmol cm-2 s-1) * direction of water column to sediment is positive
 #   if defined BLUE_TIDE         
 !          , Flux_Mn2       &   ! Mn2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
 !          , Flux_MnO2      &   ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
@@ -1244,11 +1255,11 @@ END SUBROUTINE allocate_reef_ecosys
       dNH4_dt(:,1) = dNH4_dt(:,1) - Flux_NH4(:) * cff
       dPO4_dt(:,1) = dPO4_dt(:,1) - Flux_PO4(:) * cff
       dDOC_dt(:,:,1) = dDOC_dt(:,:,1) - Flux_DOC(:,:) * cff
-      dPOC_dt(:,1:Npom-1,1) = dPOC_dt(:,1:Npom-1,1) - Flux_POC(:,1:Npom-1) * cff
+      dPOC_dt(:,:,1) = dPOC_dt(:,:,1) - Flux_POC(:,:) * cff
       dDON_dt(:,:,1) = dDON_dt(:,:,1) - Flux_DON(:,:) * cff
-      dPON_dt(:,1:Npom-1,1) = dPON_dt(:,1:Npom-1,1) - Flux_PON(:,1:Npom-1) * cff
+      dPON_dt(:,:,1) = dPON_dt(:,:,1) - Flux_PON(:,:) * cff
       dDOP_dt(:,:,1) = dDOP_dt(:,:,1) - Flux_DOP(:,:) * cff
-      dPOP_dt(:,1:Npom-1,1) = dPOP_dt(:,1:Npom-1,1) - Flux_POP(:,1:Npom-1) * cff
+      dPOP_dt(:,:,1) = dPOP_dt(:,:,1) - Flux_POP(:,:) * cff
 #   if defined BLUE_TIDE         
 !      Flux_Mn2         ! Mn2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
 !      Flux_MnO2        ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
@@ -1275,9 +1286,9 @@ END SUBROUTINE allocate_reef_ecosys
     
     IF( date*86400.0d0 >= dsec ) THEN
       if(dsec == 0.0d0) then
-        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+        dsec=date*86400.0d0+ECOSYS_OUTPUT_INTERVAL*60.0d0
       else
-        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+        dsec=dsec+ECOSYS_OUTPUT_INTERVAL*60.0d0
       endif
       
 #  ifdef CORAL_POLYP 
@@ -1443,7 +1454,7 @@ END SUBROUTINE allocate_reef_ecosys
     real(8), intent(out) :: Fb_trc         ! (mmol m-2 s-1) Bottom flux from sediment to water column (upward is positive)    
 
     real(8) :: dz_r(N-1)    
-    real(8) :: F(0:N),v(0:N-1)
+    real(8) :: F(0:N),v(0:N)
     integer :: k, ks
     integer :: kup
     real(8) :: dtrc_s, trct, tnewt, Courant

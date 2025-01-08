@@ -649,8 +649,8 @@ CONTAINS
 
 # if defined CORAL_TESTMODE
 !  Output
-    real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
-    real(8), parameter :: AVERAGE_INTERVAL = 1.0d0    ! Average interval (day)
+!    real(8), parameter :: CORAL_OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
+!    real(8), parameter :: CORAL_AVERAGE_INTERVAL = 1.0d0    ! Average interval (day)
     real(8), save :: dsec = 0.d0 !sec
     real(8), save :: dday = 0.d0 !day
     real(8), save :: S_PFD_dt(2)     = [ 0.d0, 0.d0 ]
@@ -1374,9 +1374,9 @@ DO isp=1,N_Psp
 
     IF( date*86400.0d0 >= dsec ) THEN
       if(dsec == 0.0d0) then
-        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+        dsec=date*86400.0d0+CORAL_OUTPUT_INTERVAL*60.0d0
       else
-        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+        dsec=dsec+CORAL_OUTPUT_INTERVAL*60.0d0
       endif
        
       write(10+n,'(*(g0:,", "))') date, PFD                                      &
@@ -1435,12 +1435,12 @@ DO isp=1,N_Psp
     S_d11BargxGn_dt(n)=S_d11BargxGn_dt(n)+d11Barg*CORAL(ng)%G (n,i,j)*dt
 #  endif
 
-!    IF(mod(int(date*86400.0d0), int(AVERAGE_INTERVAL*86400.0d0))==0) THEN
+!    IF(mod(int(date*86400.0d0), int(CORAL_AVERAGE_INTERVAL*86400.0d0))==0) THEN
     IF( date >= dday ) THEN   
       if(dday == 0.0d0) then
-        dday=date+AVERAGE_INTERVAL
+        dday=date+CORAL_AVERAGE_INTERVAL
       else
-        dday=dday+AVERAGE_INTERVAL
+        dday=dday+CORAL_AVERAGE_INTERVAL
       endif
 
       write(20+n,'(*(g0:,", "))') date    &
@@ -1675,7 +1675,7 @@ DO isp=1,N_Psp
 
 #  if defined CORAL_TESTMODE
 !  Output
-    real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
+!    real(8), parameter :: CORAL_OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
     real(8), save :: dsec = 0.d0 !sec
 #  endif
     integer :: isp
@@ -1841,9 +1841,13 @@ DO isp=1,N_Psp
 
 #  if defined CORAL_TESTMODE
 
-!    IF(mod(int(date*86400.0d0*100.0d0), int(OUTPUT_INTERVAL*60.0d0*100.0d0))==0) THEN
+!    IF(mod(int(date*86400.0d0*100.0d0), int(CORAL_OUTPUT_INTERVAL*60.0d0*100.0d0))==0) THEN
     IF( date*86400.0d0 >= dsec ) THEN
-      dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+      if(dsec == 0.0d0) then
+        dsec=date*86400.0d0+CORAL_OUTPUT_INTERVAL*60.0d0
+      else
+        dsec=dsec+CORAL_OUTPUT_INTERVAL*60.0d0
+      endif
 
       write(30+n,'(*(g0:,", "))')                                        &
          date, PFDsurf                                                   &
@@ -1994,7 +1998,7 @@ DO isp=1,N_Psp
     
 #  if defined CORAL_TESTMODE
 !  Output
-    real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
+!    real(8), parameter :: CORAL_OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
     real(8), save :: dsec = 0.d0 !sec
     real(8) :: FvFm       
     real(8) :: YII
@@ -2117,9 +2121,9 @@ DO isp=1,N_Psp
 
     IF( date*86400.0d0 >= dsec ) THEN
       if(dsec == 0.0d0) then
-        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+        dsec=date*86400.0d0+CORAL_OUTPUT_INTERVAL*60.0d0
       else
-        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+        dsec=dsec+CORAL_OUTPUT_INTERVAL*60.0d0
       endif
 
       KF = s_0/s_ab - 1.0d0

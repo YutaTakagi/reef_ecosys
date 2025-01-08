@@ -31,6 +31,9 @@ rm *.mod
 #
 mkdir -p output
 #
-./ecosys_test.exe < foodweb2022control.in
-#./ecosys_test.exe < foodweb2023.in
+./ecosys_test.exe < foodweb_C.in
+./ecosys_test.exe < foodweb_2NP.in
+./ecosys_test.exe < foodweb_N.in
+./ecosys_test.exe < foodweb_2N.in
+./ecosys_test.exe < foodweb_P.in
 #

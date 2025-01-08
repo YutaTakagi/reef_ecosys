@@ -26,15 +26,9 @@ PROGRAM main
 
   implicit none
   
-  integer, parameter :: Im = 1
-  integer, parameter :: Jm = 1
-  integer, parameter :: N  = 2
-
-  real(8), parameter :: dt = 1.0d0
-  integer, parameter :: isplitc  = 20
-  integer, parameter :: isplitsed  = 20
   integer, parameter :: Ngrids = 1
-
+  logical :: start_of_new_run = .true.
+     
   integer :: i,j,k,id, ng, Nid, nstp, isp, m
   integer :: nheat
   
@@ -43,63 +37,63 @@ PROGRAM main
   integer :: iflag = 1 ! Timer for setting 6
   integer :: iclose = 0 ! Timer for setting 6
 
-  real(8) :: Tmp(N)               ! Temperature (oC)
-  real(8) :: Sal(N)               ! Salinity (PSU)
-  real(8) :: DOx(N)               ! Dissolved oxygen (umol L-1)
-  real(8) :: TA (N)               ! Total alkalinity (TA: umol kg-1)
-  real(8) :: DIC(N_Csp,N)           ! Total dissolved inorganic carbon (DIC: umol kg-1)
-  real(8) :: NO3(N_Nsp,N)           ! NO3 (umol L-1)
-  real(8) :: NH4(N_Nsp,N)           ! NH4 (umol L-1)
-  real(8) :: PO4(N_Nsp,N)           ! PO4 (umol L-1)
-  real(8) :: DOC(N_Csp,Ndom,N)      ! Dissolved organic carbon (DOC: umol L-1)
-  real(8) :: POC(N_Csp,Npom,N)      ! Particulate organic carbon (POC: umol L-1)
-  real(8) :: DON(N_Nsp,Ndom,N)      ! Labile Dissolved organic nitrogen (DON: umol L-1)
-  real(8) :: PON(N_Nsp,Npom,N)      ! Particulate organic nitrogen (PON: umol L-1)
-  real(8) :: DOP(N_Psp,Ndom,N)      ! Labile Dissolved organic phosporius (DOP: umol L-1)
-  real(8) :: POP(N_Psp,Npom,N)      ! Particulate organic phosporius (POP: umol L-1)
-  real(8) :: PhyC(N_Csp,Nphy,N)     ! phytoplankton C biomass (umol C L-1), dinoflagellate
-  real(8) :: ZooC(N_Csp,Nzoo,N)     ! zooplankton C biomass (umol C L-1)
-  real(8) :: PhyN(N_Nsp,Nphy,N)     ! phytoplankton N biomass (umol N L-1), dinoflagellate
-  real(8) :: ZooN(N_Nsp,Nzoo,N)     ! zooplankton N biomass (umol N L-1)
-  real(8) :: PhyP(N_Psp,Nphy,N)     ! phytoplankton P biomass (umol P L-1), dinoflagellate
-  real(8) :: ZooP(N_Psp,Nzoo,N)     ! zooplankton P biomass (umol P L-1)
-  real(8) :: PIC (N_Csp,Npim,N)     ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+  real(8), allocatable :: Tmp(:)               ! Temperature (oC)
+  real(8), allocatable :: Sal(:)               ! Salinity (PSU)
+  real(8), allocatable :: DOx(:)               ! Dissolved oxygen (umol L-1)
+  real(8), allocatable :: TA (:)               ! Total alkalinity (TA: umol kg-1)
+  real(8), allocatable :: DIC(:,:)           ! Total dissolved inorganic carbon (DIC: umol kg-1)
+  real(8), allocatable :: NO3(:,:)           ! NO3 (umol L-1)
+  real(8), allocatable :: NH4(:,:)           ! NH4 (umol L-1)
+  real(8), allocatable :: PO4(:,:)           ! PO4 (umol L-1)
+  real(8), allocatable :: DOC(:,:,:)      ! Dissolved organic carbon (DOC: umol L-1)
+  real(8), allocatable :: POC(:,:,:)      ! Particulate organic carbon (POC: umol L-1)
+  real(8), allocatable :: DON(:,:,:)      ! Labile Dissolved organic nitrogen (DON: umol L-1)
+  real(8), allocatable :: PON(:,:,:)      ! Particulate organic nitrogen (PON: umol L-1)
+  real(8), allocatable :: DOP(:,:,:)      ! Labile Dissolved organic phosporius (DOP: umol L-1)
+  real(8), allocatable :: POP(:,:,:)      ! Particulate organic phosporius (POP: umol L-1)
+  real(8), allocatable :: PhyC(:,:,:)     ! phytoplankton C biomass (umol C L-1), dinoflagellate
+  real(8), allocatable :: ZooC(:,:,:)     ! zooplankton C biomass (umol C L-1)
+  real(8), allocatable :: PhyN(:,:,:)     ! phytoplankton N biomass (umol N L-1), dinoflagellate
+  real(8), allocatable :: ZooN(:,:,:)     ! zooplankton N biomass (umol N L-1)
+  real(8), allocatable :: PhyP(:,:,:)     ! phytoplankton P biomass (umol P L-1), dinoflagellate
+  real(8), allocatable :: ZooP(:,:,:)     ! zooplankton P biomass (umol P L-1)
+  real(8), allocatable :: PIC (:,:,:)     ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
 #if defined COT_STARFISH         
-  real(8) :: COTe(N)         ! COT starfish egg (umol L-1)
-  real(8) :: COTl(N)         ! COT starfish larvae (umol L-1)
+  real(8), allocatable :: COTe(:)         ! COT starfish egg (umol L-1)
+  real(8), allocatable :: COTl(:)         ! COT starfish larvae (umol L-1)
 #endif
 
-  real(8) :: dTemp_dt(N)            ! Tmp(N): Temperature (oC)
-  real(8) :: dSalt_dt(N)            ! Sal(N): Salinity (PSU)
-  real(8) :: dDOx_dt(N)             ! dDOx/dt  (umol L-1 s-1) 
-  real(8) :: dTA_dt (N)             ! dTA/dt   (umol kg-1 s-1) 
-  real(8) :: dDIC_dt(N_Csp,N)       ! dDIC/dt  (umol kg-1 s-1)  1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
-  real(8) :: dNO3_dt(N_Nsp,N)       ! dNO3/dt (umol L-1 s-1)
-  real(8) :: dNH4_dt(N_Nsp,N)       ! dNH4/dt (umol L-1 s-1)
-  real(8) :: dPO4_dt(N_Psp,N)       ! dPO4/dt (umol L-1 s-1)
-  real(8) :: dDOC_dt(N_Csp,Ndom,N)  ! dDOC/dt  (umol L-1 s-1) 
-  real(8) :: dPOC_dt(N_Csp,Npom,N)  ! dPOC/dt  (umol L-1 s-1) 
-  real(8) :: dDON_dt(N_Nsp,Ndom,N)  ! dDON/dt (umol L-1 s-1)
-  real(8) :: dPON_dt(N_Nsp,Npom,N)  ! dPON/dt (umol L-1 s-1)
-  real(8) :: dDOP_dt(N_Psp,Ndom,N)  ! dDOP/dt (umol L-1 s-1)
-  real(8) :: dPOP_dt(N_Psp,Npom,N)  ! dPOP/dt (umol L-1 s-1)
-  real(8) :: dPhyC_dt(N_Csp,Nphy,N) ! dPhyC/dt  (umolC L-1 s-1)  
-  real(8) :: dZooC_dt(N_Csp,Nzoo,N) ! dZooC/dt  (umolC L-1 s-1)  
-  real(8) :: dPhyN_dt(N_Nsp,Nphy,N) ! dPhyN/dt  (umolN L-1 s-1)  
-  real(8) :: dZooN_dt(N_Nsp,Nzoo,N) ! dZooN/dt  (umolN L-1 s-1)  
-  real(8) :: dPhyP_dt(N_Psp,Nphy,N) ! dPhyP/dt  (umolP L-1 s-1)  
-  real(8) :: dZooP_dt(N_Psp,Nzoo,N) ! dZooP/dt  (umolP L-1 s-1)  
-  real(8) :: dPIC_dt (N_Csp,Npim,N) ! dPIC/dt  (umol L-1 s-1) 
+  real(8), allocatable :: dTemp_dt(:)            ! Tmp(N): Temperature (oC)
+  real(8), allocatable :: dSalt_dt(:)            ! Sal(N): Salinity (PSU)
+  real(8), allocatable :: dDOx_dt(:)             ! dDOx/dt  (umol L-1 s-1) 
+  real(8), allocatable :: dTA_dt (:)             ! dTA/dt   (umol kg-1 s-1) 
+  real(8), allocatable :: dDIC_dt(:,:)       ! dDIC/dt  (umol kg-1 s-1)  1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
+  real(8), allocatable :: dNO3_dt(:,:)       ! dNO3/dt (umol L-1 s-1)
+  real(8), allocatable :: dNH4_dt(:,:)       ! dNH4/dt (umol L-1 s-1)
+  real(8), allocatable :: dPO4_dt(:,:)       ! dPO4/dt (umol L-1 s-1)
+  real(8), allocatable :: dDOC_dt(:,:,:)  ! dDOC/dt  (umol L-1 s-1) 
+  real(8), allocatable :: dPOC_dt(:,:,:)  ! dPOC/dt  (umol L-1 s-1) 
+  real(8), allocatable :: dDON_dt(:,:,:)  ! dDON/dt (umol L-1 s-1)
+  real(8), allocatable :: dPON_dt(:,:,:)  ! dPON/dt (umol L-1 s-1)
+  real(8), allocatable :: dDOP_dt(:,:,:)  ! dDOP/dt (umol L-1 s-1)
+  real(8), allocatable :: dPOP_dt(:,:,:)  ! dPOP/dt (umol L-1 s-1)
+  real(8), allocatable :: dPhyC_dt(:,:,:) ! dPhyC/dt  (umolC L-1 s-1)  
+  real(8), allocatable :: dZooC_dt(:,:,:) ! dZooC/dt  (umolC L-1 s-1)  
+  real(8), allocatable :: dPhyN_dt(:,:,:) ! dPhyN/dt  (umolN L-1 s-1)  
+  real(8), allocatable :: dZooN_dt(:,:,:) ! dZooN/dt  (umolN L-1 s-1)  
+  real(8), allocatable :: dPhyP_dt(:,:,:) ! dPhyP/dt  (umolP L-1 s-1)  
+  real(8), allocatable :: dZooP_dt(:,:,:) ! dZooP/dt  (umolP L-1 s-1)  
+  real(8), allocatable :: dPIC_dt (:,:,:) ! dPIC/dt  (umol L-1 s-1) 
 #if defined COT_STARFISH         
-  real(8) :: dCOTe_dt(N)    ! dCOTe/dt (umol L-1 s-1)
-  real(8) :: dCOTl_dt(N)    ! dCOTl/dt (umol L-1 s-1)
+  real(8), allocatable :: dCOTe_dt(:)    ! dCOTe/dt (umol L-1 s-1)
+  real(8), allocatable :: dCOTl_dt(:)    ! dCOTl/dt (umol L-1 s-1)
 #endif
 
 #if defined CARBON_ISOTOPE
   real(8) :: R13C
 #endif
 !  For Output      
-  real(8), parameter :: OUTPUT_INTERVAL = 60.0d0 !1d0/60d0 !60.0d0 !1.0d0     ! Output interval (min)
+!  real(8), parameter :: ECOSYS_OUTPUT_INTERVAL = 60.0d0 !1d0/60d0 !60.0d0 !1.0d0     ! Output interval (min)
   real(8) :: dsec = 0.d0 !sec
   
   real(8) :: h1,h2
@@ -109,33 +103,97 @@ PROGRAM main
   integer :: in_file(12)
   real(8) :: Tmax, time0
   integer :: nSetting
-#ifdef SEDIMENT_ECOSYS
-!  integer :: Nsed
-#endif
-  logical :: start_of_new_run = .true.
-     
+  integer :: Im, Jm, N
+  real(8) :: dt
+  integer :: isplitc, isplitsed
+
+  real(8) :: Fdep_sed_in
+  real(8) :: MnO2_sed_in, FeOOH_sed_in, FeS2_sed_in
+  real(8) :: rCaCO3_sed_in, OrgC_sed_in
+  real(8) :: sgd_flux_in, sgd_Tmp_in, sgd_Sal_in, sgd_DOx_in 
+  real(8) :: sgd_TA_in, sgd_DIC_in, sgd_NO3_in, sgd_NH4_in 
+  real(8) :: sgd_PO4_in
+  real(8) :: sgd_DOC_in(Ndom), sgd_DON_in(Ndom), sgd_DOP_in(Ndom)
 
   namelist/input_info/in_file
   namelist/ecosys_config/Tmax, time0
   namelist/ecosys_config/nSetting
+  namelist/ecosys_config/Im, Jm, N
+  namelist/ecosys_config/dt, isplitc, isplitsed
 
-#ifdef SEDIMENT_ECOSYS
-!  namelist/sedecosys_config/Nsed
-#endif
+  namelist/sedeco_config/Fdep_sed_in
+  namelist/sedeco_config/MnO2_sed_in, FeOOH_sed_in, FeS2_sed_in
+  namelist/sedeco_config/rCaCO3_sed_in, OrgC_sed_in
+  namelist/sedeco_config/sgd_flux_in, sgd_Tmp_in, sgd_Sal_in, sgd_DOx_in
+  namelist/sedeco_config/sgd_TA_in, sgd_DIC_in, sgd_NO3_in, sgd_NH4_in
+  namelist/sedeco_config/sgd_PO4_in
+  namelist/sedeco_config/sgd_DOC_in, sgd_DON_in, sgd_DOP_in
+
 
   read (5, nml=input_info)
   rewind(5)
   read (5, nml=ecosys_config)
   rewind(5)
-#ifdef SEDIMENT_ECOSYS
-!  read (5, nml=sedecosys_config)
-!  rewind(5)
-#endif
+  read (5, nml=sedeco_config)
+  rewind(5)
+
 
   ng=1
   i=1
   j=1
   nstp=1
+
+  allocate( Tmp(N)             ) ! Temperature (oC)
+  allocate( Sal(N)             ) ! Salinity (PSU)
+  allocate( DOx(N)             ) ! Dissolved oxygen (umol L-1)
+  allocate( TA (N)             ) ! Total alkalinity (TA: umol kg-1)
+  allocate( DIC(N_Csp,N)       )   ! Total dissolved inorganic carbon (DIC: umol kg-1)
+  allocate( NO3(N_Nsp,N)       )   ! NO3 (umol L-1)
+  allocate( NH4(N_Nsp,N)       )   ! NH4 (umol L-1)
+  allocate( PO4(N_Nsp,N)       )   ! PO4 (umol L-1)
+  allocate( DOC(N_Csp,Ndom,N)  )   ! Dissolved organic carbon (DOC: umol L-1)
+  allocate( POC(N_Csp,Npom,N)  )   ! Particulate organic carbon (POC: umol L-1)
+  allocate( DON(N_Nsp,Ndom,N)  )   ! Labile Dissolved organic nitrogen (DON: umol L-1)
+  allocate( PON(N_Nsp,Npom,N)  )   ! Particulate organic nitrogen (PON: umol L-1)
+  allocate( DOP(N_Psp,Ndom,N)  )   ! Labile Dissolved organic phosporius (DOP: umol L-1)
+  allocate( POP(N_Psp,Npom,N)  )   ! Particulate organic phosporius (POP: umol L-1)
+  allocate( PhyC(N_Csp,Nphy,N) )   ! phytoplankton C biomass (umol C L-1), dinoflagellate
+  allocate( ZooC(N_Csp,Nzoo,N) )   ! zooplankton C biomass (umol C L-1)
+  allocate( PhyN(N_Nsp,Nphy,N) )   ! phytoplankton N biomass (umol N L-1), dinoflagellate
+  allocate( ZooN(N_Nsp,Nzoo,N) )   ! zooplankton N biomass (umol N L-1)
+  allocate( PhyP(N_Psp,Nphy,N) )   ! phytoplankton P biomass (umol P L-1), dinoflagellate
+  allocate( ZooP(N_Psp,Nzoo,N) )   ! zooplankton P biomass (umol P L-1)
+  allocate( PIC (N_Csp,Npim,N) )   ! Particulate inorganic carbon (PIC: umol L-1), coccolith (CaCO3)
+#if defined COT_STARFISH         
+  allocate( COTe(N)            )   ! COT starfish egg (umol L-1)
+  allocate( COTl(N)            )   ! COT starfish larvae (umol L-1)
+#endif
+
+  allocate( dTemp_dt(N)            ) ! Tmp(N): Temperature (oC)
+  allocate( dSalt_dt(N)            ) ! Sal(N): Salinity (PSU)
+  allocate( dDOx_dt(N)             ) ! dDOx/dt  (umol L-1 s-1) 
+  allocate( dTA_dt (N)             ) ! dTA/dt   (umol kg-1 s-1) 
+  allocate( dDIC_dt(N_Csp,N)       ) ! dDIC/dt  (umol kg-1 s-1)  1 mmol m-3 = 1 umol L-1 = 1/1.024 umol kg-1
+  allocate( dNO3_dt(N_Nsp,N)       ) ! dNO3/dt (umol L-1 s-1)
+  allocate( dNH4_dt(N_Nsp,N)       ) ! dNH4/dt (umol L-1 s-1)
+  allocate( dPO4_dt(N_Psp,N)       ) ! dPO4/dt (umol L-1 s-1)
+  allocate( dDOC_dt(N_Csp,Ndom,N)  ) ! dDOC/dt  (umol L-1 s-1) 
+  allocate( dPOC_dt(N_Csp,Npom,N)  ) ! dPOC/dt  (umol L-1 s-1) 
+  allocate( dDON_dt(N_Nsp,Ndom,N)  ) ! dDON/dt (umol L-1 s-1)
+  allocate( dPON_dt(N_Nsp,Npom,N)  ) ! dPON/dt (umol L-1 s-1)
+  allocate( dDOP_dt(N_Psp,Ndom,N)  ) ! dDOP/dt (umol L-1 s-1)
+  allocate( dPOP_dt(N_Psp,Npom,N)  ) ! dPOP/dt (umol L-1 s-1)
+  allocate( dPhyC_dt(N_Csp,Nphy,N) ) ! dPhyC/dt  (umolC L-1 s-1)  
+  allocate( dZooC_dt(N_Csp,Nzoo,N) ) ! dZooC/dt  (umolC L-1 s-1)  
+  allocate( dPhyN_dt(N_Nsp,Nphy,N) ) ! dPhyN/dt  (umolN L-1 s-1)  
+  allocate( dZooN_dt(N_Nsp,Nzoo,N) ) ! dZooN/dt  (umolN L-1 s-1)  
+  allocate( dPhyP_dt(N_Psp,Nphy,N) ) ! dPhyP/dt  (umolP L-1 s-1)  
+  allocate( dZooP_dt(N_Psp,Nzoo,N) ) ! dZooP/dt  (umolP L-1 s-1)  
+  allocate( dPIC_dt (N_Csp,Npim,N) ) ! dPIC/dt  (umol L-1 s-1) 
+#if defined COT_STARFISH         
+  allocate( dCOTe_dt(N)            ) ! dCOTe/dt (umol L-1 s-1)
+  allocate( dCOTl_dt(N)            ) ! dCOTl/dt (umol L-1 s-1)
+#endif
 
 !----- Open output files -------------------------
 
@@ -154,6 +212,11 @@ PROGRAM main
   endif
 
 !----- Set initial conditions -------------------------
+  MnO2_sed  = MnO2_sed_in   !! Manganese oxide (MnO2) concentration in sediments [nmol/g(DW)]
+  FeOOH_sed = FeOOH_sed_in  !! Iron hydroxide (FeOOH) concentration in sediments [nmol/g(DW)]
+  FeS2_sed  = FeS2_sed_in   !! Iron sulfide (FeS2) concentration in sediments [nmol/g(DW)]
+  OrgC_sed  = OrgC_sed_in   ! Organic carbon in sediments [nmol/g(DW)]
+  rCaCO3_sed = rCaCO3_sed_in ! Fraction of Calcium carbonate (CaCO3) in sediments [% DW]
 
 #if defined USE_HEAT
   CALL initialize_heat(1, Ngrids, 1, Im, 1, Jm)
@@ -344,18 +407,30 @@ PROGRAM main
 #endif
 
 #if defined SEDECO_SGD && defined SGD_ON
-    sgd_flux  = 0d0 !1.0d-2   ! sumbarine groundwater discharge rate (cm s-1)  This flux is assumed to be the same throughout the sediment ecosystem layers (no compression/expansion) So volume flux doesn't change but concentrations of tracers do
-    sgd_Tmp   = 20.0d0  ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
-    sgd_Sal   = 5.0d0  ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
-    sgd_DOx   = 10.0d0  ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
-    sgd_TA    = 3500.0d0  ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
-    sgd_DIC(:)= 3500.0d0  ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
-    sgd_NO3(:)= 100.0d0  ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
-    sgd_NH4(:)= 1.0d0  ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
-    sgd_PO4(:)= 1.0d0  ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+    sgd_flux  = sgd_flux_in
+    sgd_Tmp   = sgd_Tmp_in 
+    sgd_Sal   = sgd_Sal_in 
+    sgd_DOx   = sgd_DOx_in
+    sgd_TA    = sgd_TA_in
+
+    sgd_DIC(:)= 0.0d0     
+    sgd_NO3(:)= 0.0d0 
+    sgd_NH4(:)= 0.0d0 
+    sgd_PO4(:)= 0.0d0 
+    sgd_DOC(:,:)= 0.0d0
+    sgd_DON(:,:)= 0.0d0
+    sgd_DOP(:,:)= 0.0d0
+
+    sgd_DIC(iCt)= sgd_DIC_in
+    sgd_NO3(iNt)= sgd_NO3_in 
+    sgd_NH4(iNt)= sgd_NH4_in 
+    sgd_PO4(iPt)= sgd_PO4_in 
+    sgd_DOC(iCt,:)= sgd_DOC_in
+    sgd_DON(iNt,:)= sgd_DON_in
+    sgd_DOP(iPt,:)= sgd_DOP_in
 #endif
 #if defined SEDECO_BURIAL
-    Fdep_sed = -3.0d-8  ! 2.77d-8 g/cm2/s = 1.0 g/m2/h; Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
+    Fdep_sed = Fdep_sed_in  ! 2.77d-8 g/cm2/s = 1.0 g/m2/h; Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
 #endif
 
     CALL reef_ecosys          &
@@ -418,6 +493,9 @@ PROGRAM main
       , sgd_NO3        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
       , sgd_NH4        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
       , sgd_PO4        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+      , sgd_DOC        &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic carbon (DOC: umol L-1)
+      , sgd_DON        &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic nitrogen (DON: umol L-1)
+      , sgd_DOP        &   ! SGD concentration coming in through bottom: DOC: Total dissolved organic phosphrous (DOP: umol L-1)
 #endif
 #if defined SEDECO_BURIAL
       , Fdep_sed       &   ! Sedimentation rate (g cm-2 s-1) (Positive: sedimentation; Negative: erosion)
@@ -570,7 +648,7 @@ PROGRAM main
 
           t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt(k,id)*dt
 #if defined SEDECO_SGD && defined SGD_ON
-          ! Volume flux by SGD and overflow is assumed 
+          ! Overflowing of the SGD volume flux is assumed 
           dtrc_dt_sgd = -0.01d0*sgd_flux *t(i,j,k,nstp,id)/dz(i,j,1)
           t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt_sgd*dt
 #endif
@@ -749,9 +827,9 @@ PROGRAM main
 
     if( time*86400.0d0 >= dsec ) THEN
       if(dsec == 0.0d0) then
-        dsec=time*86400.0d0+OUTPUT_INTERVAL*60.0d0
+        dsec=time*86400.0d0+ECOSYS_OUTPUT_INTERVAL*60.0d0
       else
-        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+        dsec=dsec+ECOSYS_OUTPUT_INTERVAL*60.0d0
       endif
       
       write(*,*) 'Time (day): ', time  ! Output for standard out

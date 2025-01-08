@@ -211,6 +211,9 @@ MODULE mod_param
   real(8) :: sgd_NO3(N_Nsp)  ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
   real(8) :: sgd_NH4(N_Nsp)  ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
   real(8) :: sgd_PO4(N_Psp)  ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
+  real(8) :: sgd_DOC(N_Csp,Ndom)  ! SGD concentration coming in through bottom: DOC: Total dissolved organic carbon (DOC: umol L-1)
+  real(8) :: sgd_DON(N_Nsp,Ndom)  ! SGD concentration coming in through bottom: DOC: Total dissolved organic nitrogen (DON: umol L-1)
+  real(8) :: sgd_DOP(N_Psp,Ndom)  ! SGD concentration coming in through bottom: DOC: Total dissolved organic phosphrous (DOP: umol L-1)
 #endif
 #if defined SEDECO_BURIAL
   real(8) :: Fdep_sed        ! Sedimentation rate (cm s-1) (Positive: sedimentation; Negative: erosion)
@@ -241,8 +244,8 @@ contains
     real(8) :: TAlk0, TIC_0, Oxyg0
     real(8) :: NO3_0, NH4_0, PO4_0
     real(8) :: DOC_0(Ndom), POC_0(Npom), PhyC_0(Nphy), ZooC_0(Nzoo), PIC_0(Npim)
-    real(8) :: DON_0(Ndom), PON_0(Npom), PhyN_0(Nphy), ZooN_0(Nzoo)
-    real(8) :: DOP_0(Ndom), POP_0(Npom), PhyP_0(Nphy), ZooP_0(Nzoo)
+!    real(8) :: DON_0(Ndom), PON_0(Npom), PhyN_0(Nphy), ZooN_0(Nzoo)
+!    real(8) :: DOP_0(Ndom), POP_0(Npom), PhyP_0(Nphy), ZooP_0(Nzoo)
     real(8) :: d13C_TIC0, d13C_DOC_0(Ndom), d13C_POC_0(Npom)
     real(8) :: d13C_PhyC_0(Nphy), d13C_ZooC_0(Nzoo), d13C_PIC_0(Npim)
     real(8) :: d15N_NO3_0, d15N_NH4_0, d15N_DON_0(Ndom), d15N_PON_0(Npom)
@@ -253,8 +256,8 @@ contains
     namelist/initial/TAlk0, TIC_0, Oxyg0
     namelist/initial/NO3_0, NH4_0, PO4_0
     namelist/initial/DOC_0, POC_0, PhyC_0, ZooC_0, PIC_0
-    namelist/initial/DON_0, PON_0, PhyN_0, ZooN_0
-    namelist/initial/DOP_0, POP_0, PhyP_0, ZooP_0
+!    namelist/initial/DON_0, PON_0, PhyN_0, ZooN_0
+!    namelist/initial/DOP_0, POP_0, PhyP_0, ZooP_0
     namelist/initial/d13C_TIC0, d13C_DOC_0, d13C_POC_0
     namelist/initial/d13C_PhyC_0, d13C_ZooC_0, d13C_PIC_0
     namelist/initial/d15N_NO3_0, d15N_NH4_0, d15N_DON_0, d15N_PON_0
@@ -440,7 +443,6 @@ contains
             t(i,j,k,nstp,iDON(iNt,m)) = DOC_0(m)*16d0/106d0     !DON  (umol L-1) 
             t(i,j,k,nstp,iDOP(iPt,m)) = DOC_0(m)/106d0     !DOP  (umol L-1) 
           END DO
-          write(*,*) 'DEBUG0',iDOC(1,1),iDOC(N_Csp,Ndom),t(i,j,k,nstp,iDOC(1,1):iDOC(N_Csp,Ndom))
           DO m=1,Npom
             t(i,j,k,nstp,iPOC(iCt,m)) = POC_0(m)       !POC  (umol L-1) 
 !            t(i,j,k,nstp,iPON(iNt,m)) = PON_0(m)     !PON  (umol L-1) 
@@ -452,19 +454,21 @@ contains
             t(i,j,k,nstp,iPhyC(iCt,m)) = PhyC_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
 !            t(i,j,k,nstp,iPhyN(iNt,m)) = PhyN_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
 !            t(i,j,k,nstp,iPhyP(iPt,m)) = PhyP_0(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-            t(i,j,k,nstp,iPhyN(iNt,m)) = PhyC_0(m)*16d0/106d0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
-            t(i,j,k,nstp,iPhyP(iPt,m)) = PhyC_0(m)/106d0     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+            t(i,j,k,nstp,iPhyN(iNt,m)) = PhyC_0(m)*rNCp(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
+            t(i,j,k,nstp,iPhyP(iPt,m)) = PhyC_0(m)*rPCp(m)     !Phytoplankton1 0.3(umolC L-1) all0.561 0.746-gC/gchla-1h 2.23-gC/gchla-30 4.47-gC/gchla-60	others
           END DO
           DO m=1,Nzoo
             t(i,j,k,nstp,iZooC(iCt,m)) = ZooC_0(m)     !Zooplankton (umol L-1)1.3
 !            t(i,j,k,nstp,iZooN(iNt,m)) = ZooN_0(m)     !Zooplankton (umol L-1)1.3
 !            t(i,j,k,nstp,iZooP(iPt,m)) = ZooP_0(m)     !Zooplankton (umol L-1)1.3
-            t(i,j,k,nstp,iZooN(iNt,m)) = ZooC_0(m)*16d0/106d0     !Zooplankton (umol L-1)1.3
-            t(i,j,k,nstp,iZooP(iPt,m)) = ZooC_0(m)/106d0     !Zooplankton (umol L-1)1.3
+            t(i,j,k,nstp,iZooN(iNt,m)) = ZooC_0(m)*rNCz(m)     !Zooplankton (umol L-1)1.3
+            t(i,j,k,nstp,iZooP(iPt,m)) = ZooC_0(m)*rPCz(m)     !Zooplankton (umol L-1)1.3
           END DO
           DO m=1,Npim
             t(i,j,k,nstp,iPIC (iCt,m)) = PIC_0 (m)     !Particulated inorganic carbon (umol L-1)1.3
           END DO
+          t(i,j,k,nstp,iPIC (iCt,iLive)) = PhyC_0(iCcl)*rCaCp(iCcl)     !Particulated inorganic carbon (umol L-1)
+
 #if defined CARBON_ISOTOPE
           R13C=R13C_fromd13C(d13C_TIC0)
           t(i,j,k,nstp,iT13C) =R13C*t(i,j,k,nstp,iTIC_) !DI13C (umol kg-1) 

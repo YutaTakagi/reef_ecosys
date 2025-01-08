@@ -65,7 +65,7 @@ CONTAINS
     , R_FeS          &   ! d[FeS]/dt (nmol g(DW)-1 s-1) *solid
     , R_FeS2         &   ! d[FeS2]/dt (nmol g(DW)-1 s-1) *solid
     , R_FeOOH        &   ! d[FeOOH]/dt (nmol g(DW)-1 s-1) *solid
-    , R_FeOOH_PO4    &   ! d[FeOOH=O4]/dt (nmol g(DW)-1 s-1) *solid
+    , R_FeOOH_PO4    &   ! d[FeOOH=PO4]/dt (nmol g(DW)-1 s-1) *solid
     , R_H2S          &   ! d[H2S]/dt (umol L-1 s-1)
     , R_S0           &   ! d[S]/dt (nmol g(DW)-1 s-1) *solid
     , R_SO4          &   ! d[SO42-]/dt (umol L-1 s-1)
@@ -90,11 +90,11 @@ CONTAINS
     real(8), intent(in) :: NH4(N_Nsp)
     real(8), intent(in) :: PO4(N_Psp)
     real(8), intent(in) :: DOC(N_Csp,Ndom)   
-    real(8), intent(in) :: POC(N_Csp,Npom-1) 
+    real(8), intent(in) :: POC(N_Csp,Npom) 
     real(8), intent(in) :: DON(N_Nsp,Ndom)   
-    real(8), intent(in) :: PON(N_Nsp,Npom-1) 
+    real(8), intent(in) :: PON(N_Nsp,Npom) 
     real(8), intent(in) :: DOP(N_Psp,Ndom)   
-    real(8), intent(in) :: POP(N_Psp,Npom-1) 
+    real(8), intent(in) :: POP(N_Psp,Npom) 
     real(8), intent(in) :: Mn2 
     real(8), intent(in) :: MnO2
     real(8), intent(in) :: Fe2 
@@ -115,11 +115,11 @@ CONTAINS
     real(8), intent(inout) :: R_NH4(N_Nsp)
     real(8), intent(inout) :: R_PO4(N_Psp)
     real(8), intent(inout) :: R_DOC(N_Csp,Ndom)   
-    real(8), intent(inout) :: R_POC(N_Csp,Npom-1) 
+    real(8), intent(inout) :: R_POC(N_Csp,Npom) 
     real(8), intent(inout) :: R_DON(N_Nsp,Ndom)   
-    real(8), intent(inout) :: R_PON(N_Nsp,Npom-1) 
+    real(8), intent(inout) :: R_PON(N_Nsp,Npom) 
     real(8), intent(inout) :: R_DOP(N_Psp,Ndom)   
-    real(8), intent(inout) :: R_POP(N_Psp,Npom-1) 
+    real(8), intent(inout) :: R_POP(N_Psp,Npom) 
     real(8), intent(inout) :: R_Mn2 
     real(8), intent(inout) :: R_MnO2
     real(8), intent(inout) :: R_Fe2 
@@ -163,37 +163,22 @@ CONTAINS
     !! ----------- Decomposition rate constant for organic matter ------------- !!
     !! DOM
     ! real(8),parameter :: kdomf = 1.0d-3   ! For  domf (s-1)      Kasih (2009), Irie (2018)
-    ! real(8),parameter :: kdomf = 1.0d-4   ! For  domf (s-1)           
-    ! real(8),parameter :: kdomf = 2.0d-3   ! For  domf (s-1)
-    ! real(8),parameter :: kdomf = 1.2d-1   ! For  domf (s-1)
 
     ! real(8),parameter :: kdoms = 5.0d-9   ! For  doms (s-1)      Kasih (2009)
     ! real(8),parameter :: kdoms = 5.0d-8   ! For  doms (s-1)      Irie (2018)
-    ! real(8),parameter :: kdoms = 1.0d-8
-    ! real(8),parameter :: kdoms = 2.5d-9   ! For  doms (s-1)      
-    ! real(8),parameter :: kdoms = 1.0d-7   ! For  doms (s-1)   
-    ! real(8),parameter :: kdoms = 1.4d-10   ! For  doms (s-1)
-    ! real(8),parameter :: kdoms = 1.4d-12   ! For  doms (s-1)            
 
     !! POM
     ! real(8),parameter :: kpomf = 2.5d-6   ! For  pomf (s-1)      Kasih (2009), Irie (2018)
-    ! real(8),parameter :: kpomf = 2.5d-7   ! For  pomf (s-1)
-    ! real(8),parameter :: kpomf = 2.5d-8   ! For  pomf (s-1)          
-    ! real(8),parameter :: kpomf = 2.0d-9   ! For  pomf (s-1)            
-    ! real(8),parameter :: kpomf = 5.0d-10   ! For  pomf (s-1)            
 
     ! real(8),parameter :: kpoms = 1.2d-10   ! For  poms (s-1)     Kasih (2009)
     ! real(8),parameter :: kpoms = 6.0d-10   ! For  poms (s-1)     Irie (2018)
-    ! real(8),parameter :: kpoms = 6.0d-11   ! For  poms (s-1)      
-    ! real(8),parameter :: kpoms = 1.2d-9   ! For  poms (s-1)     
-    ! real(8),parameter :: kpoms = 1.2d-11   ! For  poms (s-1) 
-    ! real(8),parameter :: kpoms = 7.0d-12   ! For  poms (s-1)
 
 !                                    LDOM    RDOM
 !    real(8),parameter :: kdom(2) = [ 1.0d-4, 5.0d-8 ]  ! For  dom (s-1)           
-    real(8),parameter :: kdom(2) = [ 1.0d-5, 1.0d-8 ]  ! For  dom (s-1)           
+    real(8),parameter :: kdom(2) = [ 1.0d-7, 1.2d-8 ]  ! For  dom (s-1)           
 !                                    LPOM    RPOM
-    real(8),parameter :: kpom(2) = [ 1.0d-6, 1.0d-10 ]  ! For  pom (s-1)
+!    real(8),parameter :: kpom(2) = [ 9.6d-6, 1.2d-8 ]  ! For  pom (s-1) Fossing (2004)
+    real(8),parameter :: kpom(3) = [ 2.5d-6, 1.2d-10, 2.5d-8 ]  ! For  pom (s-1) Kasih (2009)
 
     !! Reaction rate constants
     ! real(8),parameter :: k6  = 2.5d-6  ! For R6  (uM-1 s-1)           Fossing(2004)
@@ -236,21 +221,23 @@ CONTAINS
     !! Concentration limit
     real(8),parameter :: O2lim    = 20.0d0    !(umol l-1)     Fossing2004
     real(8),parameter :: NO3lim   = 5.0d0     !(umol l-1)     Fossing2004
-    real(8),parameter :: MnO2lim  = 50000d0   !(nmol g-1)     Fossing2004
-    real(8),parameter :: FeOOHlim = 100000d0  !(nmol g-1)     Fossing2004
+    real(8),parameter :: MnO2lim  = 5.0d4     !(nmol g-1)     Fossing2004
+    real(8),parameter :: FeOOHlim = 1.0d5     !(nmol g-1)     Fossing2004
     real(8),parameter :: SO4lim   = 5.0d0     !(umol L-1)
+
+! ======================================================================= 
+   !! Decompostion rate from CPOM to:  LPOM    RPOM
+    real(8),parameter :: kcpom(2) = [ 2.0d-8, 1.0d-8 ]  ! (s-1) Tuning !!!!!!!!!!!
 
 ! ======================================================================= 
 !! Reaction rate constants considering temperature dependency
     real(8) :: k6_Q10,  k7_Q10,  k8_Q10,  k9_Q10,  k10_Q10
     real(8) :: k11_Q10, k12_Q10, k13_Q10, k14_Q10, k15_Q10
     real(8) :: k16_Q10, k17_Q10, k18_Q10, k19_Q10, k20_Q10, k21_Q10 
-    real(8) :: kdom_Q10(Ndom), kpom_Q10(Npom-1)
+    real(8) :: kdom_Q10(Ndom), kpom_Q10(Npom), kcpom_Q10(Npom-1)
 !! Reaction Rate  -------------------------------------------------------------
     !! unit: (nmol cm-3 s-1)
-    real(8) :: vdoc(Ndom,Nsed),vdon(Ndom,Nsed),vdop(Ndom,Nsed)
-    real(8) :: vpoc(Npom-1,Nsed),vpon(Npom-1,Nsed),vpop(Npom-1,Nsed)
-    real(8) :: vOC,vON,vOP
+    real(8) :: v0
     real(8) :: v1c, v2c, v3c, v4c, v5c
     real(8) :: v1n, v2n, v3n, v4n, v5n
     real(8) :: v1p, v2p, v3p, v4p, v5p
@@ -268,17 +255,32 @@ CONTAINS
     real(8) :: rNH4(N_Nsp)
     real(8) :: rPO4(N_Psp)
     real(8) :: rDOC(N_Csp,Ndom)  
-    real(8) :: rPOC(N_Csp,Npom-1)
+    real(8) :: rPOC(N_Csp,Npom)
     real(8) :: rDON(N_Nsp,Ndom)  
-    real(8) :: rPON(N_Nsp,Npom-1)
+    real(8) :: rPON(N_Nsp,Npom)
     real(8) :: rDOP(N_Psp,Ndom)  
-    real(8) :: rPOP(N_Psp,Npom-1)
+    real(8) :: rPOP(N_Psp,Npom)
     real(8) :: rFeS (N_Ssp)
     real(8) :: rFeS2(N_Ssp)
     real(8) :: rFeOOH_PO4(N_Psp)
     real(8) :: rH2S(N_Ssp)
     real(8) :: rS0 (N_Ssp)
     real(8) :: rSO4(N_Ssp)
+
+    real(8) :: cO2       
+    real(8) :: cNO3      
+    real(8) :: cNH4      
+    real(8) :: cPO4      
+    real(8) :: cMn2      
+    real(8) :: cMnO2     
+    real(8) :: cFe2      
+    real(8) :: cFeS      
+    real(8) :: cFeS2     
+    real(8) :: cFeOOH    
+    real(8) :: cFeOOH_PO4
+    real(8) :: cH2S      
+    real(8) :: cS0       
+    real(8) :: cSO4      
 
     integer :: isp, m
 
@@ -307,7 +309,7 @@ CONTAINS
         rDOP(isp,m) = Iso_ratio( DOP(isp,m), DOP(iPt,m) )
       ENDDO
     ENDDO   
-    DO m = 1,Npom-1
+    DO m = 1,Npom
       DO isp=1,N_Csp
         rPOC(isp,m) = Iso_ratio( POC(isp,m), POC(iCt,m) ) 
       ENDDO
@@ -323,19 +325,38 @@ CONTAINS
     ENDDO
     DO isp=1,N_Ssp
       rFeS(isp) = Iso_ratio( FeS(isp), FeS(iSt) )
-      rFeS2(isp) = Iso_ratio( FeS2(isp), FeS2(iSt) )
+      rFeS2(isp)= Iso_ratio( FeS2(isp), FeS2(iSt) )
       rH2S(isp) = Iso_ratio( H2S(isp), H2S(iSt) )
       rS0 (isp) = Iso_ratio( S0(isp), S0(iSt) )
       rSO4(isp) = Iso_ratio( SO4(isp), SO4(iSt) )
     ENDDO
+
+  !! Correct negative concentratios for safe calculation  
+    cO2        = max(O2,0.0d0)
+    cNO3       = max(NO3(iNt),0.0d0)
+    cNH4       = max(NH4(iNt),0.0d0)
+    cPO4       = max(PO4(iPt),0.0d0)
+    cMn2       = max(Mn2,0.0d0)
+    cMnO2      = max(MnO2,0.0d0)
+    cFe2       = max(Fe2,0.0d0)
+    cFeS       = max(FeS(iSt),0.0d0)
+    cFeS2      = max(FeS2(iSt),0.0d0)
+    cFeOOH     = max(FeOOH,0.0d0)
+    cFeOOH_PO4 = max(FeOOH_PO4(iPt),0.0d0)
+    cH2S       = max(H2S(iSt),0.0d0)
+    cS0        = max(S0(iSt),0.0d0)
+    cSO4       = max(SO4(iSt),0.0d0)
 
   !! Reaction rate constants depending on temperature
     cff = Q10_pri**((Tmp-10d0)/10d0)
     DO m = 1,Ndom
       kdom_Q10(m) = kdom(m) * cff
     ENDDO
-    DO m = 1,Npom-1
+    DO m = 1,Npom
       kpom_Q10(m) = kpom(m) * cff
+    ENDDO
+    DO m = 1,Npom-1
+      kcpom_Q10(m) = kcpom(m) * cff
     ENDDO
 
     cff = Q10_sec**((Tmp-10d0)/10d0)
@@ -376,6 +397,23 @@ CONTAINS
     cfsd = cfs * cfd
     cfss = cfs * cfs
 
+  !! ----------------------------------------------------------------------------------- !!
+    ! CPOM decomposition to LPOM and RPOM 
+    DO m = 1,Npom-1
+      v0 = kcpom_Q10(m) *cfs* POC(iCt,iCPOM)
+      R_POC(:,iCPOM) = R_POC(:,iCPOM) - v0 *rPOC(:,iCPOM)
+      R_POC(:,m)     = R_POC(:,m)     + v0 *rPOC(:,m)
+      
+      v0 = kcpom_Q10(m) *cfs* PON(iCt,iCPOM)
+      R_PON(:,iCPOM) = R_PON(:,iCPOM) - v0 *rPON(:,iCPOM)
+      R_PON(:,m)     = R_PON(:,m)     + v0 *rPON(:,m)
+
+      v0 = kcpom_Q10(m) *cfs* POP(iCt,iCPOM)
+      R_POP(:,iCPOM) = R_POP(:,iCPOM) - v0 *rPOP(:,iCPOM)
+      R_POP(:,m)     = R_POP(:,m)     + v0 *rPOP(:,m)
+    END DO
+
+  !! ----------------------------------------------------------------------------------- !!
   !! PRIMARY REACTIONS
 
      ! R1:   O2 + CH2O --> CO2 + H2O
@@ -399,29 +437,29 @@ CONTAINS
       r4 = 0.0d0
       r5 = 0.0d0
     else
-      r1 = O2/O2lim 
-      if(NO3(iNt) > NO3lim) then      !! -- Denitrification     (NO3)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 > NO3lim
+      r1 = cO2/O2lim 
+      if(cNO3 > NO3lim) then      !! -- Denitrification     (NO3)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 > NO3lim
         r2 = 1.0d0-r1
         r3 = 0.0d0
         r4 = 0.0d0
         r5 = 0.0d0       
       else
-        r2 =(1.0d0-r1)*NO3(iNt)/NO3lim      
-        if(MnO2 > MnO2lim) then    !! -- Manganese reduction (MnO2)  (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 > MnO2lim
+        r2 =(1.0d0-r1)*cNO3/NO3lim      
+        if(cMnO2 > MnO2lim) then    !! -- Manganese reduction (MnO2)  (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 > MnO2lim
           r3 = 1.0d0-r1-r2
           r4 = 0.0d0
           r5 = 0.0d0       
         else 
-          r3 =(1.0d0-r1-r2)*MnO2/MnO2lim
-          if(FeOOH > FeOOHlim) then  !! -- Iron reduction      (FeOOH) (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH > FeOOHlim
+          r3 =(1.0d0-r1-r2)*cMnO2/MnO2lim
+          if(cFeOOH > FeOOHlim) then  !! -- Iron reduction      (FeOOH) (nmol g-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH > FeOOHlim
             r4 = 1.0d0-r1-r2-r3
             r5 = 0.0d0       
           else
-            r4 =(1.0d0-r1-r2-r3)*FeOOH/FeOOHlim
-            if(SO4(iSt) > SO4lim) then      !! -- Sulfate reduction   (SO4)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
+            r4 =(1.0d0-r1-r2-r3)*cFeOOH/FeOOHlim
+            if(cSO4 > SO4lim) then      !! -- Sulfate reduction   (SO4)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
               r5 = 1.0d0-r1-r2-r3-r4
             else                                              !! limit OM decomposition if SO4 < SO4lim    -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 < SO4lim
-              r5 =(1.0d0-r1-r2-r3-r4)*SO4(iSt)/SO4lim
+              r5 =(1.0d0-r1-r2-r3-r4)*cSO4/SO4lim
             endif
           endif
         endif
@@ -430,8 +468,9 @@ CONTAINS
 
 # endif
     ! POM remineralization
-    DO m = 1,Npom-1
+    DO m = 1,Npom
       cff = kpom_Q10(m) * POC(iCt,m)
+      cff = max(cff,0.0d0) !! Error handring
       v1c = r1*cfsd * cff
       v2c = r2*cfsd * cff
       v3c = r3*cfss * cff
@@ -439,6 +478,7 @@ CONTAINS
       v5c = r5*cfsd * cff
 
       cff = kpom_Q10(m) * PON(iNt,m)
+      cff = max(cff,0.0d0) !! Error handring
       v1n = r1*cfsd * cff
       v2n = r2*cfsd * cff
       v3n = r3*cfss * cff
@@ -446,35 +486,52 @@ CONTAINS
       v5n = r5*cfsd * cff
 
       cff = kpom_Q10(m) * POP(iPt,m)
+      cff = max(cff,0.0d0) !! Error handring
       v1p = r1*cfsd * cff
       v2p = r2*cfsd * cff
       v3p = r3*cfss * cff
       v4p = r4*cfss * cff
       v5p = r5*cfsd * cff
 
-      R_POC(:,m) = R_POC(:,m) - (v1c +v2c +v3c +v4c +v5c)*rPOC(:,m)
-      R_DIC(:)   = R_DIC(:)   + (v1c +v2c +v3c +v4c +v5c)*rPOC(:,m)
-      R_O2 = R_O2 - v1c
-      R_TA = R_TA +0.8d0*v2c +4.0d0*v3c + 4.0d0*v4c +v5c
+      R_POC(:,m) = R_POC(:,m) - (v1c +v2c +v3c +v4c +v5c) *rPOC(:,m)
+      R_DIC(:)   = R_DIC(:)   + (v1c +v2c +v3c +v4c +v5c) *rPOC(:,m)
     
-      R_PON(:,m) = R_PON(:,m) - (v1n +v2n +v3n +v4n +v5n)*rPON(:,m)
-      R_NH4(:)   = R_NH4(:)   + (v1n +v2n +v3n +v4n +v5n)*rPON(:,m)
-      R_NO3(:)   = R_NO3(:) -0.8d0*v2n*rNH4(:)
+      R_PON(:,m) = R_PON(:,m) - (v1n +v2n +v3n +v4n +v5n) *rPON(:,m)
+      R_NH4(:)   = R_NH4(:)   + (v1n +v2n +v3n +v4n +v5n) *rPON(:,m)
+      R_TA       = R_TA       + (v1n +v2n +v3n +v4n +v5n)*1.0d0
 
-      R_TA = R_TA +v1n +v2n +v3n +v4n +v5n
+      R_POP(:,m) = R_POP(:,m) - (v1p +v2p +v3p +v4p +v5p) *rPOP(:,m)
+      R_PO4(:)   = R_PO4(:)   + (v1p +v2p +v3p +v4p +v5p) *rPOP(:,m)
+      R_TA       = R_TA       - (v1p +v2p +v3p +v4p +v5p)*2.0d0
 
-      R_POP(:,m) = R_POP(:,m) - (v1p +v2p +v3p +v4p +v5p)*rPOP(:,m)
-      R_PO4(:)   = R_PO4(:)   + (v1p +v2p +v3p +v4p +v5p)*rPOP(:,m)
+      ! R1:   O2 + CH2O --> CO2 + H2O
+      R_O2       = R_O2       - v1c
 
-      R_TA = R_TA -(v1p +v2p +v3p +v4p +v5p)
+      ! R2:   4/5 NO3- + CH2O + 4/5 H+ --> 4/5 N2 + CO2 + 7/5 H2O
+      R_NO3(:)   = R_NO3(:)   - v2c*0.8d0 *rNO3(:)
+      R_TA       = R_TA       + v2c*0.8d0
 
-      R_SO4(:) = R_SO4(:) - v5c*rSO4(:)
-      R_H2S(:) = R_H2S(:) + v5c*rSO4(:)
+      ! R3:   2MnO2 + CH2O + 4H+ --> 2Mn2+ + CO2 + 3H2O
+      R_MnO2     = R_MnO2     - v3c*2.0d0
+      R_Mn2      = R_Mn2      + v3c*2.0d0
+      R_TA       = R_TA       + v3c*4.0d0
+
+      ! R4:   4FeOOH + CH2O + 4H+ --> 4Fe2+ + CO2 + 7H2O
+      R_FeOOH    = R_FeOOH    - v4c*4.0d0
+      R_Fe2      = R_Fe2      + v4c*4.0d0
+      R_TA       = R_TA       + v4c*4.0d0
+
+      ! R5:   1/2 SO42- + CH2O + H+ --> 1/2 H2S + CO2 + H2O
+      R_SO4(:)   = R_SO4(:)   - v5c*0.5d0 *aS_SO4red(1:N_Ssp)*rSO4(:)
+      R_H2S(:)   = R_H2S(:)   + v5c*0.5d0 *aS_SO4red(1:N_Ssp)*rSO4(:)
+      R_TA       = R_TA       + v5c
+
     ENDDO
 
     ! DOM remineralization
     DO m = 1,Ndom
       cff = kdom_Q10(m) * DOC(iCt,m)
+      cff = max(cff,0.0d0) !! Error handring
       v1c = r1*cfdd * cff
       v2c = r2*cfdd * cff
       v3c = r3*cfsd * cff
@@ -482,6 +539,7 @@ CONTAINS
       v5c = r5*cfdd * cff
 
       cff = kdom_Q10(m) * DON(iNt,m)
+      cff = max(cff,0.0d0) !! Error handring
       v1n = r1*cfdd * cff
       v2n = r2*cfdd * cff
       v3n = r3*cfsd * cff
@@ -489,151 +547,168 @@ CONTAINS
       v5n = r5*cfdd * cff
 
       cff = kdom_Q10(m) * DOP(iPt,m)
+      cff = max(cff,0.0d0) !! Error handring
       v1p = r1*cfdd * cff
       v2p = r2*cfdd * cff
       v3p = r3*cfsd * cff
       v4p = r4*cfsd * cff
       v5p = r5*cfdd * cff
 
-      R_DOC(:,m) = R_DOC(:,m) - (v1c +v2c +v3c +v4c +v5c)*rDOC(:,m)
-      R_DIC(:)   = R_DIC(:)   + (v1c +v2c +v3c +v4c +v5c)*rDOC(:,m)
-      R_O2 = R_O2 - v1c
-      R_TA = R_TA +0.8d0*v2c +4.0d0*v3c + 4.0d0*v4c +v5c
+      R_DOC(:,m) = R_DOC(:,m) - (v1c +v2c +v3c +v4c +v5c) *rDOC(:,m)
+      R_DIC(:)   = R_DIC(:)   + (v1c +v2c +v3c +v4c +v5c) *rDOC(:,m)
+    
+      R_DON(:,m) = R_DON(:,m) - (v1n +v2n +v3n +v4n +v5n) *rDON(:,m)
+      R_NH4(:)   = R_NH4(:)   + (v1n +v2n +v3n +v4n +v5n) *rDON(:,m)
+      R_TA       = R_TA       + (v1n +v2n +v3n +v4n +v5n)*1.0d0
 
-      R_DON(:,m) = R_DON(:,m) - (v1n +v2n +v3n +v4n +v5n)*rDON(:,m)
-      R_NH4(:)   = R_NH4(:)   + (v1n +v2n +v3n +v4n +v5n)*rDON(:,m)
-      R_NO3(:)   = R_NO3(:) -0.8d0*v2n*rNO3(:)
-      R_TA = R_TA +v1n +v2n +v3n +v4n +v5n
+      R_DOP(:,m) = R_DOP(:,m) - (v1p +v2p +v3p +v4p +v5p) *rDOP(:,m)
+      R_PO4(:)   = R_PO4(:)   + (v1p +v2p +v3p +v4p +v5p) *rDOP(:,m)
+      R_TA       = R_TA       - (v1p +v2p +v3p +v4p +v5p)*2.0d0
 
-      R_DOP(:,m) = R_DOP(:,m) - (v1p +v2p +v3p +v4p +v5p)*rDOP(:,m)
-      R_PO4(:)   = R_PO4(:)   + (v1p +v2p +v3p +v4p +v5p)*rDOP(:,m)
-      R_TA = R_TA -(v1p +v2p +v3p +v4p +v5p)
+      ! R1:   O2 + CH2O --> CO2 + H2O
+      R_O2       = R_O2       - v1c
 
-      R_SO4(:) = R_SO4(:) - v5c*rSO4(:)
-      R_H2S(:) = R_H2S(:) + v5c*rSO4(:)
+      ! R2:   4/5 NO3- + CH2O + 4/5 H+ --> 4/5 N2 + CO2 + 7/5 H2O
+      R_NO3(:)   = R_NO3(:)   - v2c*0.8d0 *rNO3(:)
+      R_TA       = R_TA       + v2c*0.8d0
+
+      ! R3:   2MnO2 + CH2O + 4H+ --> 2Mn2+ + CO2 + 3H2O
+      R_MnO2     = R_MnO2     - v3c*2.0d0
+      R_Mn2      = R_Mn2      + v3c*2.0d0
+      R_TA       = R_TA       + v3c*4.0d0
+
+      ! R4:   4FeOOH + CH2O + 4H+ --> 4Fe2+ + CO2 + 7H2O
+      R_FeOOH    = R_FeOOH    - v4c*4.0d0
+      R_Fe2      = R_Fe2      + v4c*4.0d0
+      R_TA       = R_TA       + v4c*4.0d0
+
+      ! R5:   1/2 SO42- + CH2O + H+ --> 1/2 H2S + CO2 + H2O
+      R_SO4(:)   = R_SO4(:)   - v5c*0.5d0 *aS_SO4red(1:N_Ssp)*rSO4(:)
+      R_H2S(:)   = R_H2S(:)   + v5c*0.5d0 *aS_SO4red(1:N_Ssp)*rSO4(:)
+      R_TA       = R_TA       + v5c
+
     ENDDO
 
   !! SECONDARY REACTIONS
 
     ! R6:   NH4+ + 2O2 --> NO3- + H2O + 2H+
-    v6 = cfdd * k6_Q10*NH4(iNt)*O2
-    R_O2  = R_O2 - 2.0d0*v6
-    R_TA  = R_TA - 2.0d0*v6
-    R_NO3(:) = R_NO3(:) + v6*rNH4(:)
-    R_NH4(:) = R_NH4(:) - v6*rNH4(:)
+    v6 = cfdd * k6_Q10*cNH4*cO2
+    R_O2     = R_O2     - v6*2.0d0
+    R_NO3(:) = R_NO3(:) + v6        *rNH4(:)
+    R_NH4(:) = R_NH4(:) - v6        *rNH4(:)
+    R_TA     = R_TA     - v6*2.0d0
 
     ! R7:   FeOOH + PO43- --> FeOOH=PO43-
-    v7 = cfsd * k7_Q10*FeOOH*PO4(iPt)
-    R_FeOOH = R_FeOOH -v7
-    R_PO4(:)       = R_PO4(:)       - v7*rPO4(:)
-    R_FeOOH_PO4(:) = R_FeOOH_PO4(:) + v7*rPO4(:)
+    v7 = cfsd * k7_Q10*cFeOOH*cPO4
+    R_FeOOH        = R_FeOOH        - v7
+    R_PO4(:)       = R_PO4(:)       - v7 *rPO4(:)
+    R_FeOOH_PO4(:) = R_FeOOH_PO4(:) + v7 *rPO4(:)
 
     ! R8:   2Fe2+ + MnO2 + 2H2O --> 2FeOOH + Mn2+ + 2H+
-    v8 = cfsd * k8_Q10*MnO2*Fe2
-    R_TA  = R_TA - 2.0d0*v8
-    R_Fe2   = R_Fe2   -2.0d0*v8
-    R_FeOOH = R_FeOOH +2.0d0*v8
-    R_MnO2 = R_MnO2 - v8
-    R_Mn2  = R_Mn2  + v8
+    v8 = cfsd * k8_Q10*cMnO2*cFe2
+    R_Fe2   = R_Fe2   - v8*2.0d0
+    R_MnO2  = R_MnO2  - v8
+    R_FeOOH = R_FeOOH + v8*2.0d0
+    R_Mn2   = R_Mn2   + v8
+    R_TA    = R_TA    - v8*2.0d0
 
     ! R9:   2Mn2+ + O2 + 2H2O --> 2MnO2 + 4H+
-    v9 = cfdd * k9_Q10*O2  *Mn2
-    R_O2  = R_O2 - v9
-    R_TA  = R_TA - 4.0d0*v9
-    R_Mn2  = R_Mn2  - 2.0d0*v9
-    R_MnO2 = R_MnO2 + 2.0d0*v9
+    v9 = cfdd * k9_Q10 *cO2*cMn2
+    R_Mn2  = R_Mn2  - v9*2.0d0
+    R_O2   = R_O2   - v9
+    R_MnO2 = R_MnO2 + v9*2.0d0
+    R_TA   = R_TA   - v9*4.0d0
 
     ! R10a: H2S + 2FeOOH=PO43- + 4H+ --> S0 + 2Fe2+ + 4H2O + 2PO43-
-    v10a = cfsd * k10_Q10                                           &
-                  *FeOOH_PO4(iPt)*H2S(iSt)
-    R_TA  = R_TA + 4.0d0*v10a
-    R_H2S(:) = R_H2S(:) - v10a*rH2S(:)
-    R_S0(:)  = R_S0(:)  + v10a*rH2S(:)
-    R_PO4(:)       = R_PO4(:)       +2.0d0*v10a*rFeOOH_PO4(:)
-    R_FeOOH_PO4(:) = R_FeOOH_PO4(:) -2.0d0*v10a*rFeOOH_PO4(:)
+    v10a = cfsd * k10_Q10 *cFeOOH_PO4*cH2S
+    R_H2S(:)       = R_H2S(:)       - v10a       *rH2S(:)
+    R_FeOOH_PO4(:) = R_FeOOH_PO4(:) - v10a*2.0d0 *rFeOOH_PO4(:)
+    R_S0(:)        = R_S0(:)        + v10a       *rH2S(:)
+    R_PO4(:)       = R_PO4(:)       + v10a*2.0d0 *rFeOOH_PO4(:)
+    R_TA           = R_TA           + v10a*4.0d0
 
     ! R10b: H2S + 2FeOOH + 4H+ --> S0 + 2Fe2+ + 4H2O
-    v10b = cfsd * k10_Q10*FeOOH*H2S(iSt)
-    R_TA  = R_TA + 4.0d0*v10b
-    R_FeOOH = R_FeOOH - 2.0d0*v10b
-    R_Fe2   = R_Fe2   + 2.0d0*v10b
-    R_H2S(:) = R_H2S(:) - v10b*rH2S(:)
-    R_S0(:)  = R_S0(:)  + v10b*rH2S(:)
+    v10b = cfsd * k10_Q10 *cFeOOH*cH2S
+    R_H2S(:) = R_H2S(:) - v10b       *rH2S(:)
+    R_FeOOH  = R_FeOOH  - v10b*2.0d0
+    R_S0(:)  = R_S0(:)  + v10b       *rH2S(:)
+    R_Fe2    = R_Fe2    + v10b*2.0d0
+    R_TA     = R_TA     + v10b*4.0d0
 
     ! R11:  4Fe2+ + O2 + 6H2O --> 4FeOOH + 8H+
-    v11  = cfdd * k11_Q10*Fe2 *O2 
-    R_O2  = R_O2 - v11
-    R_TA  = R_TA - 8.0d0*v11
-    R_Fe2   = R_Fe2   - 4.0d0*v11
-    R_FeOOH = R_FeOOH + 4.0d0*v11
+    v11  = cfdd * k11_Q10 *cFe2*cO2
+    R_Fe2   = R_Fe2   - v11*4.0d0
+    R_O2    = R_O2    - v11
+    R_FeOOH = R_FeOOH + v11*4.0d0
+    R_TA    = R_TA    - v11*8.0d0
 
     ! R12:  H2S + MnO2 + 4H+ --> S0 + Mn2+ + 2H2O
-    v12  = cfsd * k12_Q10*MnO2*H2S(iSt)
-    R_TA  = R_TA + 4.0d0*v12
-    R_MnO2 = R_MnO2 - v12
-    R_Mn2  = R_Mn2  + v12
-    R_H2S(:) = R_H2S(:) - v12*rH2S(:)
-    R_S0(:)  = R_S0(:)  + v12*rH2S(:)
+    v12  = cfsd * k12_Q10 *cMnO2*cH2S
+    R_H2S(:) = R_H2S(:) - v12       *rH2S(:)
+    R_MnO2   = R_MnO2   - v12
+    R_Mn2    = R_Mn2    + v12
+    R_S0(:)  = R_S0(:)  + v12       *rH2S(:)
+    R_TA     = R_TA     + v12*4.0d0
 
     ! R13:  H2S + Fe2+ --> FeS + 2H+
-    v13  = cfdd * k13_Q10*Fe2 *H2S(iSt)
-    R_TA  = R_TA + 2.0d0*v13
-    R_Fe2 = R_Fe2 - v13
-    R_H2S(:) = R_H2S(:) - v13*rH2S(:)
-    R_FeS(:) = R_FeS(:) + v13*rH2S(:)
+    v13  = cfdd * k13_Q10 *cFe2*cH2S
+    R_H2S(:) = R_H2S(:) - v13       *rH2S(:)
+    R_Fe2    = R_Fe2    - v13
+    R_FeS(:) = R_FeS(:) + v13       *rH2S(:)
+    R_TA     = R_TA     - v13*2.0d0
 
     ! R14:  FeS + S0 --> FeS2
-    v14  = cfss * k14_Q10*FeS(iSt)*S0(iSt)
-    R_FeS(:) = R_FeS(:) - v14*rFeS(:)
-    R_S0(:)  = R_S0(:) - v14*rS0(:)
-    R_FeS2(:)= R_FeS2(:) + v14*(rFeS(:) + rS0(:))*0.5d0 !!?????????????????????????????????????Check needed!!!
+    v14  = cfss * k14_Q10 *cFeS*cS0
+    R_FeS(:) = R_FeS(:)  - v14 *rFeS(:)
+    R_S0(:)  = R_S0(:)   - v14 *rS0(:)
+    R_FeS2(:)= R_FeS2(:) + v14 *(rFeS(:) + rS0(:))/2.0d0 !!?????????????????????????????????????Check needed!!!
 
     ! R15:  SO42- + 3H2S + 4FeS + 2H+ --> 4FeS2 + 4H2O
-    v15  = cfsd * k15_Q10*FeS(iSt)*H2S(iSt)
-    R_TA  = R_TA + 2.0d0*v15
-    R_SO4(:) = R_SO4(:) - v15*rSO4(:)
-    R_H2S(:) = R_H2S(:) - v15*rH2S(:)
-    R_FeS(:) = R_FeS(:) - v15*rFeS(:)
-    R_FeS2(:)= R_FeS2(:) + v15*(rSO4(:)+rH2S(:)+rFeS(:))/3.0d0 !!?????????????????????????????????????Check needed!!!
+    v15  = cfsd * k15_Q10 *cFeS*cH2S
+    R_SO4(:)  = R_SO4(:)  - v15       *rSO4(:)
+    R_H2S(:)  = R_H2S(:)  - v15*3.0d0 *rH2S(:)
+    R_FeS(:)  = R_FeS(:)  - v15*4.0d0 *rFeS(:)
+    R_FeS2(:) = R_FeS2(:) + v15*4.0d0 *(rSO4(:)+rH2S(:)*3.0d0+rFeS(:)*4.0d0)/8.0d0 !!?????????????????????????????????????Check needed!!!
+    R_TA      = R_TA      + v15*2.0d0
 
     ! R16:  H2S + 2O2 --> SO42- + 2H+
-    v16  = cfdd * k16_Q10*H2S(iSt)*O2 
-    R_TA  = R_TA + 2.0d0*v16
-    R_O2  = R_O2 - 2.0d0*v16
-    R_H2S(:) = R_H2S(:) - v16*rH2S(:)
-    R_SO4(:) = R_SO4(:) + v16*rH2S(:)
+    v16  = cfdd * k16_Q10 *cH2S*cO2
+    R_H2S(:) = R_H2S(:) - v16       *rH2S(:)
+    R_O2     = R_O2     - v16*2.0d0 
+    R_SO4(:) = R_SO4(:) + v16       *rH2S(:)
+    R_TA     = R_TA     - v16*2.0d0
 
     ! R17:  FeS + 2O2 --> Fe2+ + SO42-
-    v17  = cfsd * k17_Q10*FeS(iSt)*O2
-    R_O2  = R_O2 - 2.0d0*v17
-    R_Fe2 = R_Fe2 + v17
-    R_FeS(:) = R_FeS(:) - v17*rFeS(:)
-    R_SO4(:) = R_SO4(:) + v17*rFeS(:)
+    v17  = cfsd * k17_Q10 * cFeS* cO2
+    R_FeS(:) = R_FeS(:) - v17       *rFeS(:)
+    R_O2     = R_O2     - v17*2.0d0
+    R_Fe2    = R_Fe2    + v17
+    R_SO4(:) = R_SO4(:) + v17       *rFeS(:)
 
     ! R18:  2FeS2 + 7O2 + 2H2O --> 2Fe2+ + 4SO42- + 4H+
-    v18  = cfsd * k18_Q10*FeS2(iSt)*O2
-    R_TA  = R_TA - 4.0d0*v18
-    R_O2  = R_O2 - 7.0d0*v18
-    R_Fe2 = R_Fe2 + 2.0d0*v18
-    R_FeS2(:) = R_FeS2(:) - 2.0d0*v18*rFeS2(:)
-    R_SO4(:)  = R_SO4(:)  + 4.0d0*v18*rFeS2(:)
+    v18  = cfsd * k18_Q10 *cFeS2*cO2
+    R_FeS2(:) = R_FeS2(:) - v18*2.0d0 *rFeS2(:)
+    R_O2      = R_O2      - v18*7.0d0
+    R_Fe2     = R_Fe2     + v18*2.0d0
+    R_SO4(:)  = R_SO4(:)  + v18*4.0d0 *rFeS2(:)
+    R_TA      = R_TA      - v18*4.0d0
 
     ! R19:  4S0 + 4H2O --> 3H2S + SO42- + 2H+
     if (H2S(iSt) <= H2Sstop) then  
-      v19  = cfsd * k19_Q10 *S0(iSt)*(1d0 - (H2S(iSt)/H2Sstop))  !!??????????????????????
+      v19  = cfsd * k19_Q10 *cS0*(1d0 - (cH2S/H2Sstop))  !!??????????????????????
     else
       v19  = 0.0d0
     endif
-    R_TA  = R_TA - 2.0d0*v19
-    R_S0(:)  = R_S0(:)  - 4.0d0*v19*rS0(:)
-    R_H2S(:) = R_H2S(:) + 3.0d0*v19*rS0(:) !!!??????????????????????????
-    R_SO4(:) = R_SO4(:) + 1.0d0*v19*rS0(:) !!!??????????????????????????
+    R_S0(:)  = R_S0(:)  - v19*4.0d0 *rS0(:)
+    R_H2S(:) = R_H2S(:) + v19*3.0d0 *rS0(:) !!!??????????????????????????
+    R_SO4(:) = R_SO4(:) + v19*1.0d0 *rS0(:) !!!??????????????????????????
+    R_TA     = R_TA     - v19*2.0d0
 
     ! R20:  MnO2 --> MnO2_undeg
-    v20  = cfsd * k20_Q10*MnO2
+    v20  = cfsd * k20_Q10 *cMnO2
     R_MnO2 = R_MnO2 - v20 
     ! R21:  FeOOH --> FeOOH_undeg
-    v21  = cfsd * k21_Q10*FeOOH
+    v21  = cfsd * k21_Q10 *cFeOOH
     R_FeOOH = R_FeOOH - v21 
 
     RETURN

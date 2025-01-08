@@ -38,10 +38,11 @@
 /*# define CORAL_POLYP*/  /* USE coral module */
 /*# define SEAGRASS*/     /* USE seagrass module */
 /*# define MACROALGAE*/   /* USE algae module  */
-# define FOODWEB      /* USE foodweb module */
+/*# define FOODWEB*/      /* USE foodweb module */
 # define SEDIMENT_ECOSYS        /* USE sedecosys module  */
 
-# define AIR_SEA_GAS_EXCHANGE
+/*# define AIR_SEA_GAS_EXCHANGE*/
+# define ECOSYS_PM_VADV
 
 /*# define DYNAMIC_COVERAGE*/ /* yt_edit not yet implemented in coawst */
 
@@ -77,7 +78,7 @@
 /*** Sediment model options. ***/
 /*#  define SEDIMENT_EMPIRICAL*/     /* USE empirical sediment module  */
 # if defined SEDIMENT_ECOSYS  /* Masa_edits */
-#  define SEDECO_CSV_RESTART  /* Restart from sedeco_rst.csv file if start_of_new_run = .true. */
+/*#  define SEDECO_CSV_RESTART*/  /* Restart from sedeco_rst.csv file if start_of_new_run = .true. */
 #  if defined SEDIMENT
 #   define SEDECO_BURIAL    /* For Burial term in sediment transport (massbalance) */
 #  endif
@@ -91,6 +92,13 @@
 /*----------------------------------------------------*/
 /*** Box model option ***/
 
+/* Set output interval for each model */
+#define ECOSYS_OUTPUT_INTERVAL 1440.0d0  /* Output interval (min) */
+#define SEDECO_OUTPUT_INTERVAL 1440.0d0  /* Output interval (min) */
+#define CORAL_OUTPUT_INTERVAL   5.0d0  /* Output interval (min) */
+#define CORAL_AVERAGE_INTERVAL  1.0d0  /* Averaging interval (day) */
+#define FLOW_OUTPUT_INTERVAL    5.0d0  /* Output interval (min) */
+
 /*#define USE_HEAT*/
 /*#define LONGWAVE_IN*/
 /*#define INPUT_BOTTOM_PFD*/
@@ -99,7 +107,6 @@
 /*#define REEF_FLOW*/
 
 #define ECOSYS_TESTMODE
-
 #if defined CORAL_POLYP
 # define CORAL_TESTMODE
 #endif

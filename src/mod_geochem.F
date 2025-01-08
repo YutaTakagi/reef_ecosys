@@ -14,11 +14,11 @@ module mod_geochem
   real(8), parameter :: aC_grz (3) = [ 1.0d0, 1.0d0, 1.0d0 ]
 #else
                                      ! iCt      iC13             iD47 (clumped isotope)              
-  real(8), parameter :: aC_phot(3) = [ 1.0d0, -20.0d-3 + 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
+  real(8), parameter :: aC_phot(3) = [ 1.0d0, -20.0d-3+1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
 !  real(8), parameter :: aC_resp(3) = [ 1.0d0,   0.0d-3 + 1.0d0,   0.0d-3 + 1.0d0 ]
-  real(8), parameter :: aC_calc(3) = [ 1.0d0,   2.7d-3 + 1.0d0,   2.7d-3 + 1.0d0 ] 
-  real(8), parameter :: aC_co2 (3) = [ 1.0d0,  -7.0d-3 + 1.0d0,  -7.0d-3 + 1.0d0 ] !!!!! To Be Confirmed. Maybe ~-8-4.4
-  real(8), parameter :: aC_grz (3) = [ 1.0d0,   0.8d-3 + 1.0d0,            1.0d0 ]
+  real(8), parameter :: aC_calc(3) = [ 1.0d0,   2.7d-3+1.0d0,   2.7d-3 + 1.0d0 ] 
+  real(8), parameter :: aC_co2 (3) = [ 1.0d0,  -7.0d-3+1.0d0,  -7.0d-3 + 1.0d0 ] !!!!! To Be Confirmed. Maybe ~-8-4.4
+  real(8), parameter :: aC_grz (3) = [ 1.0d0,   0.8d-3+1.0d0,            1.0d0 ]
 #endif
 
 !----- Nitrogen isotope fractionation ------------------------
@@ -28,19 +28,17 @@ module mod_geochem
   real(8), parameter :: aN_N2fix(2)= [ 1.0d0, 1.0d0, 1.0d0 ]
 #else
                                      ! iNt      iN15         
-  real(8), parameter :: aN_phot(2) = [ 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
-  real(8), parameter :: aN_grz (2) = [ 1.0d0,   3.4d-3 + 1.0d0 ]
-  real(8), parameter :: aN_N2fix(2)= [ 1.0d0,  -2.0d-3 + 1.0d0 ]  !!!! To be confirmed
+  real(8), parameter :: aN_phot(2) = [ 1.0d0, -20.0d-3+1.0d0 ] !!!!! To Be Confirmed
+  real(8), parameter :: aN_grz (2) = [ 1.0d0,   3.4d-3+1.0d0 ]
+  real(8), parameter :: aN_N2fix(2)= [ 1.0d0,  -2.0d-3+1.0d0 ]  !!!! To be confirmed
 #endif
 
 !----- Sulfur isotope fractionation ------------------------
 #if defined SULFUR_TRACE
-!  real(8), parameter :: aN_phot(2) = [ 1.0d0, 1.0d0, 1.0d0 ]
-!  real(8), parameter :: aN_grz (2) = [ 1.0d0, 1.0d0, 1.0d0 ]
+  real(8), parameter :: aS_SO4red(2) = [ 1.0d0, 1.0d0 ]
 #else
-                                     ! iSt      iS34         
-!  real(8), parameter :: aN_phot(2) = [ 1.0d0, -20.0d-3 + 1.0d0 ] !!!!! To Be Confirmed
-!  real(8), parameter :: aN_grz (2) = [ 1.0d0,            1.0d0 ]
+                                         ! iSt      iS34         
+  real(8), parameter :: aS_SO4red(2) = [ 1.0d0, -50.0d-3+1.0d0 ] !!!!! To Be Confirmed
 #endif
 
 ! ------ Carbon Isotope related parameters -----
@@ -72,7 +70,10 @@ module mod_geochem
   real(8), parameter :: vis_sw   = 0.94d-6   ! kinematic viscosity   (m2 s-1)
 
   real(8), parameter :: grav    = 9.80665d0 ! Gravitational acceleration [m/s2]
-    
+
+  real(8), parameter :: PI  = 3.14159265359d0
+  real(8), parameter :: Rg  = 8.31d0    ! Gass constant (J K–1 mol–1)
+
 contains
 !!!***********************************************************************
 !!!   Physical parameters of seawater
@@ -1208,7 +1209,7 @@ contains
     real(8), intent(in) :: Ci  ! Isotope concentration (e.g., umol/L) 
     real(8), intent(in) :: Ct  ! Total concentration   (e.g., umol/L)
     if(Ct>0.0d0) then
-      Iso_ratio = Ci/Ct
+      Iso_ratio = max(Ci,0.0d0)/Ct
     else
       Iso_ratio = 0.0d0
     endif

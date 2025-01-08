@@ -286,14 +286,128 @@ END SUBROUTINE files_close
     
     integer, intent(in) :: fid
     
-    write(fid,'(*(g0:,", "))') 'time', 'PFDsurf'                           &
-        ,'Temp','Salt','TA','DIC','DO'                                     &
-        ,'DOC1','DOC2','POC1','POC2','POC3','Phyt1'                        &
-        ,'Phyt2','Phyt3', 'Phyt4'                                          &
-        ,'TotalPhy', 'Zoop','PIC1','PIC2'                                  &
-        ,'NO3','NH4','PO4'                                                 &
-        ,'DON1','DON2','PON1','PON2','PON3'                                &
-        ,'DOP1','DOP2','POP1','POP2','POP3'                                &
+    write(fid,'(*(g0:,", "))') 'time', 'PFDsurf'  &
+        ,'Temp','Salt','DO','TA'   &
+#if defined CLUMPED_ISOTOPE 
+        ,'DIC','DIC_13C','DIC_47D'    &
+#elif defined CARBON_ISOTOPE  || defined CARBON_TRACE
+        ,'DIC','DIC_13C'              &
+#else
+        ,'DIC'                        &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'NO3','NO3_15N'  &
+        ,'NH4','NH4_15N'  &
+#else
+        ,'NO3'            &
+        ,'NH4'            &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'PO4','PO4_P1'   &
+#else
+        ,'PO4'            &
+#endif
+#if defined CLUMPED_ISOTOPE 
+        ,'LDOC','LDOC_13C','LDOC_47D' &
+        ,'RDOC','RDOC_13C','RDOC_47D' &
+        ,'LPOC','LPOC_13C','LPOC_47D' &
+        ,'RPOC','RPOC_13C','RPOC_47D' &
+        ,'CPOC','CPOC_13C','CPOC_47D' &
+#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+        ,'LDOC','LDOC_13C' &
+        ,'RDOC','RDOC_13C' &
+        ,'LPOC','LPOC_13C' &
+        ,'RPOC','RPOC_13C' &
+        ,'CPOC','CPOC_13C' &
+#else
+        ,'LDOC'            &
+        ,'RDOC'            &
+        ,'LPOC'            &
+        ,'RPOC'            &
+        ,'CPOC'            &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'LDON','LDON_15N' &
+        ,'RDON','RDON_15N' &
+        ,'LPON','LPON_15N' &
+        ,'RPON','RPON_15N' &
+        ,'CPON','CPON_15N' &
+#else
+        ,'LDON'            &
+        ,'RDON'            &
+        ,'LPON'            &
+        ,'RPON'            &
+        ,'CPON'            &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'LDOP','LDOP_P1'  &
+        ,'RDOP','RDOP_P1'  &
+        ,'LPOP','LPOP_P1'  &
+        ,'RPOP','RPOP_P1'  &
+        ,'CPOP','CPOP_P1'  &
+#else
+        ,'LDOP'            &
+        ,'RDOP'            &
+        ,'LPOP'            &
+        ,'RPOP'            &
+        ,'CPOP'            &
+#endif
+#if defined CLUMPED_ISOTOPE 
+        ,'PhyC1','PhyC1_13C','PhyC1_47D' &
+        ,'PhyC2','PhyC2_13C','PhyC2_47D' &
+        ,'PhyC3','PhyC3_13C','PhyC3_47D' &
+        ,'PhyC4','PhyC4_13C','PhyC4_47D' &
+        ,'ZooC1','ZooC1_13C','ZooC1_47D' &
+#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+        ,'PhyC1','PhyC1_13C' &
+        ,'PhyC2','PhyC2_13C' &
+        ,'PhyC3','PhyC3_13C' &
+        ,'PhyC4','PhyC4_13C' &
+        ,'ZooC1','ZooC1_13C' &
+#else
+        ,'PhyC1'             &
+        ,'PhyC2'             &
+        ,'PhyC3'             &
+        ,'PhyC4'             &
+        ,'ZooC1'             &
+#endif
+#if defined NITROGEN_ISOTOPE  || defined NITROGEN_TRACE
+        ,'PhyN1','PhyN1_15N' &
+        ,'PhyN2','PhyN2_15N' &
+        ,'PhyN3','PhyN3_15N' &
+        ,'PhyN4','PhyN4_15N' &
+        ,'ZooN1','ZooN1_15N' &
+#else
+        ,'PhyN1'             &
+        ,'PhyN2'             &
+        ,'PhyN3'             &
+        ,'PhyN4'             &
+        ,'ZooN1'             &
+#endif
+#if defined PHOSPHOROUS_TRACE
+        ,'PhyP1','PhyP1_P1' &
+        ,'PhyP2','PhyP2_P1' &
+        ,'PhyP3','PhyP3_P1' &
+        ,'PhyP4','PhyP4_P1' &
+        ,'ZooP1','ZooP1_P1' &
+#else
+        ,'PhyP1'             &
+        ,'PhyP2'             &
+        ,'PhyP3'             &
+        ,'PhyP4'             &
+        ,'ZooP1'             &
+#endif
+#if defined CLUMPED_ISOTOPE 
+        ,'PIC1','PIC1_13C','PIC1_47D' &
+        ,'PIC2','PIC2_13C','PIC2_47D' &
+#elif defined CARBON_ISOTOPE || defined CARBON_TRACE
+        ,'PIC1','PIC1_13C' &
+        ,'PIC2','PIC2_13C' &
+#else
+        ,'PIC1'             &
+        ,'PIC2'             &
+#endif
+        ,'PhyC_Total'       &
 #if defined CARBON_ISOTOPE
         ,'d13C_DIC'                                                        &
 #endif
@@ -371,24 +485,31 @@ END SUBROUTINE files_close
     nstp=1
 
 #if defined CARBON_ISOTOPE
-    d13C_DIC=d13C_fromR13C(t(i,j,k,nstp,iT13C)/t(i,j,k,nstp,iTIC_))
+    d13C_DIC=d13C_fromR13C(t(i,j,k,nstp,iTIC(iC13))/t(i,j,k,nstp,iTIC(iCt)))
 #endif
         
-    write(fid,'(*(g0:,", "))') time, PFDsurf                                                &
-           , t(i,j,k,nstp,iTemp), t(i,j,k,nstp,iSalt)                                       &
-           , t(i,j,k,nstp,iTAlk), t(i,j,k,nstp,iTIC(1)), t(i,j,k,nstp,iOxyg)                &
-           , t(i,j,k,nstp,iDOC(1,1)), t(i,j,k,nstp,iDOC(1,2))                               &
-           , t(i,j,k,nstp,iPOC(1,1)), t(i,j,k,nstp,iPOC(1,2)), t(i,j,k,nstp,iPOC(1,3))      &
-           , t(i,j,k,nstp,iPhyC(1,1)), t(i,j,k,nstp,iPhyC(1,2)), t(i,j,k,nstp,iPhyC(1,3))   &
-           , t(i,j,k,nstp,iPhyC(1,4))                                                       &
-           , t(i,j,k,nstp,iPhyC(1,1))+t(i,j,k,nstp,iPhyC(1,2))+t(i,j,k,nstp,iPhyC(1,3))     &
-            +t(i,j,k,nstp,iPhyC(1,4))                                                       &
-           , t(i,j,k,nstp,iZooC(1,1)), t(i,j,k,nstp,iPIC(1,1)), t(i,j,k,nstp,iPIC(1,2))     &
-           , t(i,j,k,nstp,iNO3(1)), t(i,j,k,nstp,iNH4(1)), t(i,j,k,nstp,iPO4(1))            &
-           , t(i,j,k,nstp,iDON(1,1)), t(i,j,k,nstp,iDON(1,2))                               &
-           , t(i,j,k,nstp,iPON(1,1)), t(i,j,k,nstp,iPON(1,2)), t(i,j,k,nstp,iPON(1,3))      &
-           , t(i,j,k,nstp,iDOP(1,1)), t(i,j,k,nstp,iDOP(1,2))                               &
-           , t(i,j,k,nstp,iPOP(1,1)), t(i,j,k,nstp,iPOP(1,2)), t(i,j,k,nstp,iPOP(1,3))      &
+    write(fid,'(*(g0:,", "))') time, PFDsurf           &
+           , t(i,j,k,nstp,iTemp), t(i,j,k,nstp,iSalt)  &
+           , t(i,j,k,nstp,iOxyg), t(i,j,k,nstp,iTAlk)  &
+           , t(i,j,k,nstp,iTIC(1):iTIC(N_Csp))          &
+           , t(i,j,k,nstp,iNO3(1):iNO3(N_Nsp))          &
+           , t(i,j,k,nstp,iNH4(1):iNH4(N_Nsp))          &
+           , t(i,j,k,nstp,iPO4(1):iPO4(N_Psp))          &
+           , t(i,j,k,nstp,iDOC(1,1):iDOC(N_Csp,Ndom))   &
+           , t(i,j,k,nstp,iPOC(1,1):iPOC(N_Csp,Npom))   &
+           , t(i,j,k,nstp,iDON(1,1):iDON(N_Nsp,Ndom))   &
+           , t(i,j,k,nstp,iPON(1,1):iPON(N_Nsp,Npom))   &
+           , t(i,j,k,nstp,iDOP(1,1):iDOP(N_Psp,Ndom))   &
+           , t(i,j,k,nstp,iPOP(1,1):iPOP(N_Psp,Npom))   &
+           , t(i,j,k,nstp,iPhyC(1,1):iPhyC(N_Csp,Nphy)) &
+           , t(i,j,k,nstp,iZooC(1,1):iZooC(N_Csp,Nzoo)) &
+           , t(i,j,k,nstp,iPhyN(1,1):iPhyN(N_Nsp,Nphy)) &
+           , t(i,j,k,nstp,iZooN(1,1):iZooN(N_Nsp,Nzoo)) &
+           , t(i,j,k,nstp,iPhyP(1,1):iPhyP(N_Csp,Nphy)) &
+           , t(i,j,k,nstp,iZooP(1,1):iZooP(N_Csp,Nzoo)) &
+           , t(i,j,k,nstp,iPIC(1,1):iPIC(N_Csp,Npim))   &
+           , t(i,j,k,nstp,iPhyC(iCt,1))+t(i,j,k,nstp,iPhyC(iCt,2))  &
+            +t(i,j,k,nstp,iPhyC(iCt,3))+t(i,j,k,nstp,iPhyC(iCt,4))  &
 #if defined CARBON_ISOTOPE
            , d13C_DIC                                                      &
 #endif
@@ -577,9 +698,10 @@ END SUBROUTINE write_crl_ave_lavel
 
   END SUBROUTINE write_ecosys_his_lavel
 #endif
+
 #if defined SEDIMENT_TESTMODE
 ! **********************************************************************
-!  Write lavel of coral internal conditions
+!  Write lavel of sedecosys
 ! **********************************************************************
   SUBROUTINE write_sedeco_lavel(fid)
   
@@ -600,7 +722,6 @@ END SUBROUTINE write_crl_ave_lavel
     RETURN
 
   END SUBROUTINE write_sedeco_lavel
-#endif
 ! **********************************************************************
 !  Write last sediment data
 ! **********************************************************************
@@ -608,9 +729,7 @@ END SUBROUTINE write_crl_ave_lavel
   SUBROUTINE write_sedeco_last_data(fid)
   
     USE mod_reef_ecosys_param
-#ifdef SEDIMENT_ECOSYS
     USE mod_sedecosys
-#endif
       
     implicit none
       
@@ -635,11 +754,11 @@ END SUBROUTINE write_crl_ave_lavel
       , 'NH4'                         &
       , 'PO4'                         &
       , 'LDOC', 'RDOC'                &
-      , 'LPOC', 'RPOC'                &
+      , 'LPOC', 'RPOC', 'CPOC'        &
       , 'LDON', 'RDON'                &
+      , 'LPON', 'RPON', 'CPON'        &
       , 'LDOP', 'RDOP'                &
-      , 'LPON', 'RPON'                &
-      , 'LPOP', 'RPOP'                &
+      , 'LPOP', 'RPOP', 'CPOP'        &
       , 'Mn2 '                        &
       , 'MnO2'                        &
       , 'Fe2 '                        &
@@ -663,8 +782,8 @@ END SUBROUTINE write_crl_ave_lavel
       , SEDECO(ng)%DOC(:,:,k,i,j)     &
       , SEDECO(ng)%POC(:,:,k,i,j)     &
       , SEDECO(ng)%DON(:,:,k,i,j)     &
-      , SEDECO(ng)%DOP(:,:,k,i,j)     &
       , SEDECO(ng)%PON(:,:,k,i,j)     &
+      , SEDECO(ng)%DOP(:,:,k,i,j)     &
       , SEDECO(ng)%POP(:,:,k,i,j)     &
       , SEDECO(ng)%Mn2 (k,i,j)        &
       , SEDECO(ng)%MnO2(k,i,j)        &
@@ -680,6 +799,7 @@ END SUBROUTINE write_crl_ave_lavel
     RETURN
 
   END SUBROUTINE write_sedeco_last_data
+#endif
 
 END MODULE mod_output
 

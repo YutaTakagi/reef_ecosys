@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2017-2023 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2017-2025 Takashi NAKAMURA  =====
 
 #include "cppdefs.h"
 
@@ -141,7 +141,7 @@ CONTAINS
     real(8) :: del          ! difference of elevation between inner and outer reef (m)
 
 #if defined REEF_FLOW_TESTMODE
-    real(8), parameter :: OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
+!    real(8), parameter :: FLOW_OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
     real(8) :: dsec = 0.d0 !sec
 #endif
 
@@ -194,9 +194,9 @@ CONTAINS
 
     IF( date*86400.0d0 >= dsec ) THEN
       if(dsec == 0.0d0) then
-        dsec=date*86400.0d0+OUTPUT_INTERVAL*60.0d0
+        dsec=date*86400.0d0+FLOW_OUTPUT_INTERVAL*60.0d0
       else
-        dsec=dsec+OUTPUT_INTERVAL*60.0d0
+        dsec=dsec+FLOW_OUTPUT_INTERVAL*60.0d0
       endif
     
       write(45,'(*(g0:,", "))') date   &

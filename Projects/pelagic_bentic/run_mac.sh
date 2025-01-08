@@ -31,6 +31,6 @@ rm *.mod
 #
 mkdir -p output
 #
-./ecosys_test.exe < foodweb2022.in
+./ecosys_test.exe < pelagic_bentic.in
 #./ecosys_test.exe < foodweb2023.in
 #

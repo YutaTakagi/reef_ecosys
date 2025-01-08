@@ -699,7 +699,7 @@ END SUBROUTINE allocate_reef_ecosys
 #endif
 #if defined ECOSYS_TESTMODE
 !  Output
-    real(8), parameter :: OUTPUT_INTERVAL = 5.0d0     ! Output interval (min)
+!    real(8), parameter :: ECOSYS_OUTPUT_INTERVAL = 5.0d0     ! Output interval (min)
     real(8), save :: time = 0.0d0 !sec
     real(8), save :: dsec = 0.0d0 !sec
 #endif
@@ -2831,7 +2831,7 @@ END SUBROUTINE allocate_reef_ecosys
 # endif
         , pH(N), ssfCO2, Warg(N), U10, ssCO2flux, ssO2flux
         
-    dsec=dsec+OUTPUT_INTERVAL*60.
+    dsec=dsec+ECOSYS_OUTPUT_INTERVAL*60.
 
     END IF
 !-----------------------------------------------------------------------
