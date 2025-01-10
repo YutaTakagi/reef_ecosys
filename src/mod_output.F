@@ -17,172 +17,41 @@ contains
 ! **********************************************************************
 !  Open files
 ! **********************************************************************
-  SUBROUTINE files_open
+  SUBROUTINE files_open(OUTFILE_prefix)
   
     implicit none
 
-    character(256) :: OUTFILE_prefix
-
-    namelist/output/OUTFILE_prefix
+    character(len=*), intent( in) :: OUTFILE_prefix
   
-    read (5, nml=output)
-    rewind(5)
-  
-#if defined CHAMBER_SITE4
-    open(10,file=trim(OUTFILE_prefix)//'_site04-env_his.csv')
-# if defined CORAL_TESTMODE
-    open(11,file=trim(OUTFILE_prefix)//'_site04-crl1_his.csv')
-    open(12,file=trim(OUTFILE_prefix)//'_site04-crl2_his.csv')
-    open(21,file=trim(OUTFILE_prefix)//'_site04-crl1_ave.csv')
-    open(22,file=trim(OUTFILE_prefix)//'_site04-crl2_ave.csv')
-    open(31,file=trim(OUTFILE_prefix)//'_site04-zoo1_his.csv')
-# endif
-# if defined ECOSYS_TESTMODE
-    open(40,file=trim(OUTFILE_prefix)//'_site04-ecosys_his.csv')
-# endif
-#elif defined CHAMBER_SITE5
-    open(10,file=trim(OUTFILE_prefix)//'_site05-env_his.csv')
-# if defined CORAL_TESTMODE
-    open(11,file=trim(OUTFILE_prefix)//'_site05-crl1_his.csv')
-    open(12,file=trim(OUTFILE_prefix)//'_site05-crl2_his.csv')
-    open(21,file=trim(OUTFILE_prefix)//'_site05-crl1_ave.csv')
-    open(22,file=trim(OUTFILE_prefix)//'_site05-crl2_ave.csv')
-    open(31,file=trim(OUTFILE_prefix)//'_site05-zoo1_his.csv')
-# endif
-# if defined ECOSYS_TESTMODE
-    open(40,file=trim(OUTFILE_prefix)//'_site05-ecosys_his.csv')
-# endif
-#elif defined CHAMBER_SITE6
-    open(10,file=trim(OUTFILE_prefix)//'_site06-env_his.csv')
-# if defined CORAL_TESTMODE
-    open(11,file=trim(OUTFILE_prefix)//'_site06-crl1_his.csv')
-    open(12,file=trim(OUTFILE_prefix)//'_site06-crl2_his.csv')
-    open(21,file=trim(OUTFILE_prefix)//'_site06-crl1_ave.csv')
-    open(22,file=trim(OUTFILE_prefix)//'_site06-crl2_ave.csv')
-    open(31,file=trim(OUTFILE_prefix)//'_site06-zoo1_his.csv')
-# endif
-# if defined ECOSYS_TESTMODE
-    open(40,file=trim(OUTFILE_prefix)//'_site06-ecosys_his.csv')
-# endif
-#elif defined CHAMBER_SITE7
-    open(10,file=trim(OUTFILE_prefix)//'_site07-env_his.csv')
-# if defined CORAL_TESTMODE
-    open(11,file=trim(OUTFILE_prefix)//'_site07-crl1_his.csv')
-    open(12,file=trim(OUTFILE_prefix)//'_site07-crl2_his.csv')
-    open(21,file=trim(OUTFILE_prefix)//'_site07-crl1_ave.csv')
-    open(22,file=trim(OUTFILE_prefix)//'_site07-crl2_ave.csv')
-    open(31,file=trim(OUTFILE_prefix)//'_site07-zoo1_his.csv')
-# endif
-# if defined ECOSYS_TESTMODE
-    open(40,file=trim(OUTFILE_prefix)//'_site07-ecosys_his.csv')
-# endif
-#elif defined CHAMBER_SITE9
-    open(10,file=trim(OUTFILE_prefix)//'_site09-env_his.csv')
-# if defined CORAL_TESTMODE
-    open(11,file=trim(OUTFILE_prefix)//'_site09-crl1_his.csv')
-    open(12,file=trim(OUTFILE_prefix)//'_site09-crl2_his.csv')
-    open(21,file=trim(OUTFILE_prefix)//'_site09-crl1_ave.csv')
-    open(22,file=trim(OUTFILE_prefix)//'_site09-crl2_ave.csv')
-    open(31,file=trim(OUTFILE_prefix)//'_site09-zoo1_his.csv')
-# endif
-# if defined ECOSYS_TESTMODE
-    open(40,file=trim(OUTFILE_prefix)//'_site09-ecosys_his.csv')
-# endif
-#elif defined CHAMBER_SITE10
-    open(10,file=trim(OUTFILE_prefix)//'_site10-env_his.csv')
-# if defined CORAL_TESTMODE
-    open(11,file=trim(OUTFILE_prefix)//'_site10-crl1_his.csv')
-    open(12,file=trim(OUTFILE_prefix)//'_site10-crl2_his.csv')
-    open(21,file=trim(OUTFILE_prefix)//'_site10-crl1_ave.csv')
-    open(22,file=trim(OUTFILE_prefix)//'_site10-crl2_ave.csv')
-    open(31,file=trim(OUTFILE_prefix)//'_site10-zoo1_his.csv')
-# endif
-# if defined ECOSYS_TESTMODE
-    open(40,file=trim(OUTFILE_prefix)//'_site10-ecosys_his.csv')
-# endif
-
-
-#else
     open(10,file=trim(OUTFILE_prefix)//'-env_his.csv')
-# if defined CORAL_TESTMODE
+#if defined CORAL_TESTMODE
     open(11,file=trim(OUTFILE_prefix)//'-crl1_his.csv')
     open(12,file=trim(OUTFILE_prefix)//'-crl2_his.csv')
     open(21,file=trim(OUTFILE_prefix)//'-crl1_ave.csv')
     open(22,file=trim(OUTFILE_prefix)//'-crl2_ave.csv')
-#  if defined CORAL_ZOOXANTHELLAE
+# if defined CORAL_ZOOXANTHELLAE
     open(31,file=trim(OUTFILE_prefix)//'-zoo1_his.csv')
     open(32,file=trim(OUTFILE_prefix)//'-zoo2_his.csv')
     open(41,file=trim(OUTFILE_prefix)//'-zphot1_his.csv')
     open(42,file=trim(OUTFILE_prefix)//'-zphot2_his.csv')
-#  endif
 # endif
-# if defined ECOSYS_TESTMODE
-    open(40,file=trim(OUTFILE_prefix)//'-ecosys_his.csv')
-# endif
-# if defined REEF_FLOW_TESTMODE
-    open(45,file=trim(OUTFILE_prefix)//'-flow_his.csv')
-# endif
-
 #endif
-    open(46,file=trim(OUTFILE_prefix)//'-vprof.csv') !!!! for vertical profile output
-      
+#if defined ECOSYS_TESTMODE
+    open(40,file=trim(OUTFILE_prefix)//'-ecosys_his.csv')
+#endif
+#if defined REEF_FLOW_TESTMODE
+    open(45,file=trim(OUTFILE_prefix)//'-flow_his.csv')
+#endif
+
+!    open(46,file=trim(OUTFILE_prefix)//'-vprof.csv') !!!! for vertical profile output
+       ! moved to write_env_vprof routine
 #if defined SEDIMENT_TESTMODE
-    open(50,file='output/sedeco_rst.csv')!!!!!!!!!!!!!!!!!!!for debug
-    open(62,file=trim(OUTFILE_prefix)//'-sedTmp_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    open(80,file=trim(OUTFILE_prefix)//'-sedSal_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(56,file=trim(OUTFILE_prefix)//'-sedDIC_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    open(57,file=trim(OUTFILE_prefix)//'-sedTA_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    open(58,file=trim(OUTFILE_prefix)//'-sedDO_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(59,file=trim(OUTFILE_prefix)//'-sedpH_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(60,file=trim(OUTFILE_prefix)//'-sedWarg_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    open(61,file=trim(OUTFILE_prefix)//'-sedNH4_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(63,file=trim(OUTFILE_prefix)//'-sedNO3_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(64,file=trim(OUTFILE_prefix)//'-sedPO4_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(65,file=trim(OUTFILE_prefix)//'-sedLDOC_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(66,file=trim(OUTFILE_prefix)//'-sedLPOC_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(67,file=trim(OUTFILE_prefix)//'-sedDON_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(68,file=trim(OUTFILE_prefix)//'-sedPON_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(69,file=trim(OUTFILE_prefix)//'-sedDOP_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(70,file=trim(OUTFILE_prefix)//'-sedPOP_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(71,file=trim(OUTFILE_prefix)//'-sedPg_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(72,file=trim(OUTFILE_prefix)//'-sedRdoc_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(73,file=trim(OUTFILE_prefix)//'-sedRpoc_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(74,file=trim(OUTFILE_prefix)//'-sedGn_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(75,file=trim(OUTFILE_prefix)//'-sedNit1_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(76,file=trim(OUTFILE_prefix)//'-sedNit2_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(78,file=trim(OUTFILE_prefix)//'-sedDNd_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(79,file=trim(OUTFILE_prefix)//'-sedDNp_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-
-    !! MM edit 2023
-!    open(81,file=trim(OUTFILE_prefix)//'-sedN2_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(82,file=trim(OUTFILE_prefix)//'-sedRDOC_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(83,file=trim(OUTFILE_prefix)//'-sedRPOC_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(84,file=trim(OUTFILE_prefix)//'-sedMn2_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(85,file=trim(OUTFILE_prefix)//'-sedMnO2_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(86,file=trim(OUTFILE_prefix)//'-sedFe2_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(87,file=trim(OUTFILE_prefix)//'-sedFeS_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(88,file=trim(OUTFILE_prefix)//'-sedFeS2_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(89,file=trim(OUTFILE_prefix)//'-sedFeOOH_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(90,file=trim(OUTFILE_prefix)//'-sedFeOOH_PO4_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(91,file=trim(OUTFILE_prefix)//'-sedH2S_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(92,file=trim(OUTFILE_prefix)//'-sedHS_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-    open(93,file=trim(OUTFILE_prefix)//'-sedS0_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    open(94,file=trim(OUTFILE_prefix)//'-sedSO4_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-    ! open(95,file=trim(OUTFILE_prefix)//'-sedS2_his.csv')!!!!!!!!!!!!!!!!!!!for debug
-
-    open(96,file=trim(OUTFILE_prefix)//'-calcheck0.csv',status='replace')!!!!!!!!!for debug
-    open(97,file=trim(OUTFILE_prefix)//'-calcheck1.csv',status='replace')!!!!!!!!!for debug
-!    open(98,file=trim(OUTFILE_prefix)//'-redoxlevel.csv',status='replace')!!!!!!!!!for debug
-    open(99,file=trim(OUTFILE_prefix)//'-depth.csv',status='replace')!!!!!!!!!for debug
-!    open(100,file=trim(OUTFILE_prefix)//'-sedPOCn_his.csv',status='replace')!!!!!!!!!!!!!!!!!!!for debug
-!    open(101,file=trim(OUTFILE_prefix)//'-v1.csv',status='replace')!!!!!!!!!for debug
-!    open(102,file=trim(OUTFILE_prefix)//'-v2.csv',status='replace')!!!!!!!!!for debug
-!    open(103,file=trim(OUTFILE_prefix)//'-v3.csv',status='replace')!!!!!!!!!for debug
-!    open(104,file=trim(OUTFILE_prefix)//'-v4.csv',status='replace')!!!!!!!!!for debug
-!    open(105,file=trim(OUTFILE_prefix)//'-v5.csv',status='replace')!!!!!!!!!for debug
-!    open(106,file=trim(OUTFILE_prefix)//'-vom.csv',status='replace')!!!!!!!!!for debug
-    open(107,file=trim(OUTFILE_prefix)//'-R_O2.csv',status='replace')!!!!!!!!!for debug
-    open(108,file=trim(OUTFILE_prefix)//'-flux_DO.csv',status='replace')!!!!!!!!!for debug
+    open(50,file=trim(OUTFILE_prefix)//'-depth.csv',status='replace')!!!!!!!!!for debug
+!    open(51,file='output/sedeco_his.csv') ! moved to write_sedeco_his_data routine
+!    open(52,file='output/sedeco_dia.csv') ! moved to write_sedeco_dia_data routine
+    open(53,file=trim(OUTFILE_prefix)//'-calcheck0.csv',status='replace')!!!!!!!!!for debug
+    open(54,file=trim(OUTFILE_prefix)//'-calcheck1.csv',status='replace')!!!!!!!!!for debug
+    open(55,file=trim(OUTFILE_prefix)//'-flux_DO.csv',status='replace')!!!!!!!!!for debug
 #endif
     RETURN
 
@@ -216,58 +85,11 @@ END SUBROUTINE files_open
 #endif
 #if defined SEDIMENT_TESTMODE
     close(50)
-    ! close(56)
-    ! close(57)
-    close(58)
-    ! close(59)
-    ! close(60)
-    close(61)
-    ! close(62)
-    close(63)
-    close(64)
-    close(65)
-    close(66)
-    ! close(67)
-    ! close(68)
-    ! close(69)
-    ! close(70)
-    ! close(71)
-    ! close(72)
-    ! close(73)
-    ! close(74)
-    ! close(75)
-    ! close(76)
-    ! close(78)
-    ! close(79)
-    close(80)
-    close(81)
-    close(82)
-    close(83)
-    close(84)
-    close(85)
-    close(86)
-    close(87)
-    close(88)
-    close(89)
-    close(90)
-    close(91)
-    ! close(92)
-    close(93)
-    close(94)
-    ! close(95)
-    close(96)
-    close(97)
-    close(98)
-    close(99)
-    close(100)
-    close(101)
-    close(102)
-    close(103)
-    close(104)
-    close(105)
-    close(106)
-    close(107)
-    close(108)
+!    close(51)
+!    close(52)
+    close(53)
+    close(54)
+    close(55)
 
 #endif
 
@@ -429,14 +251,18 @@ END SUBROUTINE files_close
 !  Write vertical profile of environmental data
 ! **********************************************************************
 
-  SUBROUTINE write_env_vprof(fid, N)
+  SUBROUTINE write_env_vprof(OUT_FILE, date, N)
   
     USE mod_param
     
     implicit none
     
-    integer, intent(in) :: fid
+    character(len=*), intent( in) :: OUT_FILE
+    real(8), intent( in) :: date
     integer, intent(in) :: N
+
+    integer,parameter :: fid = 45
+
     real(8) :: depth_r
 #if defined CARBON_ISOTOPE
     real(8) :: d13C_DIC
@@ -448,6 +274,9 @@ END SUBROUTINE files_close
 !    k=1
     nstp=1
     
+    open(fid,file=OUT_FILE)
+    write(fid,'(*(g0:,", "))') 'Time=', date
+
     write(fid,'(*(g0:,", "))') 'Depth', 'PFDsurf'  &
         ,'Temp','Salt','DO','TA'   &
 #if defined CLUMPED_ISOTOPE 
@@ -628,7 +457,9 @@ END SUBROUTINE files_close
 #endif
            , dz(i,j,k), tide
 
-      END DO      
+      END DO
+
+      close(fid)
 
     RETURN
 
@@ -936,14 +767,18 @@ END SUBROUTINE write_crl_ave_lavel
 !  Write last sediment data
 ! **********************************************************************
 
-  SUBROUTINE write_sedeco_last_data(fid)
+  SUBROUTINE write_sedeco_his_data(OUT_FILE, date)
   
     USE mod_reef_ecosys_param
     USE mod_sedecosys
       
     implicit none
       
-    integer, intent(in) :: fid
+    character(len=*), intent( in) :: OUT_FILE
+    real(8), intent( in) :: date
+
+    integer,parameter :: fid = 51
+
     real(8) :: zr(0:Nsed)
     integer :: i,j,k,ng
 
@@ -953,6 +788,9 @@ END SUBROUTINE write_crl_ave_lavel
 
     zr(0) = -1.0d0
     zr(1:Nsed) = SEDECO(1)%zr(:)
+
+    open(51,file=OUT_FILE)
+    write(fid,'(*(g0:,", "))') 'Time=', date
 
     write(fid,'(*(g0:,", "))') 'zr'   &
         , 'Tmp'                       &
@@ -1023,6 +861,13 @@ END SUBROUTINE write_crl_ave_lavel
         ,'RPOP'            &
         ,'CPOP'            &
 # endif
+# if defined CLUMPED_ISOTOPE 
+        ,'PIC','PIC_13C','PIC_47D'    &
+# elif defined CARBON_ISOTOPE  || defined CARBON_TRACE
+        ,'PIC','PIC_13C'              &
+# else
+        ,'PIC'                        &
+# endif
         , 'Mn2 '           &
         , 'MnO2'           &
         , 'Fe2 '           &
@@ -1063,6 +908,7 @@ END SUBROUTINE write_crl_ave_lavel
         , SEDECO(ng)%PON(:,:,k,i,j)     &
         , SEDECO(ng)%DOP(:,:,k,i,j)     &
         , SEDECO(ng)%POP(:,:,k,i,j)     &
+        , SEDECO(ng)%PIC(:,k,i,j)       & 
         , SEDECO(ng)%Mn2 (k,i,j)        &
         , SEDECO(ng)%MnO2(k,i,j)        &
         , SEDECO(ng)%Fe2 (k,i,j)        &
@@ -1073,10 +919,149 @@ END SUBROUTINE write_crl_ave_lavel
         , SEDECO(ng)%SO4(:,k,i,j)       &
         , SEDECO(ng)%S0 (:,k,i,j)   
     END DO
+    close(fid)
     
     RETURN
 
-  END SUBROUTINE write_sedeco_last_data
+  END SUBROUTINE write_sedeco_his_data
+
+  SUBROUTINE write_sedeco_dia_data(OUT_FILE, date)
+  
+    USE mod_reef_ecosys_param
+    USE mod_geochem
+    USE mod_sedecosys
+     
+    implicit none
+      
+    character(len=*), intent( in) :: OUT_FILE
+    real(8), intent( in) :: date
+
+    integer,parameter :: fid = 52
+
+    real(8) :: zr(0:Nsed)
+    real(8) :: pH, Warg, Wcal, CO3, T, S
+    integer :: i,j,k,ng
+
+    i=1
+    j=1
+    ng=1
+
+    zr(0) = -1.0d0
+    zr(1:Nsed) = SEDECO(1)%zr(:)
+
+    open(fid,file=OUT_FILE)
+    write(fid,'(*(g0:,", "))') 'Time=', date
+
+    write(fid,'(*(g0:,", "))') 'zr'   &
+# if defined CLUMPED_ISOTOPE 
+        ,'d13C_DIC','D47_DIC'    &
+# elif defined CARBON_ISOTOPE
+        ,'d13C_DIC'              &
+# endif
+# if defined NITROGEN_ISOTOPE
+        ,'d15N_NO3'  &
+        ,'d15N_NH4'  &
+# endif
+# if defined CLUMPED_ISOTOPE 
+        ,'d13C_LDOC','D47_LDOC' &
+        ,'d13C_RDOC','D47_RDOC' &
+        ,'d13C_LPOC','D47_LPOC' &
+        ,'d13C_RPOC','D47_RPOC' &
+        ,'d13C_CPOC','D47_CPOC' &
+# elif defined CARBON_ISOTOPE
+        ,'d13C_LDOC' &
+        ,'d13C_RDOC' &
+        ,'d13C_LPOC' &
+        ,'d13C_RPOC' &
+        ,'d13C_CPOC' &
+# endif
+# if defined NITROGEN_ISOTOPE
+        ,'d15N_LDON' &
+        ,'d15N_RDON' &
+        ,'d15N_LPON' &
+        ,'d15N_RPON' &
+        ,'d15N_CPON' &
+# endif
+# if defined CLUMPED_ISOTOPE 
+        ,'d13C_PIC','D47_PIC'    &
+# elif defined CARBON_ISOTOPE
+        ,'d13C_PIC'              &
+# endif
+# if defined SULFUR_ISOTOPE
+        ,'d34S_FeS2' &
+        ,'d34S_H2S'  &
+        ,'d34S_SO4'  &
+        ,'d34S_S0 '  &    
+# endif
+        ,'pH', 'Warg', 'Wcal'
+    
+    DO k=0,Nsed
+      T = SEDECO(ng)%Tmp(k,i,j)+273.15d0
+      S = SEDECO(ng)%Sal(k,i,j)
+    
+      pH = pH_fromATCT(SEDECO(ng)%TA (k,i,j)     &
+                      ,SEDECO(ng)%DIC(iCt,k,i,j) &
+                      ,T ,S  )
+      CO3 = cCO3_fromCTpH(SEDECO(ng)%DIC(iCt,k,i,j), pH, T, S)
+      Warg = Warg_fromcCO3(CO3, T, S)
+      Wcal = Wcal_fromcCO3(CO3, T, S)
+    
+      write(fid,'(*(g0:,", "))') zr(k)  &
+# if defined CLUMPED_ISOTOPE 
+        ,delta_from_Ci_Ct(SEDECO(ng)%DIC(iC13,k,i,j),SEDECO(ng)%DIC(iCt,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%DIC(iD47,k,i,j),SEDECO(ng)%DIC(iCt,k,i,j),R13C_VPDB)   &
+# elif defined CARBON_ISOTOPE
+        ,delta_from_Ci_Ct(SEDECO(ng)%DIC(iC13,k,i,j),SEDECO(ng)%DIC(iCt,k,i,j),R13C_VPDB)   &
+# endif
+# if defined NITROGEN_ISOTOPE
+        ,delta_from_Ci_Ct(SEDECO(ng)%NO3(iN15,k,i,j),SEDECO(ng)%NO3(iNt,k,i,j),R15N_AIR)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%NH4(iN15,k,i,j),SEDECO(ng)%NH4(iNt,k,i,j),R15N_AIR)   &
+# endif
+# if defined CLUMPED_ISOTOPE 
+        ,delta_from_Ci_Ct(SEDECO(ng)%DOC(iC13,iLDOM,k,i,j),SEDECO(ng)%DOC(iCt,iLDOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%DOC(iD47,iLDOM,k,i,j),SEDECO(ng)%DOC(iCt,iLDOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%DOC(iC13,iRDOM,k,i,j),SEDECO(ng)%DOC(iCt,iRDOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%DOC(iD47,iRDOM,k,i,j),SEDECO(ng)%DOC(iCt,iRDOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iC13,iLPOM,k,i,j),SEDECO(ng)%POC(iCt,iLPOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iD47,iLPOM,k,i,j),SEDECO(ng)%POC(iCt,iLPOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iC13,iRPOM,k,i,j),SEDECO(ng)%POC(iCt,iRPOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iD47,iRPOM,k,i,j),SEDECO(ng)%POC(iCt,iRPOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iC13,iCPOM,k,i,j),SEDECO(ng)%POC(iCt,iCPOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iD47,iCPOM,k,i,j),SEDECO(ng)%POC(iCt,iCPOM,k,i,j),R13C_VPDB)   &
+# elif defined CARBON_ISOTOPE
+        ,delta_from_Ci_Ct(SEDECO(ng)%DOC(iC13,iLDOM,k,i,j),SEDECO(ng)%DOC(iCt,iLDOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%DOC(iC13,iRDOM,k,i,j),SEDECO(ng)%DOC(iCt,iRDOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iC13,iLPOM,k,i,j),SEDECO(ng)%POC(iCt,iLPOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iC13,iRPOM,k,i,j),SEDECO(ng)%POC(iCt,iRPOM,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%POC(iC13,iCPOM,k,i,j),SEDECO(ng)%POC(iCt,iCPOM,k,i,j),R13C_VPDB)   &
+# endif
+# if defined NITROGEN_ISOTOPE
+        ,delta_from_Ci_Ct(SEDECO(ng)%DON(iN15,iLDOM,k,i,j),SEDECO(ng)%DON(iNt,iLDOM,k,i,j),R15C_AIR)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%DON(iN15,iRDOM,k,i,j),SEDECO(ng)%DON(iNt,iRDOM,k,i,j),R15C_AIR)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%PON(iN15,iLPOM,k,i,j),SEDECO(ng)%PON(iNt,iLPOM,k,i,j),R15C_AIR)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%PON(iN15,iRPOM,k,i,j),SEDECO(ng)%PON(iNt,iRPOM,k,i,j),R15C_AIR)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%PON(iN15,iCPOM,k,i,j),SEDECO(ng)%PON(iNt,iCPOM,k,i,j),R15C_AIR)   &
+# endif
+# if defined CLUMPED_ISOTOPE 
+        ,delta_from_Ci_Ct(SEDECO(ng)%PIC(iC13,k,i,j),SEDECO(ng)%PIC(iCt,k,i,j),R13C_VPDB)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%PIC(iD47,k,i,j),SEDECO(ng)%PIC(iCt,k,i,j),R13C_VPDB)   &
+# elif defined CARBON_ISOTOPE
+        ,delta_from_Ci_Ct(SEDECO(ng)%PIC(iC13,k,i,j),SEDECO(ng)%PIC(iCt,k,i,j),R13C_VPDB)   &
+# endif
+# if defined SULFUR_ISOTOPE
+        ,delta_from_Ci_Ct(SEDECO(ng)%FeS2(iS34,k,i,j),SEDECO(ng)%FeS2(iSt,k,i,j),R34S_VCDT)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%H2S (iS34,k,i,j),SEDECO(ng)%H2S (iSt,k,i,j),R34S_VCDT)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%SO4 (iS34,k,i,j),SEDECO(ng)%SO4 (iSt,k,i,j),R34S_VCDT)   &
+        ,delta_from_Ci_Ct(SEDECO(ng)%S0  (iS34,k,i,j),SEDECO(ng)%S0  (iSt,k,i,j),R34S_VCDT)   &
+# endif
+        ,pH, Warg, Wcal
+    END DO
+
+    close(fid)
+
+    RETURN
+
+  END SUBROUTINE write_sedeco_dia_data
 #endif
 
 END MODULE mod_output

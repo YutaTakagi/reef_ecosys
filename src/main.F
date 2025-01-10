@@ -107,6 +107,8 @@ PROGRAM main
   real(8) :: dt, depth
   integer :: isplitc, isplitsed
 
+  character(256) :: OUTFILE_prefix
+
   real(8) :: Fdep_sed_in
   real(8) :: MnO2_sed_in, FeOOH_sed_in, FeS2_sed_in
   real(8) :: rCaCO3_sed_in, OrgC_sed_in
@@ -116,8 +118,12 @@ PROGRAM main
   real(8) :: sgd_DOC_in(Ndom), sgd_DON_in(Ndom), sgd_DOP_in(Ndom)
 
   real(8) :: Diff_w
+  character(256) :: OUTFILE
+  character(4) :: sFNUM
+  integer :: ifnum
 
   namelist/input_info/in_file
+  namelist/output/OUTFILE_prefix
   namelist/ecosys_config/Tmax, time0
   namelist/ecosys_config/nSetting
   namelist/ecosys_config/Im, Jm, N
@@ -133,8 +139,9 @@ PROGRAM main
   namelist/vprof_config/Diff_w
 
 
-
   read (5, nml=input_info)
+  rewind(5)
+  read (5, nml=output)
   rewind(5)
   read (5, nml=ecosys_config)
   rewind(5)
@@ -208,7 +215,7 @@ PROGRAM main
 
 !----- Open output files -------------------------
 
-  CALL files_open
+  CALL files_open(OUTFILE_prefix)
       
 !----- Set initial conditions -------------------------
 
@@ -229,7 +236,7 @@ PROGRAM main
   FeOOH_sed = FeOOH_sed_in  !! Iron hydroxide (FeOOH) concentration in sediments [nmol/g(DW)]
   FeS2_sed  = FeS2_sed_in   !! Iron sulfide (FeS2) concentration in sediments [nmol/g(DW)]
   OrgC_sed  = OrgC_sed_in   ! Organic carbon in sediments [nmol/g(DW)]
-  rCaCO3_sed = rCaCO3_sed_in ! Fraction of Calcium carbonate (CaCO3) in sediments [% DW]
+  rCaCO3_sed = rCaCO3_sed_in ! Fraction of Calcium carbonate (CaCO3) in sediments [g/g(DW)]
 
 #if defined USE_HEAT
   CALL initialize_heat(1, Ngrids, 1, Im, 1, Jm)
@@ -866,12 +873,26 @@ PROGRAM main
     if( time*86400.0d0 >= dsec ) THEN
       if(dsec == 0.0d0) then
         dsec=time*86400.0d0+ECOSYS_OUTPUT_INTERVAL*60.0d0
+        ifnum = 0
       else
         dsec=dsec+ECOSYS_OUTPUT_INTERVAL*60.0d0
       endif
       
       write(*,*) 'Time (day): ', time  ! Output for standard out
+      write(sFNUM,'(I4.4)') ifnum
       CALL write_env_data(10)
+#if defined SEDIMENT_TESTMODE
+      OUTFILE=trim(OUTFILE_prefix)//'-sedeco_his_'//sFNUM//'.csv'
+      CALL write_sedeco_his_data(OUTFILE, time)
+      OUTFILE=trim(OUTFILE_prefix)//'-sedeco_dia_'//sFNUM//'.csv'
+      CALL write_sedeco_dia_data(OUTFILE, time)
+#endif
+      if (nSetting .eq. 7) then
+        OUTFILE=trim(OUTFILE_prefix)//'-env_vprof_'//sFNUM//'.csv'
+        CALL write_env_vprof(OUTFILE, time, N)
+      endif
+
+      ifnum = ifnum + 1
 
     endif
 
@@ -887,11 +908,11 @@ PROGRAM main
 !----- End loop --------------------------------------
 
 
-!----- Write sedeco last data --------------------------------------
+!----- Write sedeco restart data --------------------------------------
 #if defined SEDIMENT_TESTMODE
-  CALL write_sedeco_last_data(50)
+  OUTFILE=trim(OUTFILE_prefix)//'-sedeco_rst.csv'
+  CALL write_sedeco_his_data(OUTFILE,time)
 #endif
-  CALL write_env_vprof(46, N)
 
 !----- Close output files --------------------------------------
 

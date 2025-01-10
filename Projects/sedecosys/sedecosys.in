@@ -35,7 +35,7 @@
 ! isplitsed > 1.0d3 * sgd_flux_in * dt
 !    because  Courant Number: C = v*dt/dz < 1 
 !      -> sgd_flux_in*dt/isplitsed/dz_min < 1 (dz_min = 0.001 m)
-  isplitsed = 2
+  isplitsed = 5
 !  isplitsed = 20  
 /
 
@@ -99,7 +99,7 @@
 !  FeS2_sed_in  = 5.0d5   ! Iron sulfide (FeS2) concentration in sediments [nmol/g(DW)]
   OrgC_sed_in =  2.0d6   ! Organic carbon in sediments [nmol/g(DW)]
                          !  (~2000 umolC g-1; Miyazima et al., 2015)
-  rCaCO3_sed_in = 80.0d0 ! Fraction of Calcium carbonate (CaCO3) in sediments [% DW]
+  rCaCO3_sed_in = 0.8d0 ! Fraction of Calcium carbonate (CaCO3) in sediments [% DW]
 
 ! parameters of sumbarine groundwater discharge (set: SGD_ON)
   sgd_flux_in = 0.0d-2   ! sumbarine groundwater discharge rate (cm s-1) 

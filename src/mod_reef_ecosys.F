@@ -628,6 +628,7 @@ END SUBROUTINE allocate_reef_ecosys
       CALL foodweb     &
     !   input parameters
         ( ng, n, i, j  &   ! ng: nested grid number; n: coral compartment; i,j: position
+        , date         &   ! Date (days since x or elapsed days)
         , dt           &   ! Time step (sec)
         , PFD          &   ! Photon flux density (umol m-2 s-1)
         , rho_sw(k)    &   ! Density of seawater (g cm-3)
@@ -805,18 +806,22 @@ END SUBROUTINE allocate_reef_ecosys
       ENDDO
     END DO
 
-    DO itrc=2, Npim
-      w_PM = -(rho_PIM(itrc)/1.024d0 - 1.0d0)*grav*D_PIM(itrc)*D_PIM(itrc)*1.0d-6/18.0d0/vis_sw
-      DO isp=1, N_Csp
-        CALL bio_vadv2(N, dt, dz, z_r, z_w, w_PM, PIC(isp,itrc,:), dPIC(isp,itrc,:), Fdep_PIC(isp,itrc))
-      ENDDO
-    END DO
+!    DO itrc=2, Npim
+!      w_PM = -(rho_PIM(itrc)/1.024d0 - 1.0d0)*grav*D_PIM(itrc)*D_PIM(itrc)*1.0d-6/18.0d0/vis_sw
+!      DO isp=1, N_Csp
+!        CALL bio_vadv2(N, dt, dz, z_r, z_w, w_PM, PIC(isp,itrc,:), dPIC(isp,itrc,:), Fdep_PIC(isp,itrc))
+!      ENDDO
+!    END DO
+    w_PM = -(rho_PIM(iDead)/1.024d0 - 1.0d0)*grav*D_PIM(iDead)*D_PIM(iDead)*1.0d-6/18.0d0/vis_sw
+    DO isp=1, N_Csp
+      CALL bio_vadv2(N, dt, dz, z_r, z_w, w_PM, PIC(isp,iDead,:), dPIC(isp,iDead,:), Fdep_PIC(isp,iDead))
+    ENDDO
 
 !----- Mass balance equation -----------------------------------------------------------
     dPOC_dt(:,:,:) = dPOC_dt(:,:,:) + dPOC(:,:,:)
     dPON_dt(:,:,:) = dPON_dt(:,:,:) + dPON(:,:,:)
     dPOP_dt(:,:,:) = dPOP_dt(:,:,:) + dPOP(:,:,:)
-    dPIC_dt(:,2:Npim,:) = dPIC_dt(:,2:Npim,:) + dPIC(:,2:Npim,:)
+    dPIC_dt(:,iDead,:) = dPIC_dt(:,iDead,:) + dPIC(:,iDead,:)
 # endif
 
 !!!---------------------------------------------------------------------
@@ -1154,29 +1159,34 @@ END SUBROUTINE allocate_reef_ecosys
       Fdep_MnO2  = Fdep_sed * MnO2_sed !!!! Check needed
       Fdep_FeOOH = Fdep_sed * FeOOH_sed !!!! Check needed
       Fdep_FeOOH_PO4(iPt) = Fdep_sed * 0.0d0 !!!! Check needed
-      Fdep_FeS(iSt) = Fdep_sed * 0.0d0 !!!! Check needed
-      Fdep_FeS2(iSt)= Fdep_sed * FeS2_sed !!!! Check needed
-      Fdep_S0(iSt)  = Fdep_sed * 0.0d0 !!!! Check needed
+      Fdep_FeS (iSt) = Fdep_sed * 0.0d0 !!!! Check needed
+      Fdep_FeS2(iSt) = Fdep_sed * FeS2_sed !!!! Check needed
+      Fdep_S0  (iSt) = Fdep_sed * 0.0d0 !!!! Check needed
+#    if defined SULFUR_ISOTOPE
+      Fdep_FeS (iS34) = Ci_from_Ct_delta(Fdep_FeS (iSt), 0.0d0, R34S_VCDT) !!!! Check needed
+      Fdep_FeS2(iS34) = Ci_from_Ct_delta(Fdep_FeS2(iSt), 0.0d0, R34S_VCDT) !!!! Check needed
+      Fdep_S0  (iS34) = Ci_from_Ct_delta(Fdep_S0  (iSt), 0.0d0, R34S_VCDT) !!!! Check needed
+#    endif
 #   endif
 
       DO m=1,isplitsed   !!! Loop for sediment model: dtc <= 0.05 sec
 
         datei = date + dtsed*(m-1)/86400.0d0
-        CALL sedecosys      &
+        CALL sedecosys       &
 !         input parameters
-          ( ng, i, j        &   ! ng: nested grid number; i,j: position
-          , datei           &   ! Date (days since x or elapsed days)
-          , dtsed           &   ! Time step (sec)
-          , Tmp(1)          &   ! Tmp: Temperature (oC)
-          , Sal(1)          &   ! Sal: Salinity (PSU)
-          , DOx(1)          &   ! DOx: Dissolved oxygen (umol L-1)
-          , TA(1)*rho_sw(1) &   ! TA: Total alkalinity (umol L-1)
-          , DIC(:,1)*rho_sw(1)&   ! DIC: Dissolved inorganic carbon (µmol L-1)   ! DIC(umol kg-1) * rho(kg L-1) = (umol L-1)
+          ( ng, i, j         &   ! ng: nested grid number; i,j: position
+          , datei            &   ! Date (days since x or elapsed days)
+          , dtsed            &   ! Time step (sec)
+          , Tmp(1)           &   ! Tmp: Temperature (oC)
+          , Sal(1)           &   ! Sal: Salinity (PSU)
+          , DOx(1)           &   ! DOx: Dissolved oxygen (umol L-1)
+          , TA(1)            &   ! TA: Total alkalinity (umol kg-1)
+          , DIC(:,1)         &   ! DIC: Dissolved inorganic carbon (umol kg-1)
           , NO3(:,1)         &   ! NO3: NO3 (umol L-1)
           , NH4(:,1)         &   ! NH4: NH4 (umol L-1)
           , PO4(:,1)         &   ! PO4: PO4 (umol L-1)
-          , DOC(:,:,1)      &   ! DOC: Dissolved organic carbon (µmol L-1)
-          , POC(:,:,1)      &   ! POC: Particulate organic carbon (DOC: umol L-1)
+          , DOC(:,:,1)       &   ! DOC: Dissolved organic carbon (µmol L-1)
+          , POC(:,:,1)       &   ! POC: Particulate organic carbon (DOC: umol L-1)
           , DON(:,:,1)       &   ! DOC: Dissolved organic nitrogen (µmol L-1)
           , PON(:,:,1)       &   ! PON: Particulate organic nitrogen (PON: umol L-1)
           , DOP(:,:,1)       &   ! DOC: Dissolved organic phosporius (µmol L-1)
@@ -1191,6 +1201,7 @@ END SUBROUTINE allocate_reef_ecosys
           , -Fdep_POC(:,:)*100.0d0  &   ! POC deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive ! yt_edit POC deposition flux   ! double check advection scheme
           , -Fdep_PON(:,:)*100.0d0  &   ! PON deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , -Fdep_POP(:,:)*100.0d0  &   ! POP deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
+          , -Fdep_PIC(:,iDead)*100.0d0  &   ! PIC deposition flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Fdep_MnO2         &  ! MnO2 deposition flux (nmol cm-2 s-1)
           , Fdep_FeOOH        &  ! FeOOH depositoin flux (nmol cm-2 s-1)
           , Fdep_FeOOH_PO4(:) &  ! FeOOH_PO4 depositoin flux (nmol cm-2 s-1)
@@ -1202,8 +1213,8 @@ END SUBROUTINE allocate_reef_ecosys
           , sgd_Tmp           &   ! SGD concentration coming in through bottom: Tmp: Temperature (oC)
           , sgd_Sal           &   ! SGD concentration coming in through bottom: Sal: Salinity (PSU)
           , sgd_DOx           &   ! SGD concentration coming in through bottom: DOx: Dissolved oxygen (umol L-1)
-          , sgd_TA*rho_sw(1)  &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
-          , sgd_DIC(:)*rho_sw(1) &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
+          , sgd_TA            &   ! SGD concentration coming in through bottom: TA : Total alkalinity (TA: umol kg-1)
+          , sgd_DIC(:)        &   ! SGD concentration coming in through bottom: DIC: Total dissolved inorganic carbon (DIC: umol kg-1)
           , sgd_NO3(:)        &   ! SGD concentration coming in through bottom: NO3: NO3 (umol L-1)
           , sgd_NH4(:)        &   ! SGD concentration coming in through bottom: NH4: NH4 (umol L-1)
           , sgd_PO4(:)        &   ! SGD concentration coming in through bottom: PO4: PO4 (umol L-1)
@@ -1221,11 +1232,12 @@ END SUBROUTINE allocate_reef_ecosys
           , Flux_NH4(:)       &   ! NH4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_PO4(:)       &   ! PO4 flux (nmol cm-2 s-1)  * direction of water column to sediment is positive
           , Flux_DOC(:,:)     &   ! DOC(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_POC(:,:) &   ! POC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_DON(:,:)        &   ! DON(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_PON(:,:) &   ! PON flux (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_DOP(:,:)        &   ! DOP(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
-          , Flux_POP(:,:) &   ! POP flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_POC(:,:)     &   ! POC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_DON(:,:)     &   ! DON(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_PON(:,:)     &   ! PON flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_DOP(:,:)     &   ! DOP(f,s) fluxes (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_POP(:,:)     &   ! POP flux (nmol cm-2 s-1) * direction of water column to sediment is positive
+          , Flux_PIC(:,iDead) &   ! PIC flux (nmol cm-2 s-1) * direction of water column to sediment is positive
 #   if defined BLUE_TIDE         
 !          , Flux_Mn2       &   ! Mn2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
 !          , Flux_MnO2      &   ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
@@ -1262,6 +1274,7 @@ END SUBROUTINE allocate_reef_ecosys
       dPON_dt(:,:,1) = dPON_dt(:,:,1) - Flux_PON(:,:) * cff
       dDOP_dt(:,:,1) = dDOP_dt(:,:,1) - Flux_DOP(:,:) * cff
       dPOP_dt(:,:,1) = dPOP_dt(:,:,1) - Flux_POP(:,:) * cff
+      dPIC_dt(:,iDead,1) = dPIC_dt(:,iDead,1) - Flux_PIC(:,iDead) * cff
 #   if defined BLUE_TIDE         
 !      Flux_Mn2         ! Mn2 flux   (nmol cm-2 s-1) * direction of water column to sediment is positive
 !      Flux_MnO2        ! MnO2 flux  (nmol cm-2 s-1) * direction of water column to sediment is positive
@@ -1455,8 +1468,8 @@ END SUBROUTINE allocate_reef_ecosys
     real(8), intent(out) :: dtrc_dt(N)     ! (umol L-1 s-1) Time derivative of concentration
     real(8), intent(out) :: Fb_trc         ! (mmol m-2 s-1) Bottom flux from sediment to water column (upward is positive)    
 
-    real(8) :: dz_r(N-1)    
-    real(8) :: F(0:N),v(0:N)
+    real(8) :: dz_r   
+    real(8) :: F(0:N),v, vmin
     integer :: k, ks
     integer :: kup
     real(8) :: dtrc_s, trct, tnewt, Courant
@@ -1464,36 +1477,31 @@ END SUBROUTINE allocate_reef_ecosys
 !
 !   Upstream advective scheme
 !
+ ! set velocity (v) to keep Courant number less than 0.4
+    v = abs(w)
     DO k=1,N-1
-      dz_r(k) = z_r(k+1) - z_r(k)
+      dz_r = z_r(k+1) - z_r(k)
+      v = min( dz_r/dt*0.4d0, v )
     END DO
-
-    DO k=1,N-1
-      Courant = abs( w*dt/dz_r(k) )
-      if(Courant > 0.4d0 ) then
-        v(k) = sign( dz_r(k)/dt*0.4d0, w )
-      else
-        v(k) = w
-      endif
-    END DO
-    v(0) = v(1)
+    v = sign( v, w )
 
     if(w>0) then
-      kup = 0   
+      kup = 0
+      Fb_trc = 0.0d0
     else
       kup = 1
+      Fb_trc = v * trc(1)
     endif
-
+    
     F(0) = 0.0d0
     DO k=1,N-1
-      F(k) = v(k) * trc(K+kup)
+      F(k) = v * trc(K+kup)
     END DO
     F(N) = 0.0d0
 
     DO k=1,N
       dtrc_dt(k) = (F(k-1)-F(k))/dz(k)
-    END DO    
-    Fb_trc = trc(1)*v(0)
+    END DO
 
     RETURN
   END SUBROUTINE bio_vadv2

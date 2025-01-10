@@ -25,8 +25,8 @@ CONTAINS
     , rhos_d         &   ! Dry soil density (g cm-3)
     , poro           &   ! Soil porosity (= Vwater/(Vwater+Vsed) (non-dimensional: 0.0-1.0)
     , O2             &   ! Dissolved oxygen (umol L-1)
-    , TA             &   ! Total alkalinity (TA: umol L-1)
-    , DIC            &   ! Total dissolved inorganic carbon (DIC: umol L-1)
+    , TA             &   ! Total alkalinity (TA: umol kg-1)
+    , DIC            &   ! Total dissolved inorganic carbon (DIC: umol kg-1)
     , NO3            &   ! NO3 (umol L-1)
     , NH4            &   ! NH4 (umol L-1)
     , PO4            &   ! PO4 (umol L-1)
@@ -36,15 +36,16 @@ CONTAINS
     , PON            &   ! Particulate organic nitrogen (PON: umol L-1 or nmol g(DW)-1 *solid)
     , DOP            &   ! Dissolved organic phosporius (DOP: umol L-1)
     , POP            &   ! Particulate organic phosporius (POP: umol L-1 or nmol g(DW)-1 *solid)
+    , PIC            &   ! CaCO3 (umolC L-1 or nmol g(DW)-1 *solid)
     , Mn2            &   ! Mn2+ (umol L-1) 
-    , MnO2           &   ! MnO2 (nmol g-1 s-1) *solid
+    , MnO2           &   ! MnO2 (nmol g-1) *solid
     , Fe2            &   ! Fe2+ (umol L-1) 
-    , FeS            &   ! FeS (nmol g(DW)-1 s-1)) *solid
-    , FeS2           &   ! FeS2 (nmol g(DW)-1 s-1)) *solid
-    , FeOOH          &   ! FeOOH (nmol g(DW)-1 s-1)) *solid
-    , FeOOH_PO4      &   ! FeOOH=PO4 (nmol g(DW)-1 s-1)) *solid
+    , FeS            &   ! FeS (nmol g(DW)-1) *solid
+    , FeS2           &   ! FeS2 (nmol g(DW)-1) *solid
+    , FeOOH          &   ! FeOOH (nmol g(DW)-1) *solid
+    , FeOOH_PO4      &   ! FeOOH=PO4 (nmol g(DW)-1) *solid
     , H2S            &   ! H2S (umol L-1) 
-    , S0             &   ! S (nmol g(DW)-1 s-1)) *solid
+    , S0             &   ! S (nmol g(DW)-1) *solid
     , SO4            &   ! SO42- (umol L-1) 
     ! input and output parameters
     , R_O2           &   ! d[O2]/dt  (umol L-1 s-1) 
@@ -59,6 +60,7 @@ CONTAINS
     , R_PON          &   ! dPON/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
     , R_DOP          &   ! dDOP/dt (umol L-1 s-1)
     , R_POP          &   ! dPOP/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
+    , R_PIC          &   ! d CaCO3/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
     , R_Mn2          &   ! d[Mn2+]/dt (umol L-1 s-1)
     , R_MnO2         &   ! d[MnO2]/dt (nmol g(DW)-1 s-1) *solid
     , R_Fe2          &   ! d[Fe2+]/dt (umol L-1 s-1)
@@ -95,6 +97,7 @@ CONTAINS
     real(8), intent(in) :: PON(N_Nsp,Npom) 
     real(8), intent(in) :: DOP(N_Psp,Ndom)   
     real(8), intent(in) :: POP(N_Psp,Npom) 
+    real(8), intent(in) :: PIC(N_Csp)
     real(8), intent(in) :: Mn2 
     real(8), intent(in) :: MnO2
     real(8), intent(in) :: Fe2 
@@ -120,6 +123,7 @@ CONTAINS
     real(8), intent(inout) :: R_PON(N_Nsp,Npom) 
     real(8), intent(inout) :: R_DOP(N_Psp,Ndom)   
     real(8), intent(inout) :: R_POP(N_Psp,Npom) 
+    real(8), intent(inout) :: R_PIC(N_Csp)
     real(8), intent(inout) :: R_Mn2 
     real(8), intent(inout) :: R_MnO2
     real(8), intent(inout) :: R_Fe2 
@@ -175,15 +179,15 @@ CONTAINS
 
 !                                    LDOM    RDOM
 !    real(8),parameter :: kdom(2) = [ 1.0d-4, 5.0d-8 ]  ! For  dom (s-1)           
-    real(8),parameter :: kdom(2) = [ 1.0d-7, 1.2d-8 ]  ! For  dom (s-1)           
+    real(8),parameter :: kdom(2) = [ 1.0d-8, 1.0d-10 ]  ! For  dom (s-1)           
 !                                    LPOM    RPOM
 !    real(8),parameter :: kpom(2) = [ 9.6d-6, 1.2d-8 ]  ! For  pom (s-1) Fossing (2004)
     real(8),parameter :: kpom(3) = [ 2.5d-6, 1.2d-10, 2.5d-8 ]  ! For  pom (s-1) Kasih (2009)
 
     !! Reaction rate constants
     ! real(8),parameter :: k6  = 2.5d-6  ! For R6  (uM-1 s-1)           Fossing(2004)
-    real(8),parameter :: k6  = 2.5d-7  ! For R6  (uM-1 s-1)           Berg(2003),Kasih2004
-!    real(8),parameter :: k6  = 1.0d-7  ! For R6  (uM-1 s-1) 
+!    real(8),parameter :: k6  = 2.5d-7  ! For R6  (uM-1 s-1)           Berg(2003),Kasih2004
+    real(8),parameter :: k6  = 1.0d-8  ! For R6  (uM-1 s-1) 
     real(8),parameter :: k7  = 5.0d-14 ! For R7  (s-1)                Kasih2009
     ! real(8),parameter :: k7  = 5.0d-11 ! For R7  (s-1)                Fossing2004
     ! real(8),parameter :: k8  = 7.5d-11 ! For R8  (uM-1 s-1)           Berg2003
@@ -225,9 +229,18 @@ CONTAINS
     real(8),parameter :: FeOOHlim = 1.0d5     !(nmol g-1)     Fossing2004
     real(8),parameter :: SO4lim   = 5.0d0     !(umol L-1)
 
+    !! pH dependency on sulfate reduction
+    real(8),parameter :: pHopt    = 7.0d0    ! Optimun pH value for suflate reduction  Tuning !!!!!!!!!!!
+    real(8),parameter :: stdpH    = 1.0d0    ! Standard deviation of pH dependency (a normal distribution is assumed) Tuning !!!!!!!!!!!
+
 ! ======================================================================= 
    !! Decompostion rate from CPOM to:  LPOM    RPOM
     real(8),parameter :: kcpom(2) = [ 2.0d-8, 1.0d-8 ]  ! (s-1) Tuning !!!!!!!!!!!
+
+! ======================================================================= 
+   !! CaCO3 dissolution rate (Yamamoto et al 2012)
+    real(8),parameter :: a_diss = 0.0015d0/100.0d0/3600.0d0 ! (s-1)
+    real(8),parameter :: b_diss = 0.0056d0/100.0d0/3600.0d0 ! (s-1)
 
 ! ======================================================================= 
 !! Reaction rate constants considering temperature dependency
@@ -237,6 +250,7 @@ CONTAINS
     real(8) :: kdom_Q10(Ndom), kpom_Q10(Npom), kcpom_Q10(Npom-1)
 !! Reaction Rate  -------------------------------------------------------------
     !! unit: (nmol cm-3 s-1)
+    real(8) :: vdiss
     real(8) :: v0
     real(8) :: v1c, v2c, v3c, v4c, v5c
     real(8) :: v1n, v2n, v3n, v4n, v5n
@@ -246,6 +260,7 @@ CONTAINS
     real(8) :: v16, v17, v18, v19, v20, v21
 
     real(8) :: r1,  r2, r3, r4, r5
+    real(8) :: r5pH
     
     real(8) :: cff, cff2, cff3
     real(8) :: cfd, cfs, cfdd, cfsd, cfss
@@ -260,6 +275,7 @@ CONTAINS
     real(8) :: rPON(N_Nsp,Npom)
     real(8) :: rDOP(N_Psp,Ndom)  
     real(8) :: rPOP(N_Psp,Npom)
+    real(8) :: rPIC(N_Csp)
     real(8) :: rFeS (N_Ssp)
     real(8) :: rFeS2(N_Ssp)
     real(8) :: rFeOOH_PO4(N_Psp)
@@ -271,6 +287,7 @@ CONTAINS
     real(8) :: cNO3      
     real(8) :: cNH4      
     real(8) :: cPO4      
+    real(8) :: cPIC
     real(8) :: cMn2      
     real(8) :: cMnO2     
     real(8) :: cFe2      
@@ -280,8 +297,9 @@ CONTAINS
     real(8) :: cFeOOH_PO4
     real(8) :: cH2S      
     real(8) :: cS0       
-    real(8) :: cSO4      
+    real(8) :: cSO4
 
+    real(8) :: CO3, TK, pH, Wcal, Warg
     integer :: isp, m
 
 ! =======================================================================
@@ -330,6 +348,9 @@ CONTAINS
       rS0 (isp) = Iso_ratio( S0(isp), S0(iSt) )
       rSO4(isp) = Iso_ratio( SO4(isp), SO4(iSt) )
     ENDDO
+    DO isp=1,N_Csp
+      rPIC(isp) = Iso_ratio( PIC(isp), PIC(iCt) )
+    ENDDO
 
   !! Correct negative concentratios for safe calculation  
     cO2        = max(O2,0.0d0)
@@ -346,6 +367,38 @@ CONTAINS
     cH2S       = max(H2S(iSt),0.0d0)
     cS0        = max(S0(iSt),0.0d0)
     cSO4       = max(SO4(iSt),0.0d0)
+    cPIC       = max(PIC(iCt),0.0d0)
+
+  !! ----------------------------------------------------------------------------------- !!
+
+    IF(Flag_SW==0) THEN
+      cfd  = poro
+      cfs  = rhos_d*(1.0d0 - poro)
+    ELSE
+      cfd  = 1.0d0
+      cfs  = 1.0d0
+    END IF
+    cfdd = cfd * cfd
+    cfsd = cfs * cfd
+    cfss = cfs * cfs
+
+!!!! ==== Carbonate dissoution =========================================== !!!
+
+    TK   = Tmp + 273.15d0
+    pH   = pH_fromATCT( TA, DIC(iCt),TK, Sal )   ! pH
+    CO3  = cCO3_fromCTpH( DIC(iCt), pH, TK, Sal )  ! CO32- concentration
+    Wcal = Wcal_fromcCO3( CO3, TK, Sal )  ! Calcite saturation state
+    Warg = Warg_fromcCO3( CO3, TK, Sal )  ! Calcite saturation state
+
+    ! R:  CaCO3 --> Ca2+ + CO3(2-) 
+    vdiss = cfs *(-a_diss * Warg + b_diss)* cPIC ! Yamamoto et al. (2012)
+    Vdiss = max(vdiss,0.0d0)
+    Vdiss = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!! DEBUG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    R_PIC(:) = R_PIC(:) - vdiss *rPIC(:)
+    R_DIC(:) = R_DIC(:) + vdiss *rPIC(:)
+    R_TA     = R_TA     + vdiss*2.0d0
+
+!!!! ==== Organic matter remineralization =========================================== !!!
 
   !! Reaction rate constants depending on temperature
     cff = Q10_pri**((Tmp-10d0)/10d0)
@@ -377,25 +430,9 @@ CONTAINS
     k20_Q10 = k20 * cff     ! (Fossing2004)   (s-1)
     k21_Q10 = k21 * cff     ! (Fossing2004)   (s-1)
 
+  !! pH dependence on sulfate reduction (a normal distribution is assumed)
+    r5pH = exp(-0.5d0*(pH-pHopt)**2/stdpH**2) !/sqrt(2.0d0*PI*stdpH**2)
 
-  !! Reaction rate calculatoin (functions Vdd, Vsd, Vss are defined in mod_geochem.F) -- !!
-      ! Vdd : reaction with solute * solute (R6, ...)
-      ! Vsd : reaction with solid * solute  (R7, ...)
-      ! Vss : reaction with solid * solid   (R14)
-  !! ----------------------------------------------------------------------------------- !!
-      ! Vdd = poro * k * Cd1 * Cd2
-      ! Vsd = rho_s * (1d0 - poro) * k * Cs1 * Cd1
-      ! Vss = ((rho_s * (1d0 - poro))**2) * k * Cs1 * Cs2
-    IF(Flag_SW==0) THEN
-      cfd  = poro
-      cfs  = rhos_d*(1.0d0 - poro)
-    ELSE
-      cfd  = 1.0d0
-      cfs  = 1.0d0
-    END IF
-    cfdd = cfd * cfd
-    cfsd = cfs * cfd
-    cfss = cfs * cfs
 
   !! ----------------------------------------------------------------------------------- !!
     ! CPOM decomposition to LPOM and RPOM 
@@ -457,9 +494,9 @@ CONTAINS
           else
             r4 =(1.0d0-r1-r2-r3)*cFeOOH/FeOOHlim
             if(cSO4 > SO4lim) then      !! -- Sulfate reduction   (SO4)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
-              r5 = 1.0d0-r1-r2-r3-r4
+              r5 =(1.0d0-r1-r2-r3-r4)*r5pH
             else                                              !! limit OM decomposition if SO4 < SO4lim    -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 < SO4lim
-              r5 =(1.0d0-r1-r2-r3-r4)*cSO4/SO4lim
+              r5 =(1.0d0-r1-r2-r3-r4)*cSO4/SO4lim*r5pH
             endif
           endif
         endif
@@ -699,9 +736,10 @@ CONTAINS
     else
       v19  = 0.0d0
     endif
-    R_S0(:)  = R_S0(:)  - v19*4.0d0 *rS0(:)
-    R_H2S(:) = R_H2S(:) + v19*3.0d0 *rS0(:) !!!??????????????????????????
-    R_SO4(:) = R_SO4(:) + v19*1.0d0 *rS0(:) !!!??????????????????????????
+    R_S0(:)  = R_S0(:)  - v19*3.0d0 *aS_S02H2S(1:N_Nsp)*rS0(:)  &
+                        - v19*1.0d0 *aS_S02SO4(1:N_Nsp)*rS0(:)
+    R_H2S(:) = R_H2S(:) + v19*3.0d0 *aS_S02H2S(1:N_Nsp)*rS0(:)
+    R_SO4(:) = R_SO4(:) + v19*1.0d0 *aS_S02SO4(1:N_Nsp)*rS0(:)
     R_TA     = R_TA     - v19*2.0d0
 
     ! R20:  MnO2 --> MnO2_undeg
@@ -709,7 +747,8 @@ CONTAINS
     R_MnO2 = R_MnO2 - v20 
     ! R21:  FeOOH --> FeOOH_undeg
     v21  = cfsd * k21_Q10 *cFeOOH
-    R_FeOOH = R_FeOOH - v21 
+    R_FeOOH = R_FeOOH - v21
+
 
     RETURN
   

@@ -42,9 +42,13 @@ module mod_geochem
 !----- Sulfur isotope fractionation ------------------------
 #if defined SULFUR_TRACE
   real(8), parameter :: aS_SO4red(2) = [ 1.0d0, 1.0d0 ]
+  real(8), parameter :: aS_S02SO4(2) = [ 1.0d0, 1.0d0 ]
+  real(8), parameter :: aS_S02H2S(2) = [ 1.0d0, 1.0d0 ]
 #else
                                          ! iSt      iS34         
-  real(8), parameter :: aS_SO4red(2) = [ 1.0d0, -30.0d-3 +1.0d0 ] ! Sulfate reduction (SO42- -> H2S) !!!! To Be Confirmed
+  real(8), parameter :: aS_SO4red(2) = [ 1.0d0, -25.0d-3 +1.0d0 ] ! Sulfate reduction (SO42- -> H2S)             ( 25 permill; Dale et al., 2009)
+  real(8), parameter :: aS_S02SO4(2) = [ 1.0d0,  20.0d-3 +1.0d0 ] ! S0 disproportionation to SO42- (S0 -> SO42-) (-20 permill; Dale et al., 2009)
+  real(8), parameter :: aS_S02H2S(2) = [ 1.0d0,  -7.0d-3 +1.0d0 ] ! S0 disproportionation to H2S   (S0 -> H2S)   (  7 permill; Dale et al., 2009)
 #endif
 
 ! ------ Carbon Isotope related parameters -----

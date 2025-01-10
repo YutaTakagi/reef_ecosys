@@ -30,7 +30,7 @@
 
 /*# define PHOSPHOROUS_TRACE*/
 
-/*# define SULFUR_ISOTOPE*/
+# define SULFUR_ISOTOPE
 /*# define SULFUR_TRACE*/
 
 
@@ -124,7 +124,7 @@
 # define CARBON_TRACE
 # define NITROGEN_TRACE
 # define PHOSPHOROUS_TRACE
-# define SULFUR_TRACE
+/*# define SULFUR_TRACE*/
 #endif
 
 /*----------------------------------------------------*/

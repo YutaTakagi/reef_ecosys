@@ -20,6 +20,7 @@ CONTAINS
   SUBROUTINE foodweb &
 !   input parameters
     ( ng, n, i, j    &   ! ng: nested grid number; n: coral compartment; i,j: position
+    , date           &   ! Date (days since x or elapsed days)
     , dt             &   ! Time step (sec)
     , PFD            &   ! Photon flux density (umol m-2 s-1)
     , rho_sw         &   ! Density of seawater (g cm-3)
@@ -93,6 +94,7 @@ CONTAINS
 
 !        input parameters
     integer, intent(in) :: ng, n, i, j          ! ng: nested grid number; n: coral compartment; i,j: position
+    real(8), intent(in) :: date                 ! Date (days since x or elapsed days)
     real(8), intent(in) :: dt                   ! Time step (sec)
     real(8), intent(in) :: PFD                  ! Photon flux density (umol m-2 s-1)
     real(8), intent(in) :: rho_sw               ! Density of seawater (g cm-3)
@@ -162,7 +164,7 @@ CONTAINS
 !  Phytoplankton photosynthesis Parameter         
 !                                       Dnfl      Dtm        Ccl      Cya
 !  Maximum photosynthetic rate ( s-1) (0.4d0 d-1; Kishi et al., 2007)0.3     (!!!Tuning parameters!!!) 
-    real(8), parameter :: Pp_max(4)= [ 3.5d-5,   8.0d-5,  1.0d-5,   3.5d-6 ]  ! (s-1)   JS_edit check reference values for all parameters
+    real(8), parameter :: Pp_max(4)= [ 5.0d-5,   1.0d-4,  1.0d-5,   3.5d-5 ]  ! (s-1)   JS_edit check reference values for all parameters
 !  Parameters for temperature dependency on photosynthetic rate
 !    fp_temp = A_Pp*exp(-Ea_Pp/Rg/TK)/(1.0d0+exp((TK*dS_Pp-dH_Pp)/Rg/TK))
     real(8), parameter :: A_Pp (4) = [3.0d11,   3.0d11,   3.0d11,   3.0d11 ]     ! !!! Tuning
@@ -178,33 +180,34 @@ CONTAINS
 !                                           Dnfl       Dtm      Ccl     Cya
 !   Maximum N uptake rate normalized by maximum PO4 updatke rate.
 !    nVmax_NH4 = Vmax_NH4/Vmax_PO4;  nVmax_NO3 = Vmax_NO3/Vmax_PO4
-    real(8), parameter :: nVmax_NH4(4) = [ 5.0d0, 5.0d0, 5.0d0, 5.0d0 ]     ! (no dim.) 
-    real(8), parameter :: nVmax_NO3(4) = [ 50.0d0, 50.0d0, 50.0d0, 50.0d0 ]      ! (no dim.)
+    real(8), parameter :: nVmax_NH4(4) = [ 5.0d0, 20.0d0, 10.0d0,   5.0d0 ]     ! (no dim.) 
+    real(8), parameter :: nVmax_NO3(4) = [ 5.0d0, 15.0d0, 15.0d0, 10.0d0 ]      ! (no dim.)
 !   Half-saturation constants.           
-    real(8), parameter :: Kp_NH4(4)    = [ 100.0d0,  100.0d0 ,  100.0d0, 100.0d0 ]      ! (µmol L-1)  
-    real(8), parameter :: Kp_NO3(4)    = [ 2.0d0,    2.0d0 ,   1.0d0,  1.0d0  ]      ! (µmol L-1)
-    real(8), parameter :: Kp_PO4(4)    = [ 1.0d0,    1.0d0,   1.5d0, 6.0d0 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
+    real(8), parameter :: Kp_NH4(4)    = [ 0.1d0,    0.5d0 ,  0.5d0, 0.1d0 ]      ! (µmol L-1)  
+    real(8), parameter :: Kp_NO3(4)    = [ 1.0d0,    0.1d0 ,   0.1d0,  1.0d0  ]      ! (µmol L-1)
+    real(8), parameter :: Kp_PO4(4)    = [ 5.0d-2,    5.0d-2,  1.0d-2, 1.0d-2 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
 !   Coefficients for Hill equation.  
 !    V = K**n_Hill/(K**n_Hill + C**n_Hill), if n_Hill=1 -> Michaelis-Menten equation    
-    real(8), parameter :: nNH4_Hill(4)   = [ 1.0d0,    1.0d0,    1.0d0,  1.0d0 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
-    real(8), parameter :: nNO3_Hill(4)   = [ 2.0d0,    2.0d0,    1.0d0,  1.0d0 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
-    real(8), parameter :: nPO4_Hill(4)   = [ 2.0d0,    2.0d0,    1.0d0,  1.0d0 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
+    real(8), parameter :: nNH4_Hill(4)   = [ 2.0d0,    1.0d0,    1.0d0,  1.0d0 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
+    real(8), parameter :: nNO3_Hill(4)   = [ 1.0d0,    2.0d0,    1.0d0,  1.0d0 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
+    real(8), parameter :: nPO4_Hill(4)   = [ 1.0d0,    1.0d0,    1.0d0,  1.0d0 ]      ! (µmol L-1)  (!!!Tuning parameters!!!)
 
 !  Respiration rate at 0 oC
-    real(8), parameter :: k_Rp(4) = [ 3.0d-7,   3.0d-7,   1.0d-7,   1.0d-7   ]    ! (s-1)    (!!!Tuning parameters!!!)
+    real(8), parameter :: k_Rp(4) = [ 3.0d-7,   5.0d-7,   1.0d-7,   1.0d-7   ]    ! (s-1)    (!!!Tuning parameters!!!)
 !  Temperature coefficient for PhyC respiration rate (0.03d0 d-1; Kawamiya et al., 1995)
     real(8), parameter :: b_Rp(4) = [ 0.0519d0, 0.0519d0, 0.0519d0, 0.0519d0 ] ! (degC-1)
+
 !  Mortality rate at 0 oC (0.00562d0 umol-1 d-1; 0.0585L/umolN/day? 0.0088; Kishi et al., 2001)0.0066     
-    real(8), parameter :: k_Mp(4) = [ 3.3d-8,   1.0d-7,   6.5d-8,   6.5d-8   ] ! (L umol-1 s-1)
-    real(8), parameter :: rLPOMphy = 0.42d0  ! (Labile POM)/(Total POM) of phytoplankton tissue (no dim.) 
+    real(8), parameter :: k_Mp(4) = [ 1.0d-7,   5.0d-7,   6.5d-8,   6.5d-8   ] ! (L umol-1 s-1)
 !  Temperature coefficient for PhyC mortality (Kawamiya et al., 1995)
     real(8), parameter :: b_Mp(4) = [ 0.069d0,  0.069d0,  0.069d0,  0.069d0  ] ! (degC-1)   
+    real(8), parameter :: rLPOMphy = 0.42d0  ! (Labile POM)/(Total POM) of phytoplankton tissue (no dim.) 
 !  PhyC ratio of extracellular excretion to production 0.135(Kawamiya et al., 1995)    
-    real(8), parameter :: k_Ep(4) = [ 1.0d-9,  2.0d-9,  1.0d-9,  1.0d-9  ] ! (no dim.) 
+    real(8), parameter :: k_Ep(4) = [ 1.0d-8,  2.0d-8,  1.0d-8,  1.0d-8  ] ! (no dim.) 
     real(8), parameter :: rLDOMphy = 0.42d0  ! (Labile DOM)/(Total DOM) of phytoplankton excreted DOM (no dim.) 
 !------- Zooplankton parameters ------------------------
 !                                          from     Dnfl       Dtm        Ccl         Cya
-    real(8), parameter :: k_Gp2z(4,1) = reshape( [ 5.0d-6,    1.0d-5,    3.0d-8 ,    3.0d-8    ], [4,1] ) ! to Gzoo! (s-1)          Maximum grazing rate of PhyC1 by ZooC at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)0.16
+    real(8), parameter :: k_Gp2z(4,1) = reshape( [ 1.0d-6,    1.0d-6,    1.0d-8 ,    1.0d-8    ], [4,1] ) ! to Gzoo! (s-1)          Maximum grazing rate of PhyC1 by ZooC at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)0.16
     real(8), parameter :: b_Gp2z(4,1) = reshape( [ 0.0693d0,  0.0693d0,  0.0693d0,   0.0693d0  ], [4,1] ) ! to Gzoo! (degC-1)       Temperature coefficient for ZooC grazing (0.063d0degC-1;Kawamiya et al., 1995)
     real(8), parameter :: e_Gp2z(4,1) = reshape( [ 0.15d0,    0.15d0,    0.15d0,     0.15d0    ], [4,1] ) ! to Gzoo! (no dim.)      Assimilation efficiency of ZooC (0.7:Kawamiya et al., 1995)
     real(8), parameter :: Kz_phy(4,1) = reshape( [ 1.0d0,     10.0d0,     0.1d0,      0.1d0     ], [4,1] ) ! (umol C L-1)       PhyC1 threshold value for grazing by ZooC (0.04umolN/L0.265; Kishi et al., 2007)
@@ -314,6 +317,12 @@ CONTAINS
     real(8) :: dS0_dt(N_Ssp)        ! d[S]/dt (nmol g(DW)-1 s-1) *solid
     real(8) :: dSO4_dt(N_Ssp)       ! d[SO42-]/dt (umol L-1 s-1)
 
+# if defined FOODWEB_TESTMODE
+!  Output
+    real(8), save :: dsec = 0.d0 !sec
+    real(8), save :: dday = 0.d0 !day
+# endif
+
 !===== Initiallize tracer parameters =================================
     TK = Tmp + 273.15d0 !(K)
 
@@ -411,13 +420,13 @@ CONTAINS
         rPIC(isp,m) = Iso_ratio( PIC(isp,m), PIC(iCt,m) ) 
       ENDDO
     ENDDO   
-#if defined NITROGEN_ISOTOPE
+# if defined NITROGEN_ISOTOPE
     rN2(iN15)= 0.003663d0
     rN2(iNt) = 1.0d0
-#else
+# else
     rN2(:)   = 0.0d0
     rN2(iNt) = 1.0d0
-#endif
+# endif
 !===== Phytoplankton reaction =================================
     DO k=1, Nphy
       cPhyC = MAX(PhyC(iCt,k),0.0d0)
@@ -449,7 +458,9 @@ CONTAINS
 
       ! --- Liebig's low of minimmum -----
       !   Carbon based assimilation rate
-      Ap = MIN( Pp, (nVp_NH4+nVp_NO3)/rNCp(k), nVp_PO4/rPCp(k) )
+      Ap = MIN( (nVp_NH4+nVp_NO3)/rNCp(k)*rPCp(k), nVp_PO4 )
+
+      Ap = Ap * Pp
 
       if(nVp_NH4 + nVp_NO3 > 0.0d0) then
         Ap_NO3 = Ap*rNCp(k)* nVp_NO3/( nVp_NH4 + nVp_NO3 )
@@ -460,6 +471,23 @@ CONTAINS
       endif
       Ap_PO4 = Ap*rPCp(k)
 
+# if defined FOODWEB_TESTMODE
+!------------------------------------------------------------------------
+! Print section (for debug)
+      IF( k==2 .and. date*86400.0d0 >= dsec ) THEN
+        if(dsec == 0.0d0) then
+          dsec=date*86400.0d0+ECOSYS_OUTPUT_INTERVAL*60.0d0
+        else
+          dsec=dsec+ECOSYS_OUTPUT_INTERVAL*60.0d0
+        endif
+  
+        write(110,'(*(g0:,", "))') k, PFD, Tmp, fp_temp      &
+           , Pp, (nVp_NH4+nVp_NO3)/rNCp(k)*rPCp(k), nVp_PO4  &
+           , Ap, Ap_NO3, Ap_NH4, Ap_PO4        
+      END IF
+!-----------------------------------------------------------------------
+# endif
+  
 !     === Mass balance ===
 
       dDIC_dt(:)    = dDIC_dt(:)    - Ap     *aC_phot(1:N_Csp)*rDIC(:)  ! Primary production    
@@ -710,8 +738,8 @@ CONTAINS
     , 0.0d0             &   ! Dry soil density (g cm-3)
     , 1.0d0             &   ! Soil porosity (= Vwater/(Vwater+Vsed) (non-dimensional: 0.0-1.0)
     , DOx               &   ! Dissolved oxygen (umol L-1)
-    , TA                &   ! Total alkalinity (TA: umol L-1)
-    , DIC(:)            &   ! Total dissolved inorganic carbon (DIC: umol L-1)
+    , TA                &   ! Total alkalinity (TA: umol kg-1)
+    , DIC(:)            &   ! Total dissolved inorganic carbon (DIC: umol kg-1)
     , NO3(:)            &   ! NO3 (umol L-1)
     , NH4(:)            &   ! NH4 (umol L-1)
     , PO4(:)            &   ! PO4 (umol L-1)
@@ -722,15 +750,16 @@ CONTAINS
     , DOP(:,:)          &   ! Dissolved organic phosporius (DOP: umol L-1)
     , POP(:,:)          &   ! Particulate organic phosporius (POP: umol L-1 or nmol g(DW)-1 *solid)
     , Mn2               &   ! Mn2+ (umol L-1) 
-    , MnO2              &   ! MnO2 (nmol g-1 s-1) *solid
+    , MnO2              &   ! MnO2 (nmol g-1) *solid
     , Fe2               &   ! Fe2+ (umol L-1) 
-    , FeS(:)            &   ! FeS (nmol g(DW)-1 s-1)) *solid
-    , FeS2(:)           &   ! FeS2 (nmol g(DW)-1 s-1)) *solid
-    , FeOOH             &   ! FeOOH (nmol g(DW)-1 s-1)) *solid
-    , FeOOH_PO4(:)      &   ! FeOOH=PO4 (nmol g(DW)-1 s-1)) *solid
+    , FeS(:)            &   ! FeS (nmol g(DW)-1) *solid
+    , FeS2(:)           &   ! FeS2 (nmol g(DW)-1) *solid
+    , FeOOH             &   ! FeOOH (nmol g(DW)-1) *solid
+    , FeOOH_PO4(:)      &   ! FeOOH=PO4 (nmol g(DW)-1) *solid
     , H2S(:)            &   ! H2S (umol L-1) 
-    , S0(:)             &   ! S (nmol g(DW)-1 s-1)) *solid
+    , S0(:)             &   ! S (nmol g(DW)-1) *solid
     , SO4(:)            &   ! SO42- (umol L-1) 
+    , PIC(:,iDead)      &   ! PIC (N_Csp,Npim): Particulate inorganic carbon (PIC: umolC L-1), coccolith (CaCO3)
    ! input and output parameters
     , dDOx_dt           &   ! d[O2]/dt  (umol L-1 s-1) 
     , dTA_dt            &   ! dTA/dt  (umol L-1 s-1) 
@@ -754,28 +783,32 @@ CONTAINS
     , dH2S_dt(:)        &   ! d[H2S]/dt (umol L-1 s-1)
     , dS0_dt(:)         &   ! d[S]/dt (nmol g(DW)-1 s-1) *solid
     , dSO4_dt(:)        &   ! d[SO42-]/dt (umol L-1 s-1)
+    , dPIC_dt(:,iDead)  &   ! d CaCO3/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
+    , pH                &   ! pH
+    , Warg              &   ! Warg: Aragonite saturation state
+    , Wcal              &   ! Wcal: Calcite saturation state
     )
 
 
 !===== Carbonate dissolution ==============================================
 
 !!!!!! Need pressure correction (not impremented) !!!!!!
-    pH     = pH_fromATCT( TA, DIC(iCt),TK, Sal )   ! pH
-    CO3   = cCO3_fromCTpH( DIC(iCt), pH, TK, Sal )  ! CO32- concentration
-    Wcal   = Wcal_fromcCO3( CO3, TK, Sal )  ! Calcite saturation state
-    Warg   = Warg_fromcCO3( CO3, TK, Sal )  ! Calcite saturation state
-    IF ( Wcal < 1.0d0 ) THEN !!! CHECK: Keir 1979 !!!!!!
-      Dissol = 1.3d7*(1.d0-Wcal)**2.8d0 * PIC(iCt,iDead)  !! [umol L-1 s-1] Low-Mg Calcite dissolution rate (Walter and Morse, 1985)
-    ELSE
-      Dissol = 0.0d0
-    END IF
-    Dissol = MAX( Dissol, 0.0d0 )  !!! Error handling
-
-!     === Mass balance ===
-
-    dPIC_dt(:,iDead) = dPIC_dt(:,iDead) - Dissol*rPIC(:,iDead)
-    dDIC_dt(:)       = dDIC_dt(:)       + Dissol*rPIC(:,iDead)
-    dTA_dt = dTA_dt + Dissol*2.0d0
+!    pH     = pH_fromATCT( TA, DIC(iCt),TK, Sal )   ! pH
+!    CO3   = cCO3_fromCTpH( DIC(iCt), pH, TK, Sal )  ! CO32- concentration
+!    Wcal   = Wcal_fromcCO3( CO3, TK, Sal )  ! Calcite saturation state
+!    Warg   = Warg_fromcCO3( CO3, TK, Sal )  ! Calcite saturation state
+!    IF ( Wcal < 1.0d0 ) THEN !!! CHECK: Keir 1979 !!!!!!
+!      Dissol = 1.3d7*(1.d0-Wcal)**2.8d0 * PIC(iCt,iDead)  !! [umol L-1 s-1] Low-Mg Calcite dissolution rate (Walter and Morse, 1985)
+!    ELSE
+!      Dissol = 0.0d0
+!    END IF
+!    Dissol = MAX( Dissol, 0.0d0 )  !!! Error handling
+!
+!!     === Mass balance ===
+!
+!    dPIC_dt(:,iDead) = dPIC_dt(:,iDead) - Dissol*rPIC(:,iDead)
+!    dDIC_dt(:)       = dDIC_dt(:)       + Dissol*rPIC(:,iDead)
+!    dTA_dt = dTA_dt + Dissol*2.0d0
 
 !#ifdef DEBUG_TEST  /*!!! To chcek mass balance !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 
