@@ -182,7 +182,7 @@ CONTAINS
     real(8),parameter :: kdom(2) = [ 1.0d-8, 1.0d-10 ]  ! For  dom (s-1)           
 !                                    LPOM    RPOM
 !    real(8),parameter :: kpom(2) = [ 9.6d-6, 1.2d-8 ]  ! For  pom (s-1) Fossing (2004)
-    real(8),parameter :: kpom(3) = [ 2.5d-6, 1.2d-10, 2.5d-8 ]  ! For  pom (s-1) Kasih (2009)
+    real(8),parameter :: kpom(3) = [ 2.5d-6, 1.2d-11, 2.5d-8 ]  ! For  pom (s-1) Kasih (2009)
 
     !! Reaction rate constants
     ! real(8),parameter :: k6  = 2.5d-6  ! For R6  (uM-1 s-1)           Fossing(2004)
