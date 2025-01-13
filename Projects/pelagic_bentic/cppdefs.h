@@ -42,7 +42,6 @@
 # define SEDIMENT_ECOSYS        /* USE sedecosys module  */
 
 # define AIR_SEA_GAS_EXCHANGE
-# define ECOSYS_PM_VADV
 
 /*# define DYNAMIC_COVERAGE*/ /* yt_edit not yet implemented in coawst */
 
@@ -98,6 +97,7 @@
 #define CORAL_OUTPUT_INTERVAL   5.0d0  /* Output interval (min) */
 #define CORAL_AVERAGE_INTERVAL  1.0d0  /* Averaging interval (day) */
 #define FLOW_OUTPUT_INTERVAL    5.0d0  /* Output interval (min) */
+#define SEAGRASS_OUTPUT_INTERVAL 60.0d0  /* Output interval (min) */
 
 /*#define USE_HEAT*/
 /*#define LONGWAVE_IN*/

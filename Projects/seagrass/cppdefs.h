@@ -42,7 +42,6 @@
 # define SEDIMENT_ECOSYS        /* USE sedecosys module  */
 
 /*# define AIR_SEA_GAS_EXCHANGE*/
-# define ECOSYS_PM_VADV
 
 /*# define DYNAMIC_COVERAGE*/ /* yt_edit not yet implemented in coawst */
 

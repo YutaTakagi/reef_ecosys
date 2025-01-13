@@ -911,6 +911,7 @@ MODULE mod_seagrass
     real(8)               :: rPO4_sed(N_Psp,Nsed)       ! [no dim.] 
 # endif
     integer               :: isp                        !
+    real(8)               :: rNC, rPC
 
 !!  Output ------------------------------------------------------------------
 # if defined SEAGRASS_TESTMODE
@@ -1109,14 +1110,13 @@ MODULE mod_seagrass
 ! ----------------------------------------------------------------------------------------------------
 ! ====================================================================================================
     
-!    if (date .gt. real(int(Day*24), 8)/24) then
-!      is_growth_interval = .true.
-!      Day = real(int(date*24+1), 8)/24d0
-!      ! if(i == 50 .and. j == 50) then
-!      !   write(*,*) "yt_debug:    Day = ", Day, "   date = ", date
-!      ! endif
-!    endif
-
+    if (date .gt. aint(Day*24.0d0)/24.0d0 ) then
+      is_growth_interval = .true.
+      Day = (aint(Day*24.0d0)+1.0d0)/24.0d0  !! TN: One hour interval???????????????????????????????????????????????????
+      ! if(i == 50 .and. j == 50) then
+      !   write(*,*) "yt_debug:    Day = ", Day, "   date = ", date
+      ! endif
+    endif
 
 ! ====================================================================================================
 ! ----------------------------------------------------------------------------------------------------
@@ -2068,6 +2068,8 @@ MODULE mod_seagrass
     
     if (is_growth_interval) then 
 
+      is_growth_interval = .false. !! TN: added << Is this right?
+
 ! update total carbon-biomass ------------------------------------------------------------------------
 
       !   write(*,*) 'yt_debug: TotSgCBm = ', TotSgCBm, ' TotLfCBm = ', TotLfCBm,  'TotRtCBm = ', TotRtCBm
@@ -2230,9 +2232,12 @@ MODULE mod_seagrass
       ! TotSgCBm                    [mol.C]                     Total seagrass carbon-biomass in grid cell
       ! HabArea                     [m2.sg.hab]                 Seagrass habitat ground area in grid cell (such that seagrass coverage (p_sgrass) times the grid area equals the habitat area)
       ! [umol.C/m2.hab] = [mol.C]  / [m2.hab] (1000000umol/mol)
-      SgCBmF(:)         = TotSgCBm / HabArea  * 1000000d0 *rSgCBm(:)
-      SgNBmF(:)         = TotSgCBm*SgNperC / HabArea  * 1000000d0 *rSgNBm(:)
-      SgPBmF(:)         = TotSgCBm*SgPperC / HabArea  * 1000000d0 *rSgPBm(:)
+
+!      rNC = SgNBmF(iNt)/SgCBmF(iCt) ! N/C ratio
+!      rPC = SgPBmF(iPt)/SgCBmF(iCt) ! P/C ratio
+!      SgCBmF(:)         = TotSgCBm / HabArea  * 1000000d0 *rSgCBm(:)
+!      SgNBmF(:)         = TotSgCBm*rNC / HabArea  * 1000000d0 *rSgNBm(:)
+!      SgPBmF(:)         = TotSgCBm*rPC / HabArea  * 1000000d0 *rSgPBm(:)
       LfCBm             = TotLfCBm / HabArea  * 1000000d0
       RtCBm             = TotRtCBm / HabArea  * 1000000d0
 
@@ -2319,7 +2324,8 @@ MODULE mod_seagrass
 # else
            ,'SgPBmF'               &
 # endif
-           ,'TotSgCBm' ,'TotLfCBm', 'TotRtCBm'
+           ,'TotSgCBm' ,'TotLfCBm', 'TotRtCBm' &
+           ,'p_sgrass'
 
         else
           dsec=dsec+SEAGRASS_OUTPUT_INTERVAL*60.0d0
@@ -2328,7 +2334,8 @@ MODULE mod_seagrass
         ! Write data
         write(60,'(*(g0:,", "))') date, PFD &
            ,SgCBmF(:),SgNBmF(:),SgPBmF(:) &
-           ,TotSgCBm ,TotLfCBm, TotRtCBm
+           ,TotSgCBm ,TotLfCBm, TotRtCBm  &
+           ,p_sgrass(species)
 !        write(*,*) 'Seagrass Time (day): ', date 
     endif
 # endif
@@ -2590,13 +2597,13 @@ MODULE mod_seagrass
 ! ----------------------------------------------------------------------------------------------------
 ! ====================================================================================================
 
-!    if (date .gt. real(int(Day*24), 8)/24) then
-!      is_growth_interval = .true.
-!      Day = real(int(date*24+1), 8)/24d0
-!      ! if(i == 50 .and. j == 50) then
-!      !   write(*,*) "yt_debug:    Day = ", Day, "   date = ", date
-!      ! endif
-!    endif
+    if (date .gt. aint(Day*24.0d0)/24.0d0 ) then
+      is_growth_interval = .true.
+      Day = (aint(Day*24.0d0)+1.0d0)/24.0d0  !! TN: One hour interval???????????????????????????????????????????????????
+      ! if(i == 50 .and. j == 50) then
+      !   write(*,*) "yt_debug:    Day = ", Day, "   date = ", date
+      ! endif
+    endif
 
 ! ====================================================================================================
 ! ----------------------------------------------------------------------------------------------------
@@ -2628,6 +2635,8 @@ MODULE mod_seagrass
 ! ====================================================================================================
     
     if (is_growth_interval) then  
+
+      is_growth_interval = .false. !! TN: added << Is this right?
 
 ! update total carbon-biomass ------------------------------------------------------------------------
 

@@ -124,6 +124,11 @@
   Diff_w = 1.0d-5  ! Vertical diffusion coefficient (m2 s-1)
 /
 
+&sgrass_config  
+  XI_size_in  = 50.0d0 ! (m)
+  ETA_size_in = 50.0d0 ! (m)
+/
+
 !--- Initial Condition -----------------------------------------------------
 &initial
 

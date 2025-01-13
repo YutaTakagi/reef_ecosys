@@ -776,7 +776,6 @@ END SUBROUTINE allocate_reef_ecosys
     PFDbott = PFDsurf !!! Photon flux density at sea bottom
 # endif
 
-# if defined ECOSYS_PM_VADV
 !-----------------------------------------------------------------------
 ! Vertical advection (sinking/flaoting) of POM and PIM
 !-----------------------------------------------------------------------
@@ -822,7 +821,6 @@ END SUBROUTINE allocate_reef_ecosys
     dPON_dt(:,:,:) = dPON_dt(:,:,:) + dPON(:,:,:)
     dPOP_dt(:,:,:) = dPOP_dt(:,:,:) + dPOP(:,:,:)
     dPIC_dt(:,iDead,:) = dPIC_dt(:,iDead,:) + dPIC(:,iDead,:)
-# endif
 
 !!!---------------------------------------------------------------------
 !!!  Benthic interactions.
