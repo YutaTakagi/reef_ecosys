@@ -93,6 +93,10 @@ END SUBROUTINE allocate_reef_ecosys
     CALL initialize_coral(ng, LBi, UBi, LBj, UBj, start_of_new_run)
     write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished coral init'
 # endif
+# ifdef SEDIMENT_ECOSYS
+    CALL initialize_sedecosys(ng, LBi, UBi, LBj, UBj, start_of_new_run)
+    write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished sediment init'
+# endif
 # ifdef SEAGRASS
     CALL initialize_seagrass( ng, LBi, UBi, LBj, UBj    &
                             , start_of_new_run          & ! TRUE = initialize coral, seagass, macroalgae, sediment from start; FALSE = continue from previous run
@@ -104,10 +108,6 @@ END SUBROUTINE allocate_reef_ecosys
 # ifdef MACROALGAE
     CALL initialize_macroalgae(ng, LBi, UBi, LBj, UBj)
     write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished macroalgae init'
-# endif
-# ifdef SEDIMENT_ECOSYS
-    CALL initialize_sedecosys(ng, LBi, UBi, LBj, UBj, start_of_new_run)
-    write(*,*) 'yt_debug: mod_reef_ecosys.F initialize_reef_ecosys() finished sediment init'
 # endif
 
     RETURN
@@ -957,40 +957,40 @@ END SUBROUTINE allocate_reef_ecosys
     DO icl=1,Nsg    
       IF(p_sgrass(icl) .gt. 0.0d0) THEN 
 
-        CALL seagrass         &
+        CALL seagrass           &
 !       input parameters
-          ( ng                &   ! ng: nested grid number; 
-          , icl               &   ! icl: seagrass species id
-          , i, j              &   ! i,j: position
-          , dz(1)             &   ! vertical layer thickness (m)
-          , date              &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
-          , dt                &   ! Time step (sec)
-          , p_sgrass(:)       &   ! seagrass coverage (every species)
+          ( ng                  &   ! ng: nested grid number; 
+          , icl                 &   ! icl: seagrass species id
+          , i, j                &   ! i,j: position
+          , dz(1)               &   ! vertical layer thickness (m)
+          , date                &   ! Date (days since x or elapsed days) yt_edit best if in phase with clock to maintain consistency on restart
+          , dt                  &   ! Time step (sec)
+          , p_sgrass(:)         &   ! seagrass coverage (every species)
 #  if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE || defined SEAGRASS_ROOT_NUTRIENT_UPTAKE || defined SEAGRASS_ROOT_POM
-          , p_sand            &   ! Sediment coverage
+          , p_sand              &   ! Sediment coverage
 #  endif
-          , PFD               &   ! Photon flux density (umol m-2 s-1)
-          , rho_sw(1)         &   ! Density of seawater (g cm-3)
+          , PFD                 &   ! Photon flux density (umol m-2 s-1)
+          , rho_sw(1)           &   ! Density of seawater (g cm-3)
           , DIC(:,1)*rho_sw(1)  &   ! DIC (umol l-1)            ! [umol/L] = [umol/kg] [g/cm3] (kg/1000g)(1000cm3/L)
-          , DOx(1)            &   ! DO  (umol L-1)
+          , DOx(1)              &   ! DO  (umol L-1)
 #  if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE         
           , NO3(:,1)            &   ! NO3 concentration (umol L-1)
           , NH4(:,1)            &   ! NH4 concentration (umol L-1)
           , PO4(:,1)            &   ! PO4 concentration (umol L-1)
 #  endif
 !       output parameters 
-          , Flux_DIC(:)          &   ! DIC uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
-          , Flux_DO           &   ! DO  uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_DIC(:)         &   ! DIC uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_DO             &   ! DO  uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
 #  if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE         
-          , Flux_NO3(:)          &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
-          , Flux_NH4(:)          &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
-          , Flux_PO4(:)          &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_NO3(:)         &   ! NO3 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_NH4(:)         &   ! NH4 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_PO4(:)         &   ! PO4 uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
 #  endif
 #  if defined SEAGRASS_LEAF_POM
-          , Flux_POC(:,:)    &   ! POC uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_POC(:,iCPOM)   &   ! POC uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
 #   if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE || defined  SEAGRASS_ROOT_NUTRIENT_UPTAKE
-          , Flux_PON(:,:)    &   ! PON uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
-          , Flux_POP(:,:)    &   ! POP uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_PON(:,iCPOM)   &   ! PON uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
+          , Flux_POP(:,iCPOM)   &   ! POP uptake rate (mmol m-2 s-1)  * direction of ocean to seagrass is positive
 #   endif
 #  endif
           )
@@ -1011,10 +1011,10 @@ END SUBROUTINE allocate_reef_ecosys
         dNH4_dt(:,1) = dNH4_dt(:,1) - Flux_NH4(:) * cff
         dPO4_dt(:,1) = dPO4_dt(:,1) - Flux_PO4(:) * cff
 #  if defined SEAGRASS_LEAF_POM
-        dPOC_dt(:,:,1) = dPOC_dt(:,:,1) - Flux_POC(:,:) * cff
+        dPOC_dt(:,iCPOM,1) = dPOC_dt(:,iCPOM,1) - Flux_POC(:,iCPOM) * cff
 #   if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE || defined  SEAGRASS_ROOT_NUTRIENT_UPTAKE
-        dPON_dt(:,:,1) = dPON_dt(:,:,1) - Flux_PON(:,:) * cff
-        dPOP_dt(:,:,1) = dPOP_dt(:,:,1) - Flux_POP(:,:) * cff
+        dPON_dt(:,iCPOM,1) = dPON_dt(:,iCPOM,1) - Flux_PON(:,iCPOM) * cff
+        dPOP_dt(:,iCPOM,1) = dPOP_dt(:,iCPOM,1) - Flux_POP(:,iCPOM) * cff
 #   endif
 #  endif
 
@@ -1334,8 +1334,8 @@ END SUBROUTINE allocate_reef_ecosys
         , CORAL(1)%G (2,1,1)*cff2                                 &
 #  endif
 #  ifdef SEAGRASS
-        , SGRASS(1)%Pg(1,1,1)*cff3, SGRASS(1)%R (1,1,1)*cff3      &
-        , (SGRASS(1)%Pg(1,1,1)-SGRASS(1)%R (1,1,1))*cff3          &
+!        , SGRASS(1)%Pg(1,1,1)*cff3, SGRASS(1)%R (1,1,1)*cff3      &
+!        , (SGRASS(1)%Pg(1,1,1)-SGRASS(1)%R (1,1,1))*cff3          &
 #  endif
 #  ifdef MACROALGAE
         , ALGAE(1)%Pg(1,1,1)*cff4, ALGAE(1)%R (1,1,1)*cff4        &

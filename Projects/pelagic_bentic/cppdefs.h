@@ -116,15 +116,21 @@
 #if defined FOODWEB 
 # define FOODWEB_TESTMODE
 #endif
+#if defined SEAGRASS 
+# define SEAGRASS_TESTMODE
+#endif
+
 /*** Chamber experiments option ***/
 /*#define CHAMBER_SITE4*/
 
-# define TRACER_TEST
+#define TRACER_TEST
 #if defined TRACER_TEST
 # define CARBON_TRACE
 # define NITROGEN_TRACE
 # define PHOSPHOROUS_TRACE
-/*# define SULFUR_TRACE*/
+# define CPOM_TRACERS
+/*# define OCN_NUTRIENT_TRACERS*/
+/*# define SGD_NUTRIENT_TRACERS*/
 #endif
 
 /*----------------------------------------------------*/

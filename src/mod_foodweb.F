@@ -319,8 +319,7 @@ CONTAINS
 
 # if defined FOODWEB_TESTMODE
 !  Output
-    real(8), save :: dsec = 0.d0 !sec
-    real(8), save :: dday = 0.d0 !day
+    real(8), save :: dsec(4) = 0.d0 !sec
 # endif
 
 !===== Initiallize tracer parameters =================================
@@ -473,16 +472,21 @@ CONTAINS
 
 # if defined FOODWEB_TESTMODE
 !------------------------------------------------------------------------
-! Print section (for debug)
-      IF( k==2 .and. date*86400.0d0 >= dsec ) THEN
-        if(dsec == 0.0d0) then
-          dsec=date*86400.0d0+ECOSYS_OUTPUT_INTERVAL*60.0d0
-        else
-          dsec=dsec+ECOSYS_OUTPUT_INTERVAL*60.0d0
+! Print section (for Phy(k))
+      IF( date*86400.0d0 >= dsec(k) ) THEN
+        if(dsec(k) == 0.0d0) then
+          dsec(k)=date*86400.0d0+ECOSYS_OUTPUT_INTERVAL*60.0d0
+          ! Write lavels at the first step
+          write(69+k,'(*(g0:,", "))') 'Time', 'k', 'PFD', 'Tmp', 'fp_temp'      &
+          , 'Pp', '(nVp_NH4+nVp_NO3)/rNCp(k)*rPCp(k)', 'nVp_PO4'  &
+          , 'Ap', 'Ap_NO3', 'Ap_NH4', 'Ap_PO4'        
+       else
+          dsec(k)=dsec(k)+ECOSYS_OUTPUT_INTERVAL*60.0d0
         endif
   
-        write(110,'(*(g0:,", "))') k, PFD, Tmp, fp_temp      &
-           , Pp, (nVp_NH4+nVp_NO3)/rNCp(k)*rPCp(k), nVp_PO4  &
+        ! Write data
+        write(69+k,'(*(g0:,", "))') date, k, PFD, Tmp, fp_temp      &
+           , Pp, (nVp_NH4+nVp_NO3)/rNCp(k)*rPCp(k), nVp_PO4       &
            , Ap, Ap_NO3, Ap_NH4, Ap_PO4        
       END IF
 !-----------------------------------------------------------------------
@@ -749,6 +753,7 @@ CONTAINS
     , PON(:,:)          &   ! Particulate organic nitrogen (PON: umol L-1 or nmol g(DW)-1 *solid)
     , DOP(:,:)          &   ! Dissolved organic phosporius (DOP: umol L-1)
     , POP(:,:)          &   ! Particulate organic phosporius (POP: umol L-1 or nmol g(DW)-1 *solid)
+    , PIC(:,iDead)      &   ! PIC (N_Csp,Npim): Particulate inorganic carbon (PIC: umolC L-1), coccolith (CaCO3)
     , Mn2               &   ! Mn2+ (umol L-1) 
     , MnO2              &   ! MnO2 (nmol g-1) *solid
     , Fe2               &   ! Fe2+ (umol L-1) 
@@ -759,7 +764,6 @@ CONTAINS
     , H2S(:)            &   ! H2S (umol L-1) 
     , S0(:)             &   ! S (nmol g(DW)-1) *solid
     , SO4(:)            &   ! SO42- (umol L-1) 
-    , PIC(:,iDead)      &   ! PIC (N_Csp,Npim): Particulate inorganic carbon (PIC: umolC L-1), coccolith (CaCO3)
    ! input and output parameters
     , dDOx_dt           &   ! d[O2]/dt  (umol L-1 s-1) 
     , dTA_dt            &   ! dTA/dt  (umol L-1 s-1) 
@@ -773,6 +777,7 @@ CONTAINS
     , dPON_dt(:,:)      &   ! dPON/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
     , dDOP_dt(:,:)      &   ! dDOP/dt (umol L-1 s-1)
     , dPOP_dt(:,:)      &   ! dPOP/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
+    , dPIC_dt(:,iDead)  &   ! d CaCO3/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
     , dMn2_dt           &   ! d[Mn2+]/dt (umol L-1 s-1)
     , dMnO2_dt          &   ! d[MnO2]/dt (nmol g(DW)-1 s-1) *solid
     , dFe2_dt           &   ! d[Fe2+]/dt (umol L-1 s-1)
@@ -783,10 +788,6 @@ CONTAINS
     , dH2S_dt(:)        &   ! d[H2S]/dt (umol L-1 s-1)
     , dS0_dt(:)         &   ! d[S]/dt (nmol g(DW)-1 s-1) *solid
     , dSO4_dt(:)        &   ! d[SO42-]/dt (umol L-1 s-1)
-    , dPIC_dt(:,iDead)  &   ! d CaCO3/dt (umol L-1 s-1) or (nmol g(DW)-1) *solid
-    , pH                &   ! pH
-    , Warg              &   ! Warg: Aragonite saturation state
-    , Wcal              &   ! Wcal: Calcite saturation state
     )
 
 

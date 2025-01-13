@@ -78,7 +78,7 @@
 /*** Sediment model options. ***/
 /*#  define SEDIMENT_EMPIRICAL*/     /* USE empirical sediment module  */
 # if defined SEDIMENT_ECOSYS  /* Masa_edits */
-/*#  define SEDECO_CSV_RESTART*/  /* Restart from sedeco_rst.csv file if start_of_new_run = .true. */
+#  define SEDECO_CSV_RESTART  /* Restart from sedeco_rst.csv file if start_of_new_run = .true. */
 #  if defined SEDIMENT
 #   define SEDECO_BURIAL    /* For Burial term in sediment transport (massbalance) */
 #  endif
@@ -98,6 +98,7 @@
 #define CORAL_OUTPUT_INTERVAL   5.0d0  /* Output interval (min) */
 #define CORAL_AVERAGE_INTERVAL  1.0d0  /* Averaging interval (day) */
 #define FLOW_OUTPUT_INTERVAL    5.0d0  /* Output interval (min) */
+#define SEAGRASS_OUTPUT_INTERVAL 60.0d0  /* Output interval (min) */
 
 /*#define USE_HEAT*/
 /*#define LONGWAVE_IN*/
@@ -119,12 +120,14 @@
 /*** Chamber experiments option ***/
 /*#define CHAMBER_SITE4*/
 
-# define TRACER_TEST
+#define TRACER_TEST
 #if defined TRACER_TEST
 # define CARBON_TRACE
 # define NITROGEN_TRACE
 # define PHOSPHOROUS_TRACE
-/*# define SULFUR_TRACE*/
+# define CPOM_TRACERS
+/*# define OCN_NUTRIENT_TRACERS*/
+/*# define SGD_NUTRIENT_TRACERS*/
 #endif
 
 /*----------------------------------------------------*/

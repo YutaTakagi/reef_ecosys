@@ -5,7 +5,7 @@
 
 &ecosys_config
 ! Simulation period     
-  Tmax = 100.0d0 ! days    ! 3years: 1095 / 5years: 1825 / 40years: 14600 / 100years: 36500
+  Tmax = 1.0d0 ! days    ! 3years: 1095 / 5years: 1825 / 40years: 14600 / 100years: 36500
 
 ! Start time
   time0 = 0.0d0 ! day
@@ -19,7 +19,7 @@
 !                5: Incubation chamber simulation of Nakamura & Nakamori (2009) experiments
 !                6: Flume simulation of Comeau et al. (2016) experiments   
 !                7: Vertical profile simulation   
-  nSetting = 1
+  nSetting = 2
 
   Im = 1
   Jm = 1
@@ -84,7 +84,7 @@
 /
 
 &output   
-  OUTFILE_prefix = 'output/02'
+  OUTFILE_prefix = 'output/01'
 /
 
 &sedeco_config
@@ -115,6 +115,11 @@
   sgd_DON_in  =  30.2d0,  15.1d0
   sgd_DOP_in  =   1.9d0,   0.9d0
 
+/
+
+&sgrass_config  
+  XI_size_in  = 50.0d0 ! (m)
+  ETA_size_in = 50.0d0 ! (m)
 /
 
 !--- Initial Condition -----------------------------------------------------
@@ -165,7 +170,7 @@ d15N_ZooN_0 = -20.0d0   ! d15N_zooplankton (permill)
 
 p_coral_0 = 0.0d0, 0.0d0  ! Coral coverage (0-1): inner reef, outer reef 
 p_algae_0  = 0.0d0  ! Macro algae coverage (0-1)
-p_sgrass_0 = 0.0d0  ! Seagrass coverage (0-1)
+p_sgrass_0 = 0.5d0  ! Seagrass coverage (0-1)
 p_sand_0   = 1.0d0  ! Sand coverage (0-1)
 
 /

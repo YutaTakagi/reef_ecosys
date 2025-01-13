@@ -31,12 +31,12 @@ module mod_geochem
   real(8), parameter :: aN_denitr(2) = [ 1.0d0, 1.0d0 ]
 #else
                                         ! iNt         iN15         
-  real(8), parameter :: aNO3_phot(2) = [ 1.0d0,  -5.0d-3 +1.0d0 ] ! NO3 assimilation by phytoplankton !!!! To Be Confirmed
-  real(8), parameter :: aNH4_phot(2) = [ 1.0d0,   0.0d-3 +1.0d0 ] ! NH4 assimilation by phytoplankton !!!! To Be Confirmed
+  real(8), parameter :: aNO3_phot(2) = [ 1.0d0, -10.0d-3 +1.0d0 ] ! NO3 assimilation by phytoplankton !!!! To Be Confirmed
+  real(8), parameter :: aNH4_phot(2) = [ 1.0d0,  -5.0d-3 +1.0d0 ] ! NH4 assimilation by phytoplankton !!!! To Be Confirmed
   real(8), parameter :: aN_grz   (2) = [ 1.0d0,   3.4d-3 +1.0d0 ] ! condensation
-  real(8), parameter :: aN_N2fix (2) = [ 1.0d0,  -2.0d-3 +1.0d0 ] ! nitrogen fixation (N2 -> NH4) !!!! To be confirmed
+  real(8), parameter :: aN_N2fix (2) = [ 1.0d0,   1.0d-3 +1.0d0 ] ! nitrogen fixation (N2 -> NH4) !!!! To be confirmed
   real(8), parameter :: aN_nitr  (2) = [ 1.0d0, -35.0d-3 +1.0d0 ] ! nitrification (NH4 -> NO3) ! To be confirmed
-  real(8), parameter :: aN_denitr(2) = [ 1.0d0,  -4.1d-3 +1.0d0 ] ! denitrification (NO3 -> N2) ! To be confirmed
+  real(8), parameter :: aN_denitr(2) = [ 1.0d0, -20.0d-3 +1.0d0 ] ! denitrification (NO3 -> N2) ! To be confirmed
 #endif
 
 !----- Sulfur isotope fractionation ------------------------

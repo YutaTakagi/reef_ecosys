@@ -450,8 +450,8 @@ contains
             t(i,j,k,nstp,iPOP(iPt,m)) = POC_0(m)/106d0      !POP  (umol L-1) 
           END DO
 
-#if defined TRACER_TEST
-          ! ***TRACER TEST****
+#if defined CPOM_TRACERS
+          ! ***CPOM TRACER TEST****
           t(i,j,k,nstp,iPOC(iC13,iCPOM)) = POC_0(iCPOM)       !POC  (umol L-1) 
           t(i,j,k,nstp,iPON(iN15,iCPOM)) = POC_0(iCPOM)*16d0/106d0     !PON  (umol L-1) 
           t(i,j,k,nstp,iPOP(iP1, iCPOM)) = POC_0(iCPOM)/106d0      !POP  (umol L-1)

@@ -155,7 +155,7 @@ CONTAINS
         ! R10a: H2S + 2FeOOH=PO43- + 4H+ --> S0 + 2Fe2+ + 4H2O + 2PO43-
         ! R10b: H2S + 2FeOOH + 4H+ --> S0 + 2Fe2+ + 4H2O
         ! R11:  4Fe2+ + O2 + 6H2O --> 4FeOOH + 8H+
-        ! R12:  H2S + MnO2 + 4H+ --> S0 + Mn2+ + 2H2O
+        ! R12:  H2S + MnO2 + 2H+ --> S0 + Mn2+ + 2H2O
         ! R13:  H2S + Fe2+ --> FeS + 2H+
         ! R14:  FeS + S0 --> FeS2
         ! R15:  SO42- + 3H2S + 4FeS + 2H+ --> 4FeS2 + 4H2O
@@ -179,10 +179,10 @@ CONTAINS
 
 !                                    LDOM    RDOM
 !    real(8),parameter :: kdom(2) = [ 1.0d-4, 5.0d-8 ]  ! For  dom (s-1)           
-    real(8),parameter :: kdom(2) = [ 1.0d-8, 1.0d-10 ]  ! For  dom (s-1)           
+    real(8),parameter :: kdom(2) = [ 1.0d-6, 1.0d-10 ]  ! For  dom (s-1)           
 !                                    LPOM    RPOM
 !    real(8),parameter :: kpom(2) = [ 9.6d-6, 1.2d-8 ]  ! For  pom (s-1) Fossing (2004)
-    real(8),parameter :: kpom(3) = [ 2.5d-6, 1.2d-11, 2.5d-8 ]  ! For  pom (s-1) Kasih (2009)
+    real(8),parameter :: kpom(3) = [ 1.0d-6, 1.0d-11, 2.5d-8 ]  ! For  pom (s-1) Kasih (2009)
 
     !! Reaction rate constants
     ! real(8),parameter :: k6  = 2.5d-6  ! For R6  (uM-1 s-1)           Fossing(2004)
@@ -229,9 +229,9 @@ CONTAINS
     real(8),parameter :: FeOOHlim = 1.0d5     !(nmol g-1)     Fossing2004
     real(8),parameter :: SO4lim   = 5.0d0     !(umol L-1)
 
-    !! pH dependency on sulfate reduction
-    real(8),parameter :: pHopt    = 7.0d0    ! Optimun pH value for suflate reduction  Tuning !!!!!!!!!!!
-    real(8),parameter :: stdpH    = 1.0d0    ! Standard deviation of pH dependency (a normal distribution is assumed) Tuning !!!!!!!!!!!
+    !! pH dependency on sulfate reduction (a normal distribution is assumed)
+    real(8),parameter :: pHopt    = 7.3d0    ! Optimun pH value for suflate reduction  Tuning !!!!!!!!!!!
+    real(8),parameter :: pHstd    = 1.0d0    ! Standard deviation of pH dependency  Tuning !!!!!!!!!!!
 
 ! ======================================================================= 
    !! Decompostion rate from CPOM to:  LPOM    RPOM
@@ -393,7 +393,11 @@ CONTAINS
     ! R:  CaCO3 --> Ca2+ + CO3(2-) 
     vdiss = cfs *(-a_diss * Warg + b_diss)* cPIC ! Yamamoto et al. (2012)
     Vdiss = max(vdiss,0.0d0)
-    Vdiss = 0.0d0  !!!!!!!!!!!!!!!!!!!!!!!! DEBUG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!    if (Vdiss < 0.0d0) then
+!      Vdiss=-1.1d-3*(Warg-1.d0)**1.63d0  ! Calcification rate (nmol cm-2 s-1)
+!    endif
+
     R_PIC(:) = R_PIC(:) - vdiss *rPIC(:)
     R_DIC(:) = R_DIC(:) + vdiss *rPIC(:)
     R_TA     = R_TA     + vdiss*2.0d0
@@ -431,7 +435,7 @@ CONTAINS
     k21_Q10 = k21 * cff     ! (Fossing2004)   (s-1)
 
   !! pH dependence on sulfate reduction (a normal distribution is assumed)
-    r5pH = exp(-0.5d0*(pH-pHopt)**2/stdpH**2) !/sqrt(2.0d0*PI*stdpH**2)
+    r5pH = exp(-0.5d0*(pH-pHopt)**2/pHstd**2) !/sqrt(2.0d0*PI*pHstd**2)
 
 
   !! ----------------------------------------------------------------------------------- !!
@@ -494,9 +498,9 @@ CONTAINS
           else
             r4 =(1.0d0-r1-r2-r3)*cFeOOH/FeOOHlim
             if(cSO4 > SO4lim) then      !! -- Sulfate reduction   (SO4)   (umol L-1) -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 > SO4lim
-              r5 =(1.0d0-r1-r2-r3-r4)*r5pH
+              r5 = 1.0d0-r1-r2-r3-r4
             else                                              !! limit OM decomposition if SO4 < SO4lim    -- !!   if O2 < O2lim   &&   NO3 < NO3lim   &&   Mn02 < MnO2lim   &&   FeOOH < FeOOHlim   &&   SO4 < SO4lim
-              r5 =(1.0d0-r1-r2-r3-r4)*cSO4/SO4lim*r5pH
+              r5 =(1.0d0-r1-r2-r3-r4)*cSO4/SO4lim
             endif
           endif
         endif
@@ -506,7 +510,7 @@ CONTAINS
 # endif
     ! POM remineralization
     DO m = 1,Npom
-      cff = kpom_Q10(m) * POC(iCt,m)
+      cff = kpom_Q10(m) * POC(iCt,m) *r5pH
       cff = max(cff,0.0d0) !! Error handring
       v1c = r1*cfsd * cff
       v2c = r2*cfsd * cff
@@ -514,7 +518,7 @@ CONTAINS
       v4c = r4*cfss * cff
       v5c = r5*cfsd * cff
 
-      cff = kpom_Q10(m) * PON(iNt,m)
+      cff = kpom_Q10(m) * PON(iNt,m) *r5pH
       cff = max(cff,0.0d0) !! Error handring
       v1n = r1*cfsd * cff
       v2n = r2*cfsd * cff
@@ -522,7 +526,7 @@ CONTAINS
       v4n = r4*cfss * cff
       v5n = r5*cfsd * cff
 
-      cff = kpom_Q10(m) * POP(iPt,m)
+      cff = kpom_Q10(m) * POP(iPt,m) *r5pH
       cff = max(cff,0.0d0) !! Error handring
       v1p = r1*cfsd * cff
       v2p = r2*cfsd * cff
@@ -567,7 +571,7 @@ CONTAINS
 
     ! DOM remineralization
     DO m = 1,Ndom
-      cff = kdom_Q10(m) * DOC(iCt,m)
+      cff = kdom_Q10(m) * DOC(iCt,m) *r5pH
       cff = max(cff,0.0d0) !! Error handring
       v1c = r1*cfdd * cff
       v2c = r2*cfdd * cff
@@ -575,7 +579,7 @@ CONTAINS
       v4c = r4*cfsd * cff
       v5c = r5*cfdd * cff
 
-      cff = kdom_Q10(m) * DON(iNt,m)
+      cff = kdom_Q10(m) * DON(iNt,m) *r5pH
       cff = max(cff,0.0d0) !! Error handring
       v1n = r1*cfdd * cff
       v2n = r2*cfdd * cff
@@ -583,7 +587,7 @@ CONTAINS
       v4n = r4*cfsd * cff
       v5n = r5*cfdd * cff
 
-      cff = kdom_Q10(m) * DOP(iPt,m)
+      cff = kdom_Q10(m) * DOP(iPt,m) *r5pH
       cff = max(cff,0.0d0) !! Error handring
       v1p = r1*cfdd * cff
       v2p = r2*cfdd * cff
@@ -679,13 +683,13 @@ CONTAINS
     R_FeOOH = R_FeOOH + v11*4.0d0
     R_TA    = R_TA    - v11*8.0d0
 
-    ! R12:  H2S + MnO2 + 4H+ --> S0 + Mn2+ + 2H2O
+    ! R12:  H2S + MnO2 + 2H+ --> S0 + Mn2+ + 2H2O
     v12  = cfsd * k12_Q10 *cMnO2*cH2S
     R_H2S(:) = R_H2S(:) - v12       *rH2S(:)
     R_MnO2   = R_MnO2   - v12
     R_Mn2    = R_Mn2    + v12
     R_S0(:)  = R_S0(:)  + v12       *rH2S(:)
-    R_TA     = R_TA     + v12*4.0d0
+    R_TA     = R_TA     + v12*2.0d0
 
     ! R13:  H2S + Fe2+ --> FeS + 2H+
     v13  = cfdd * k13_Q10 *cFe2*cH2S

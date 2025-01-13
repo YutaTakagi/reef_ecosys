@@ -174,19 +174,19 @@ CONTAINS
 !!! yuta_seagrass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>YT:Add
 # if defined SEAGRASS
 #  if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
-    allocate( SEDECO(ng)%sg_dDIC_dt(Nsg,N_Csp,Nsed,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
-    allocate( SEDECO(ng)%sg_dO2_dt (Nsg,Nsed,LBi:UBi,LBj:UBj) ) ! (nmol g-1 s-1) change in DO due to flux from seagrass (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dDIC_dt(N_Csp,Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dO2_dt       (Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (nmol g-1 s-1) change in DO due to flux from seagrass (positive means seagrass to sediment)
 #  endif
 #  if defined SEAGRASS_ROOT_NUTRIENT_UPTAKE
-    allocate( SEDECO(ng)%sg_dNO3_dt(Nsg,N_Nsp,Nsed,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
-    allocate( SEDECO(ng)%sg_dNH4_dt(Nsg,N_Nsp,Nsed,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
-    allocate( SEDECO(ng)%sg_dPO4_dt(Nsg,N_Psp,Nsed,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dNO3_dt(N_Nsp,Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dNH4_dt(N_Nsp,Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dPO4_dt(N_Psp,Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
 #  endif    
 #  if defined SEAGRASS_ROOT_POM
-    allocate( SEDECO(ng)%sg_dPOC_dt(Nsg,N_Csp,Npom,Nsed,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in POC due to root death in sediment (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dPOC_dt(N_Csp,Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in POC due to root death in sediment (positive means seagrass to sediment)
 #   if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE || defined  SEAGRASS_ROOT_NUTRIENT_UPTAKE
-    allocate( SEDECO(ng)%sg_dPON_dt(Nsg,N_Nsp,Npom,Nsed,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in PON due to root death in sediment (positive means seagrass to sediment)
-    allocate( SEDECO(ng)%sg_dPOP_dt(Nsg,N_Psp,Npom,Nsed,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in POP due to root death in sediment (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dPON_dt(N_Nsp,Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in PON due to root death in sediment (positive means seagrass to sediment)
+    allocate( SEDECO(ng)%sg_dPOP_dt(N_Psp,Nsed,Nsg,LBi:UBi,LBj:UBj) ) ! (umol L-1 s-1) change in POP due to root death in sediment (positive means seagrass to sediment)
 #   endif  
 #  endif  
 # endif
@@ -235,6 +235,9 @@ CONTAINS
     real(8), parameter :: rNCph = 16.0d0/106.0d0   ! (no dim.) algal C:N ratio (Redfield ratio)        from analysis
 
     real(8) :: tmp,cSO4
+# if defined SEDECO_CSV_RESTART
+    integer fid
+# endif
 ! - - - - - - - - - - - - - - - - - - - - - - - -
 ! ********************************************************************* !
 !   physical properties of sediment layers 
@@ -299,10 +302,13 @@ CONTAINS
 # if defined SEDECO_CSV_RESTART
 !     !!! -------------- initial concentration from sed initial concentration ----------------- !!!
 !      ! ! General
-      open(199, file='sedeco_rst.csv', status='old')
-      read(199,*)   ! read header
+!      fid = 199
+!      open(fid, file='sedeco_rst.csv', status='old')
+      open(newunit=fid, file='sedeco_rst.csv', status='old')
+      read(fid,*)   ! read header
+      read(fid,*)   ! read header
       DO k=0,Nsed
-        read(199,*) tmp                     &
+        read(fid,*) tmp                     &
         , SEDECO(ng)%Tmp(k,LBi,LBj)         &
         , SEDECO(ng)%Sal(k,LBi,LBj)         & 
         , SEDECO(ng)%O2 (k,LBi,LBj)         & 
@@ -328,7 +334,7 @@ CONTAINS
         , SEDECO(ng)%SO4(:,k,LBi,LBj)       &
         , SEDECO(ng)%S0 (:,k,LBi,LBj)       
       END DO
-      close(199)
+      close(fid)
 
       DO j=LBj,UBj
         DO i=LBi,UBi
@@ -357,7 +363,7 @@ CONTAINS
             SEDECO(ng)%H2S(:,k,i,j)       = SEDECO(ng)%H2S(:,k,LBi,LBj)      
             SEDECO(ng)%SO4(:,k,i,j)       = SEDECO(ng)%SO4(:,k,LBi,LBj)      
             SEDECO(ng)%S0 (:,k,i,j)       = SEDECO(ng)%S0 (:,k,LBi,LBj)      
-           END DO
+          END DO
         END DO
       END DO
 # else
@@ -468,11 +474,10 @@ CONTAINS
             SEDECO(ng)%SO4 (iS34,k,i,j) = Ci_from_Ct_delta(cSO4, 21.0d0, R34S_VCDT)  !SO4  (umol L-1)
             SEDECO(ng)%S0  (iS34,k,i,j) = 0.0d0     !S0  (nmol g-1)
 #  endif
-# endif
-             END DO
+          END DO
         END DO
       END DO
-
+# endif
     endif
 
     RETURN
@@ -762,24 +767,6 @@ CONTAINS
     real(8) :: R_SO4(N_Ssp,Nsed)
 
     real(8) :: cff, cff2, cff3, cfdd, cfsd, cfss
-
-    real(8) :: rDIC(N_Csp)
-    real(8) :: rNO3(N_Nsp)
-    real(8) :: rNH4(N_Nsp)
-    real(8) :: rPO4(N_Psp)
-    real(8) :: rDOC(N_Csp,Ndom)      ! 1:labile, 2:refractory
-    real(8) :: rPOC(N_Csp,Npom)    ! 1:labile, 2:refractory
-    real(8) :: rDON(N_Nsp,Ndom)      ! 1:labile, 2:refractory 
-    real(8) :: rPON(N_Nsp,Npom)    ! 1:labile, 2:refractory
-    real(8) :: rDOP(N_Psp,Ndom)      ! 1:labile, 2:refractory 
-    real(8) :: rPOP(N_Psp,Npom)    ! 1:labile, 2:refractory
-    real(8) :: rPIC(N_Csp)
-    real(8) :: rFeS (N_Ssp)
-    real(8) :: rFeS2(N_Ssp)
-    real(8) :: rFeOOH_PO4(N_Psp)
-    real(8) :: rH2S(N_Ssp)
-    real(8) :: rS0 (N_Ssp)
-    real(8) :: rSO4(N_Ssp)
 
 !!  Output ------------------------------------------------------------------
 # if defined SEDIMENT_TESTMODE
@@ -1317,46 +1304,37 @@ CONTAINS
     DO k = 1,Nsed-1
 #  if defined SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
     ! [umol/L s] = [umol/L s]
-      R_O2 (k) = R_O2 (k) + sum(SEDECO(ng)%sg_dO2_dt (:,k,i,j),DIM=1) ! (umol L-1 s-1) change in DO  due to flux from seagrass (positive means seagrass to sediment)
+      R_O2 (k) = R_O2 (k) + sum(SEDECO(ng)%sg_dO2_dt (k,:,i,j)) ! (umol L-1 s-1) change in DO  due to flux from seagrass (positive means seagrass to sediment)
       DO isp=1,N_Csp
-        R_DIC(isp,k) = R_DIC(isp,k) + sum(SEDECO(ng)%sg_dDIC_dt(:,isp,k,i,j),DIM=1) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
+        R_DIC(isp,k) = R_DIC(isp,k) + sum(SEDECO(ng)%sg_dDIC_dt(isp,k,:,i,j)) ! (umol L-1 s-1) change in DIC due to flux from seagrass (positive means seagrass to sediment)
       ENDDO
 #  endif
 #  if defined SEAGRASS_ROOT_NUTRIENT_UPTAKE
       DO isp=1,N_Nsp
-        R_NO3(isp,k) = R_NO3(isp,k) + sum(SEDECO(ng)%sg_dNO3_dt(:,isp,k,i,j),DIM=1) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
-        R_NH4(isp,k) = R_NH4(isp,k) + sum(SEDECO(ng)%sg_dNH4_dt(:,isp,k,i,j),DIM=1) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
+        R_NO3(isp,k) = R_NO3(isp,k) + sum(SEDECO(ng)%sg_dNO3_dt(isp,k,:,i,j)) ! (umol L-1 s-1) change in NO3 due to flux from seagrass (positive means seagrass to sediment)
+        R_NH4(isp,k) = R_NH4(isp,k) + sum(SEDECO(ng)%sg_dNH4_dt(isp,k,:,i,j)) ! (umol L-1 s-1) change in NH4 due to flux from seagrass (positive means seagrass to sediment)
       ENDDO
       DO isp=1,N_Psp
-        R_PO4(isp,k) = R_PO4(isp,k) + sum(SEDECO(ng)%sg_dPO4_dt(:,isp,k,i,j),DIM=1) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
+        R_PO4(isp,k) = R_PO4(isp,k) + sum(SEDECO(ng)%sg_dPO4_dt(isp,k,:,i,j)) ! (umol L-1 s-1) change in PO4 due to flux from seagrass (positive means seagrass to sediment)
       ENDDO
 #  endif    
 #  if defined SEAGRASS_ROOT_POM
     ! [nmol/g s] = [nmol/g s]   +            [umol/L s]                                [cm3/g] (1000 nmol/umol) (L/1000 cm3)
       DO isp=1,N_Csp
-        R_POC(isp,iLPOM,k) = R_POC(isp,iLPOM,k) &
-                            + OMFratio * sum(SEDECO(ng)%sg_dPOC_dt(:,isp,k,i,j),DIM=1) &
-                                          / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in POC labile due to root death in sediment (positive means seagrass to sediment)
-        R_POC(isp,iRPOM,k) = R_POC(isp,iRPOM,k) &
-                            + OMSratio * sum(SEDECO(ng)%sg_dPOC_dt(:,isp,k,i,j),DIM=1) &
-                                          / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in POC refractory due to root death in sediment (positive means seagrass to sediment)
+        R_POC(isp,iCPOM,k) = R_POC(isp,iCPOM,k) &
+                            + sum(SEDECO(ng)%sg_dPOC_dt(isp,k,:,i,j)) &
+                                  / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in POC labile due to root death in sediment (positive means seagrass to sediment)
       ENDDO
 #   if defined SEAGRASS_LEAF_NUTRIENT_UPTAKE || defined  SEAGRASS_ROOT_NUTRIENT_UPTAKE
       DO isp=1,N_Nsp
-        R_PON(isp,iLPOM,k) = R_PON(isp,iLPOM,k) &
-                            + OMFratio * sum(SEDECO(ng)%sg_dPON_dt(:,isp,k,i,j),DIM=1) &
-                                          / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in PON labile due to root death in sediment (positive means seagrass to sediment)
-        R_PON(isp,iRPOM,k) = R_PON(isp,iRPOM,k) &
-                            + OMSratio * sum(SEDECO(ng)%sg_dPON_dt(:,isp,k,i,j),DIM=1) &
-                                          / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in PON refractory due to root death in sediment (positive means seagrass to sediment)
+        R_PON(isp,iCPOM,k) = R_PON(isp,iCPOM,k) &
+                            + sum(SEDECO(ng)%sg_dPON_dt(isp,k,:,i,j)) &
+                                  / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in PON labile due to root death in sediment (positive means seagrass to sediment)
       ENDDO
       DO isp=1,N_Psp
-        R_POP(isp,iLPOM,k) = R_POP(isp,iLPOM,k) &
-                            + OMFratio * sum(SEDECO(ng)%sg_dPOP_dt(:,isp,k,i,j),DIM=1) &
-                                          / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in POP labile due to root death in sediment (positive means seagrass to sediment)
-        R_POP(isp,iRPOM,k) = R_POP(isp,iRPOM,k) &
-                            + OMSratio * sum(SEDECO(ng)%sg_dPOP_dt(:,isp,k,i,j),DIM=1) &
-                                          / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in POP refractory due to root death in sediment (positive means seagrass to sediment)
+        R_POP(isp,iCPOM,k) = R_POP(isp,iCPOM,k) &
+                            + sum(SEDECO(ng)%sg_dPOP_dt(isp,k,:,i,j)) &
+                                  / SEDECO(ng)%rhos_d(k,i,j) ! (nmol g-1 s-1) change in POP labile due to root death in sediment (positive means seagrass to sediment)
       ENDDO
 #   endif  
 #  endif  
@@ -1535,13 +1513,20 @@ CONTAINS
     IF( date*86400.0d0 >= dsec ) THEN
         if(dsec == 0.0d0) then
           dsec=date*86400.0d0+SEDECO_OUTPUT_INTERVAL*60.0d0
+          ! Write lavels at the first step
+          write(53,'(*(g0:,", "))') 'Time', 'Flux_Tmp', 'Flux_Sal','Flux_DO','Flux_TA' &
+                      ,'Flux_NH4','Flux_NO3','Flux_PO4'   &
+                      ,'Flux_DIC','Flux_LPOC','Flux_RPOC'!! sedeco-calcheck0.csv
+          write(54,'(*(g0:,", "))') 'Time', 'Wp' !! sedeco-calcheck1.csv
+          write(55,'(*(g0:,", "))') 'Time', 'Flux_DO_mmolm-2-h'
         else
           dsec=dsec+SEDECO_OUTPUT_INTERVAL*60.0d0
         endif
         
+        ! Write data
         write(53,'(*(g0:,", "))') date, Flux_Tmp, Flux_Sal,Flux_DO,Flux_TA &
-                    ,Flux_NH4(iNt),Flux_NO3(1),Flux_PO4(1)   &
-                    ,Flux_DIC(iCt),Flux_POC(1,1)!! sedeco-calcheck0.csv
+                    ,Flux_NH4(iNt),Flux_NO3(iNt),Flux_PO4(iPt)   &
+                    ,Flux_DIC(iCt),Flux_POC(iCt,iLPOM),Flux_POC(iCt,iRPOM)!! sedeco-calcheck0.csv
         write(54,'(*(g0:,", "))') date, Wp(:) !! sedeco-calcheck1.csv
         write(55,'(*(g0:,", "))') date, Flux_DO*0.01d0*60d0*60d0   !! for debug mmol/m2/h
 !        write(*,*) 'Time (day): ', date 

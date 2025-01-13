@@ -92,6 +92,9 @@ PROGRAM main
 #if defined CARBON_ISOTOPE
   real(8) :: R13C
 #endif
+  real(8), allocatable :: XI_size (:,:)
+  real(8), allocatable :: ETA_size(:,:)
+  
 !  For Output      
 !  real(8), parameter :: ECOSYS_OUTPUT_INTERVAL = 60.0d0 !1d0/60d0 !60.0d0 !1.0d0     ! Output interval (min)
   real(8) :: dsec = 0.d0 !sec
@@ -116,7 +119,7 @@ PROGRAM main
   real(8) :: sgd_TA_in, sgd_DIC_in, sgd_NO3_in, sgd_NH4_in 
   real(8) :: sgd_PO4_in
   real(8) :: sgd_DOC_in(Ndom), sgd_DON_in(Ndom), sgd_DOP_in(Ndom)
-
+  real(8) :: XI_size_in, ETA_size_in
   real(8) :: Diff_w
   character(256) :: OUTFILE
   character(4) :: sFNUM
@@ -137,7 +140,7 @@ PROGRAM main
   namelist/sedeco_config/sgd_PO4_in
   namelist/sedeco_config/sgd_DOC_in, sgd_DON_in, sgd_DOP_in
   namelist/vprof_config/Diff_w
-
+  namelist/sgrass_config/XI_size_in, ETA_size_in
 
   read (5, nml=input_info)
   rewind(5)
@@ -145,16 +148,21 @@ PROGRAM main
   rewind(5)
   read (5, nml=ecosys_config)
   rewind(5)
+
+#if defined SEDIMENT_ECOSYS
   read (5, nml=sedeco_config)
   rewind(5)
+#endif
+#if defined SEAGRASS
+  read (5, nml=sgrass_config)
+  rewind(5)
+#endif
 
   if (nSetting .eq. 7) then
-
     read (5, nml=vprof_config)
     rewind(5)
-
   endif
-  
+
 
   ng=1
   i=1
@@ -245,6 +253,13 @@ PROGRAM main
   CALL initialize_reef_flow(1, Ngrids, 1, Im, 1, Jm)
 #endif
   CALL allocate_reef_ecosys(1, Ngrids, 1, Im, 1, Jm)
+
+#ifdef SEAGRASS
+  allocate( XI_size (1:Im,1:Jm) ) ! grid size XI-direction (meters)
+  allocate( ETA_size(1:Im,1:Jm) ) ! grid size ETA-direction (meters)
+  XI_size (:,:) = XI_size_in
+  ETA_size(:,:) = ETA_size_in
+#endif
   CALL initialize_reef_ecosys(1, 1, Im, 1, Jm      &
       , start_of_new_run    &   ! TRUE = initialize coral, seagass, macroalgae, sediment from start; FALSE = continue from previous run
 #ifdef SEAGRASS

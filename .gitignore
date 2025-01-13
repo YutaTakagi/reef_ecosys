@@ -34,6 +34,9 @@
 *.xlsx
 !.gitkeep
 
+# Input Files
+!sedeco_rst.csv
+
 # Backup Files
 backup/*
 

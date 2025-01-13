@@ -16,10 +16,10 @@ gfortran ${FFLAGS} \
   ${SRC_DIR}/mod_heat.F \
   ${SRC_DIR}/mod_decomposition.F \
   ${SRC_DIR}/mod_foodweb.F \
+  ${SRC_DIR}/mod_sedecosys.F \
   ${SRC_DIR}/mod_coral.F \
   ${SRC_DIR}/mod_macroalgae.F \
   ${SRC_DIR}/mod_seagrass.F \
-  ${SRC_DIR}/mod_sedecosys.F \
   ${SRC_DIR}/mod_reef_ecosys.F \
   ${SRC_DIR}/mod_input.F \
   ${SRC_DIR}/mod_output.F \

@@ -46,13 +46,23 @@ contains
 !    open(46,file=trim(OUTFILE_prefix)//'-vprof.csv') !!!! for vertical profile output
        ! moved to write_env_vprof routine
 #if defined SEDIMENT_TESTMODE
-    open(50,file=trim(OUTFILE_prefix)//'-depth.csv',status='replace')!!!!!!!!!for debug
+    open(50,file=trim(OUTFILE_prefix)//'-sedeco_depth.csv',status='replace')!!!!!!!!!for debug
 !    open(51,file='output/sedeco_his.csv') ! moved to write_sedeco_his_data routine
 !    open(52,file='output/sedeco_dia.csv') ! moved to write_sedeco_dia_data routine
-    open(53,file=trim(OUTFILE_prefix)//'-calcheck0.csv',status='replace')!!!!!!!!!for debug
-    open(54,file=trim(OUTFILE_prefix)//'-calcheck1.csv',status='replace')!!!!!!!!!for debug
-    open(55,file=trim(OUTFILE_prefix)//'-flux_DO.csv',status='replace')!!!!!!!!!for debug
+    open(53,file=trim(OUTFILE_prefix)//'-sedeco_calcheck0.csv',status='replace')!!!!!!!!!for debug
+    open(54,file=trim(OUTFILE_prefix)//'-sedeco_calcheck1.csv',status='replace')!!!!!!!!!for debug
+    open(55,file=trim(OUTFILE_prefix)//'-sedeco_flux_DO.csv',status='replace')!!!!!!!!!for debug
 #endif
+#if defined SEAGRASS_TESTMODE
+    open(60,file=trim(OUTFILE_prefix)//'-sg_his.csv',status='replace')!!!!!!!!!for debug
+#endif
+#if defined FOODWEB_TESTMODE
+    open(70,file=trim(OUTFILE_prefix)//'-foodweb_calcheck_Phy1.csv',status='replace')!!!!!!!!!for debug
+    open(71,file=trim(OUTFILE_prefix)//'-foodweb_calcheck_Phy2.csv',status='replace')!!!!!!!!!for debug
+    open(72,file=trim(OUTFILE_prefix)//'-foodweb_calcheck_Phy3.csv',status='replace')!!!!!!!!!for debug
+    open(73,file=trim(OUTFILE_prefix)//'-foodweb_calcheck_Phy4.csv',status='replace')!!!!!!!!!for debug
+#endif
+
     RETURN
 
 END SUBROUTINE files_open
@@ -90,7 +100,15 @@ END SUBROUTINE files_open
     close(53)
     close(54)
     close(55)
-
+#endif
+#if defined SEAGRASS_TESTMODE
+    close(60)
+#endif
+#if defined FOODWEB_TESTMODE
+    close(70)
+    close(71)
+    close(72)
+    close(73)
 #endif
 
     RETURN
