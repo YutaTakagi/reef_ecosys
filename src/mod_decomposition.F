@@ -740,10 +740,10 @@ CONTAINS
     else
       v19  = 0.0d0
     endif
-    R_S0(:)  = R_S0(:)  - v19*3.0d0 *aS_S02H2S(1:N_Nsp)*rS0(:)  &
-                        - v19*1.0d0 *aS_S02SO4(1:N_Nsp)*rS0(:)
-    R_H2S(:) = R_H2S(:) + v19*3.0d0 *aS_S02H2S(1:N_Nsp)*rS0(:)
-    R_SO4(:) = R_SO4(:) + v19*1.0d0 *aS_S02SO4(1:N_Nsp)*rS0(:)
+    R_S0(:)  = R_S0(:)  - v19*3.0d0 *aS_S02H2S(1:N_Ssp)*rS0(:)  &
+                        - v19*1.0d0 *aS_S02SO4(1:N_Ssp)*rS0(:)
+    R_H2S(:) = R_H2S(:) + v19*3.0d0 *aS_S02H2S(1:N_Ssp)*rS0(:)
+    R_SO4(:) = R_SO4(:) + v19*1.0d0 *aS_S02SO4(1:N_Ssp)*rS0(:)
     R_TA     = R_TA     - v19*2.0d0
 
     ! R20:  MnO2 --> MnO2_undeg

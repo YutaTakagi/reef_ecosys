@@ -1477,7 +1477,7 @@ MODULE mod_seagrass
 
       delta_SgNBmF(:)               = delta_SgNBmF(:)               &
                                       + SgNperC * Growth_rate           * NO3_uptake_possible(0)/sumNUpPos &
-                                        * aNO3_phot(1:N_Nsp)*rNO3_ocn(:)
+                                        * aNO3_phot(1:N_Nsp)*rNO3_ocn(:)                                   &
                                       + SgNperC * Growth_rate           * NH4_uptake_possible(0)/sumNUpPos &
                                         * aNH4_phot(1:N_Nsp)*rNH4_ocn(:)
     endif
