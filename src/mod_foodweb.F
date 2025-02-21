@@ -815,7 +815,7 @@ CONTAINS
 
 !===== Nitrogen fixation ==============================================
 
-    Nfx = k_Nfx * exp(b_Nfx*Tmp) * MAX( PhyN(iNt,iCya), 0.0d0 )  !!!! To be updated !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+    Nfx = k_Nfx * exp(b_Nfx*Tmp) * MAX( PhyC(iCt,iCya), 0.0d0 )  !!!! To be updated !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 
     !     === Mass balance ===
 

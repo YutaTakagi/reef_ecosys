@@ -17,6 +17,7 @@ MODULE mod_oyster
     real(8), pointer :: QN(:,:,:,:,:)
     real(8), pointer :: QP(:,:,:,:,:)
     real(8), pointer :: CaCO3(:,:,:,:,:)
+    real(8), pointer :: Dead_CaCO3(:,:,:,:,:)
     real(8), pointer :: R   (:,:,:,:) 
   END TYPE T_OYSTER
   TYPE (T_OYSTER), allocatable :: OYSTER(:)
@@ -39,6 +40,8 @@ CONTAINS
     allocate( OYSTER(ng)%QN(N_Nsp,Noy,Nz,LBi:UBi,LBj:UBj) )
     allocate( OYSTER(ng)%QP(N_Psp,Noy,Nz,LBi:UBi,LBj:UBj) )
     allocate( OYSTER(ng)%CaCO3(N_Csp,Noy,Nz,LBi:UBi,LBj:UBj) )
+    allocate( OYSTER(ng)%Dead_CaCO3(N_Csp,Noy,Nz,LBi:UBi,LBj:UBj) )
+
 
     allocate( OYSTER(ng)%R       (Noy,Nz,LBi:UBi,LBj:UBj) )
 
@@ -73,7 +76,8 @@ CONTAINS
             OYSTER(ng)%QC(:,n,k,i,j) = 0.0d0
             OYSTER(ng)%QN(:,n,k,i,j) = 0.0d0
             OYSTER(ng)%QP(:,n,k,i,j) = 0.0d0
-            OYSTER(ng)%CaCO3(:,n,k,i,j) = 0.0d0
+            OYSTER(ng)%CaCO3(:,n,k,i,j) = 0.0d0  ! CaCO3 in living oyster (mmol ind.-1)
+            OYSTER(ng)%Dead_CaCO3(:,n,k,i,j) = 0.0d0  ! CaCO3 in dead oyster (mmol m-3)
             OYSTER(ng)%QC(iCt,n,i,j) = 15.0d0
             OYSTER(ng)%QN(iNt,n,i,j) = 1.5d0
             OYSTER(ng)%QP(iPt,n,i,j) = 0.1d0
@@ -118,7 +122,7 @@ CONTAINS
     , dPhyC_dt       &   ! dPhyC_dt(N_Csp,Nphy): dPhyC/dt (umol C L-1 s-1)  
     , dPhyN_dt       &   ! dPhyN_dt(N_Nsp,Nphy): dPhyN/dt (umol N L-1 s-1)  
     , dPhyP_dt       &   ! dPhyP_dt(N_Psp,Nphy): dPhyP/dt (umol P L-1 s-1)  
-    , dPIC_dt        &   ! dPIC_dt (N_Csp,Npim): dPIC/dt  (umol C L-1 s-1)
+!    , dPIC_dt        &   ! dPIC_dt (N_Csp,Npim): dPIC/dt  (umol C L-1 s-1)
     )
 
 !-----------------------------------------------------------------------
@@ -154,66 +158,79 @@ CONTAINS
     real(8), intent(out) :: dPhyC_dt(N_Csp,Nphy) ! dPhyC/dt  (umolC L-1 s-1)  
     real(8), intent(out) :: dPhyN_dt(N_Nsp,Nphy) ! dPhyN/dt  (umolN L-1 s-1)  
     real(8), intent(out) :: dPhyP_dt(N_Psp,Nphy) ! dPhyP/dt  (umolP L-1 s-1)  
-    real(8), intent(out) :: dPIC_dt (N_Csp,Npim) ! dPIC/dt  (umol L-1 s-1) 
+!    real(8), intent(out) :: dPIC_dt (N_Csp,Npim) ! dPIC/dt  (umol L-1 s-1) 
 
 ! --- C:N:P:CaCO3 ratio of oysters ---
     real(8), parameter :: rNC(1)  = [ 16d0/106d0 ] ! (no dim.) Oyster N:C ratio
     real(8), parameter :: rPC(1)  = [  1d0/106d0 ] ! (no dim.) Oyster P:C ratio
     real(8), parameter :: rCaC(1) = [      0.0d0 ]  ! ***** (no dim.) CaCO3:OrgC ratio !!! Need Ref!!!!!!!!!!
 ! --- Photoplankton ingestion parameters ---
-    real(8), parameter :: k_G(4,1)    = reshape( [ 1.0d-6,    1.0d-6,    1.0d-8 ,    1.0d-8    ], [4,1] ) ! to Oyster1 (s-1)          Maximum grazing rate of PhyC1 by ZooC at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)0.16
-    real(8), parameter :: b_G(4,1)    = reshape( [ 0.0693d0,  0.0693d0,  0.0693d0,   0.0693d0  ], [4,1] ) ! to Oyster1 (degC-1)       Temperature coefficient for ZooC grazing (0.063d0degC-1;Kawamiya et al., 1995)
-    real(8), parameter :: e_G(4,1)    = reshape( [ 0.15d0,    0.15d0,    0.15d0,     0.15d0    ], [4,1] ) ! to Oyster1 (no dim.)      Assimilation efficiency of ZooC (0.7:Kawamiya et al., 1995)
-    real(8), parameter :: Kz_phy(4,1) = reshape( [ 1.0d0,     10.0d0,     0.1d0,      0.1d0     ], [4,1] ) ! (umol C L-1)       PhyC1 threshold value for grazing by ZooC (0.04umolN/L0.265; Kishi et al., 2007)
+    real(8), parameter :: k_G(4,1)   = reshape( [ 1.0d-6,    1.0d-6,    1.0d-8 ,    1.0d-8    ], [4,1] ) ! to Oyster1 (s-1)          Maximum grazing rate of PhyC1 by ZooC at 0 oC (0.3d0 d-1; Kawamiya et al., 1995)0.16
+    real(8), parameter :: b_G(4,1)   = reshape( [ 0.0693d0,  0.0693d0,  0.0693d0,   0.0693d0  ], [4,1] ) ! to Oyster1 (degC-1)       Temperature coefficient for ZooC grazing (0.063d0degC-1;Kawamiya et al., 1995)
+    real(8), parameter :: e_G(4,1)   = reshape( [ 0.15d0,    0.15d0,    0.15d0,     0.15d0    ], [4,1] ) ! to Oyster1 (no dim.)      Assimilation efficiency of ZooC (0.7:Kawamiya et al., 1995)
+    real(8), parameter :: K_phy(4,1) = reshape( [ 1.0d0,     10.0d0,     0.1d0,      0.1d0     ], [4,1] ) ! (umol C L-1)       PhyC1 threshold value for grazing by ZooC (0.04umolN/L0.265; Kishi et al., 2007)
 
-    real(8), parameter :: k_Rz(1) = [ 6.0d-8    ]  ! (s-1)            zooplankton respiration rate at 0  oC  																					!!!(Tuning) Check
-    real(8), parameter :: b_Rz(1) = [ 0.0693d0  ]  ! (degC-1)         Temperature coefficient for ZooC respiration rate (Kawamiya et al., 1995)
-    real(8), parameter :: k_Mz(1) = [ 5.0d-8    ]  ! (L umol-1 s-1)   zooplankton mortality rate at 0 oC 3.0d0/86400.0d0(0.0088d0 umol-1 d-1; Kawamiya et al., 1995)
-    real(8), parameter :: b_Mz(1) = [ 0.0693d0  ]  ! (degC-1)         Temperature coefficient for ZooC mortality (Kawamiya et al., 1995)
+    real(8), parameter :: k_R(1) = [ 6.0d-8    ]  ! (s-1)            zooplankton respiration rate at 0  oC  																					!!!(Tuning) Check
+    real(8), parameter :: b_R(1) = [ 0.0693d0  ]  ! (degC-1)         Temperature coefficient for ZooC respiration rate (Kawamiya et al., 1995)
+    real(8), parameter :: k_M(1) = [ 5.0d-8    ]  ! (L umol-1 s-1)   zooplankton mortality rate at 0 oC 3.0d0/86400.0d0(0.0088d0 umol-1 d-1; Kawamiya et al., 1995)
+    real(8), parameter :: b_M(1) = [ 0.0693d0  ]  ! (degC-1)         Temperature coefficient for ZooC mortality (Kawamiya et al., 1995)
 
-    real(8) :: rQC(N_Csp),rDIC(N_Csp)
+    real(8) :: rQC(N_Csp),rPhyC(N_Csp,Nphy)
+    real(8) :: rQN(N_Nsp),rPhyN(N_Nsp,Nphy)
+    real(8) :: rQP(N_Psp),rPhyP(N_Psp,Nphy)
+    real(8) :: Gc,Gn,Gp
+    real(8) :: cPhyC,cPhyN,cPhyP
 
-    integer :: isp
+    integer :: isp, m
 
-    Flux_DIC(:) = 0.0d0
-    Flux_DO = 0.0d0
-    Flux_DOC(:,:) = 0.0d0
-    Flux_POC(:,:) = 0.0d0
-    Flux_NO3(:) = 0.0d0
-    Flux_NH4(:) = 0.0d0
-    Flux_PO4(:) = 0.0d0
-    Flux_DON(:,:) = 0.0d0
-    Flux_DOP(:,:) = 0.0d0
-    Flux_PON(:,:) = 0.0d0
-    Flux_POP(:,:) = 0.0d0
+    dDOx_dt       = 0.0d0
+    dTA_dt        = 0.0d0
+    dDIC_dt(:)    = 0.0d0
+    dNH4_dt(:)    = 0.0d0
+    dPO4_dt(:)    = 0.0d0
+    dDOC_dt(:,:)  = 0.0d0
+    dPOC_dt(:,:)  = 0.0d0
+    dDON_dt(:,:)  = 0.0d0
+    dPON_dt(:,:)  = 0.0d0
+    dDOP_dt(:,:)  = 0.0d0
+    dPOP_dt(:,:)  = 0.0d0
+    dPhyC_dt(:,:) = 0.0d0
+    dPhyN_dt(:,:) = 0.0d0
+    dPhyP_dt(:,:) = 0.0d0
+!    dPIC_dt (:,:) = 0.0d0
 
-! --- Organic and Inorganic Production Rate -----------------
-
-!    ALGAE(ng)%Pg(n,i,j)= pmax*tanh(PFD/pIk)/3600.d0   !Light response curve [mmolC/m2/s]
-    ALGAE(ng)%Pg(n,i,j)= p1*PFD/3600.d0   !Linear regression line [mmolC/m2/s]
-    ALGAE(ng)%R (n,i,j)= p0/3600.d0   ! Constant [mmolC/m2/s]
-    
-    IF(DICamb(iCt)<=0.d0) THEN !-----For Error handling
-      ALGAE(ng)%Pg(n,i,j) = 0.d0
-    ENDIF
-    IF(DOamb<=0.d0) THEN !-----For Error handling
-      ALGAE(ng)%R (n,i,j) = 0.d0
-    ENDIF
-    
-    Flux_DO = ALGAE(ng)%R (n,i,j)-ALGAE(ng)%Pg(n,i,j)
+!--- Carbon isotope or tracer ratio (R13C = 13C/Ct) -----------------
     DO isp=1,N_Csp
-      rDIC  = Iso_ratio( DICamb(isp), DICamb(iCt) )
-      rQC = Iso_ratio( ALGAE(ng)%QC(isp,n,i,j), ALGAE(ng)%QC(iCt,n,i,j) )
-  
-      Flux_DIC(isp)= ALGAE(ng)%Pg(n,i,j)*rDIC*aC_phot(isp)        &
-                   - ALGAE(ng)%R (n,i,j)*rQC *aC_resp(isp)
-    ENDDO
-      
-! --- Nutrient fluxes between water column and coral -----
-!!! Under developing
-!    Flux_NO3(:) = 
-!    Flux_NH4(:) = 
-!    Flux_PO4(:) = 
+      rQC(isp) = Iso_ratio( OYSTER(ng)%QC(isp,k,n,i,j), OYSTER(ng)%QC(iCt,k,n,i,j) ) ! OYSTER(ng)%QC
+      DO m=1,Nphy
+        rPhyC(isp,m) = Iso_ratio( PhyC(isp,m), PhyC(iCt,m) ) ! PhyC
+      END DO
+    END DO
+!--- Nitrogen isotope or tracer ratio (R15N = 15N/Nt) -----------------
+    DO isp=1,N_Nsp
+      rQN(isp) = Iso_ratio( OYSTER(ng)%QN(isp,k,n,i,j), OYSTER(ng)%QN(iNt,k,n,i,j) ) ! OYSTER(ng)%QN
+      DO m=1,Nphy
+        rPhyN(isp,m) = Iso_ratio( PhyN(isp,m), PhyN(iCt,m) ) ! PhyN
+      END DO
+    END DO
+!--- Phosphrous tracer ratio (RP = P1/Pt) -----------------
+    DO isp=1,N_Psp
+      rQP(isp) = Iso_ratio( OYSTER(ng)%QP(isp,k,n,i,j), OYSTER(ng)%QP(iPt,k,n,i,j) ) ! OYSTER(ng)%QP
+      DO m=1,Nphy
+        rPhyP(isp,m) = Iso_ratio( PhyP(isp,m), PhyP(iPt,m) ) ! PhyP
+      END DO
+    END DO
+
+! === Phtoplankton ingestion Rate (mmolC ind.-1) =========================
+    DO m=1,Nphy
+      cPhyC = MAX(PhyC(iCt,m),0.0d0) !!! Error handling
+      cPhyN = MAX(PhyN(iNt,m),0.0d0) !!! Error handling
+      cPhyP = MAX(PhyP(iPt,m),0.0d0) !!! Error handling
+
+      Gc = k_G(m,k) * exp(b_G(m,k)*Tmp)    &
+            * (cPhyC/(K_phy(m,k) + cPhyC)) * OYSTER(ng)%QC(iCt,k,n,i,j)
+    END DO
+
 
     RETURN
   
