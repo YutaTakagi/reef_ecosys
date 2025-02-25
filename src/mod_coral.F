@@ -2050,10 +2050,10 @@ CONTAINS
     real(8), parameter :: Krupb = 0.2d0   ! Half saturation constant (no dim) !!! Tuning (Ref. von Caemmerer, 2000)
     real(8), parameter :: kphot = 1.0d-3   ! rate constant of photosynthesis **** Unknown *********** 
 
-    real(8), parameter :: A  = 3.0d11     ! !!! Tuning
-    real(8), parameter :: Ea = 6.5d4      ! !!! Tuning
-    real(8), parameter :: dS = 1.02d3     ! 
-    real(8), parameter :: dH = 3.07d5     ! 
+!    real(8), parameter :: A  = 3.0d11     ! !!! Tuning
+    real(8), parameter :: Ea = 1.4d5      ! !!! Tuning
+    real(8), parameter :: dS = 1.2d3     ! 
+    real(8), parameter :: dH = 3.58d5     ! 
 
 !    real(8), parameter :: f_RO = 1.0d0    ! ROS fraction from zoox. to host. !!!Assumed
 
@@ -2114,9 +2114,10 @@ CONTAINS
 !---- electrons leading to C fixation (electron transfer rate (ETR)) (pmol e- cell-1 s-1) ---
     J_ep_in = ko * QAr
 
-!---- Photosyenthetic rate
+!---- Photosyenthetic rate (von Caemmerer, 2000; Eq.(2.34))
     TK = Tamb + 273.15 !(K)
-    f_temp = A*exp(-Ea/Rg/TK)/(1.0d0+exp((TK*dS-dH)/Rg/TK))
+    f_temp = exp(-(TK-298.15)*Ea/298.15/Rg/TK)* &
+              (1.0d0+exp((298.15*dS-dH)/Rg/298.15))/(1.0d0+exp((TK*dS-dH)/Rg/TK))
 
     Vc = Vcmax * f_temp * CO2/(CO2+Kco2*(1.0d0+DO/Ko2))  &
                         * RuBPn/(RuBPn+Krupb)
