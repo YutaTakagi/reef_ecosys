@@ -1993,13 +1993,13 @@ CONTAINS
     , ROS             & ! ROS concentration in the coral tissue
     , QCzr            & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
 !   input and output parameters
-    , QAo             & ! DO concentration in the coral tissue
-    , QAr             & ! ROS concentration in the coral tissue
-    , QAi             & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
-    , Chl             & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
-    , SOx             & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
-    , NADPHn           & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
-    , RuBPn            & ! Reserve OC pool (= QC - QC0 ) (pmolC/cell)
+    , QAo             & ! 
+    , QAr             & ! 
+    , QAi             & ! 
+    , Chl             & ! Chlorophyll concentration (pg cell-1)
+    , SOx             & ! Superoxide (O2-) concentration in Zooxanthellar cell
+    , NADPHn          & ! normalized NADPH (no dim.) NADPH/(NADPH + NADP+) 
+    , RuBPn           & ! normalized RuBP  (no dim.) RuBP/(0.5*PGA + RuBP) 
 !!   output parameters
     , Pg              & ! Gross photosynthetic rate (pmolC cell-1 s-1)
     , F_zDO           & ! Flux of DO  (pmolO2 cell-1 s-1)
@@ -2036,8 +2036,8 @@ CONTAINS
     real(8), parameter :: s_0 = 2.3d0*1.2d0    ! Absorption cross-section (m2 (umol photon)-1); ~390 (ANGSTROM quanta-1) Suggett et al. (2008) * 6.02x10^23 quanta = 1 mol photon
     real(8) :: s_ab    ! Absorption cross-section (m2 (umol photon)-1); ~390 (ANGSTROM quanta-1) Suggett et al. (2008) * 6.02x10^23 quanta = 1 mol photon
     real(8), parameter :: phi_q = 1.0d0     ! quantum efficiency of charge separation at PSII(e- photon-1)  Ross et al. (2008) !!!!!!!!!!!!!check
-    real(8), parameter :: Trb = 33.8d0    ! (oC) estimated from Lilley et al. (2010)
-    real(8), parameter :: arb = 0.55d0    ! (K-1) estimated from Lilley et al. (2010)
+!    real(8), parameter :: Trb = 33.8d0    ! (oC) estimated from Lilley et al. (2010)
+!    real(8), parameter :: arb = 0.55d0    ! (K-1) estimated from Lilley et al. (2010)
     real(8), parameter :: e2o = 0.25d0    ! Yield of O2 per electron (mol O2 (mol e-)-1) 2H2O -> 4e- +4H+ + O2 
     real(8), parameter :: o2c = 1.0d0     ! Photosynthetic quotient (mol O2 (mol CO2)-1) !!!Assumed
     real(8), parameter :: e2c = e2o*o2c   ! (mol C (mol e-)-1)
@@ -2203,7 +2203,8 @@ CONTAINS
 !-- RuBPn = RuBP/(0.5*PGA + RuBP) concentration (no unit, (pmol cell-1)/(pmol cell-1) ) -----------------
 !   Eq. (27) in Farquhar et al. (1980)
 !    RuBPn = 1.0d0 - (2.0d0+1.5d0*phi)*Vc/NADPHn/kphot
-    RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*phi)*Vc ) *dt
+!    RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*phi)*Vc ) *dt
+    RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*phi)*Vc *100.0d0 ) *dt
 
 !-----Superoxide concentration (pmol cell-1) -----------------
 !   F_zSOx: O2 + e- -> O2- 
@@ -2239,8 +2240,8 @@ CONTAINS
        , QAo, QAr, QAi                                              &
        , QAt, QAa, FvFm, YII, J_ep_in                               &
        , Ji2a, Ja2i, kr, s_ab, F_zSOx, SOx                          &
-       , Pg, J_ep_in*e2c, J_ep_max*e2c, F_zDO                       &
-       , Chl, F_QAd, F_QAp, NADPHn, RuBPn, F_zROS, ROS
+       , Pg, J_ep_in*e2c, Vc, Vo, phi, F_zDO                       &
+       , Chl, CO2, DO, F_QAp, NADPHn, RuBPn, F_zROS, ROS
       
     END IF
 #  endif

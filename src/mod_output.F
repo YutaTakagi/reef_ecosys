@@ -706,8 +706,8 @@ END SUBROUTINE write_crl_ave_lavel
        ,'QAo','QAr','QAi'                                       &
        ,'QAt','QAa','Fv/Fm','Y(II)','J_ep_in'                   &
        ,'Ji2a','Ja2i','kr','s_ab','F_zSOx','SOx'                &
-       ,'Pg','Pgcal','Pgmax','F_zDO'                            &
-       ,'Chl','F_QAd','F_QAp','NADPH','RuBP','F_zROS','ROS'
+       ,'Pg','Pgcal','Vc','Vo','phi','F_zDO'                    &
+       ,'Chl','CO2','DO','F_QAp','NADPH','RuBP','F_zROS','ROS'
      
     RETURN
 
