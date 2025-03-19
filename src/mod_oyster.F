@@ -227,10 +227,46 @@ CONTAINS
       cPhyN = MAX(PhyN(iNt,m),0.0d0) !!! Error handling
       cPhyP = MAX(PhyP(iPt,m),0.0d0) !!! Error handling
 
-      Gc = k_G(m,k) * exp(b_G(m,k)*Tmp)    &
-            * (cPhyC/(K_phy(m,k) + cPhyC)) * OYSTER(ng)%QC(iCt,k,n,i,j)
+      if (cPhyC == 0.0d0) then !!! Error handling
+        Gc = 0.0d0
+        Gn = 0.0d0
+        Gp = 0.0d0
+      else
+        Gc = k_G(m,k) * exp(b_G(m,k)*Tmp)    &
+              * (cPhyC/(K_phy(m,k) + cPhyC)) &
+              * OYSTER(ng)%QC(iCt,k,n,i,j)**(2.0d0/3.0d0)
+        Gn = Gc*cPhyN/cPhyC
+        Gp = Gc*cPhyP/cPhyC
+      endif
+
+!     === Mass balance ===
+      
+      dPhyC_dt(:,m)    = dPhyC_dt(:,m)    - Gc*rPhyC(:,m)
+      dPOC_dt(:,iLPOM) = dPOC_dt(:,iLPOM) + Mp* rLPOMphy              *rPhyC(:,k)
+      dPOC_dt(:,iRPOM) = dPOC_dt(:,iRPOM) + Mp*(1d0-rLPOMphy)         *rPhyC(:,k)
+      OYSTER(ng)%QC(:,k,n,i,j) = OYSTER(ng)%QC(:,k,n,i,j) + Gc*rPhyC(:,m)
+
+      dPhyN_dt(:,m)    = dPhyN_dt(:,m)    - Gn*rPhyN(:,m)
+      dPON_dt(:,iLPOM) = dPON_dt(:,iLPOM) + Mp* rLPOMphy              *rPhyC(:,k)
+      dPON_dt(:,iRPOM) = dPON_dt(:,iRPOM) + Mp*(1d0-rLPOMphy)         *rPhyC(:,k)
+      OYSTER(ng)%QN(:,k,n,i,j) = OYSTER(ng)%QN(:,k,n,i,j) + Gn*rPhyN(:,m)
+
+      dPhyP_dt(:,m)    = dPhyP_dt(:,m)    - Gp*rPhyP(:,m)
+      dPOP_dt(:,iLPOM) = dPOP_dt(:,iLPOM) + Mp* rLPOMphy              *rPhyC(:,k)
+      dPOP_dt(:,iRPOM) = dPOP_dt(:,iRPOM) + Mp*(1d0-rLPOMphy)         *rPhyC(:,k)
+      OYSTER(ng)%QP(:,k,n,i,j) = OYSTER(ng)%QP(:,k,n,i,j) + Gp*rPhyP(:,m)
+     
     END DO
 
+! === Oyster's oxygen demand (mmol O2 ind.-1) =========================
+
+! === Respiration rate (mmol O2 ind.-1) =========================
+
+! === Calcification rate (mmol C ind.-1) =========================
+
+! === Assimilation rate (mmol C ind.-1) =========================
+
+! === Mortality rate (ind. s-1) =========================
 
     RETURN
   
