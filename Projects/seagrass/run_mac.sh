@@ -4,7 +4,7 @@ rm *.exe
 #
 SRC_DIR=../../src
 INCLUDE="-I${PWD}"
-FFLAGS="-fbounds-check -ffree-form -O3"
+FFLAGS="-fbounds-check -ffree-form -ffree-line-length-none -O3"
 #FFLAGS="-fbounds-check -ffree-form -O0 -g -fcheck=array-temps,bounds,do,mem,pointer,recursion"
 
 gfortran ${FFLAGS} \
