@@ -788,6 +788,10 @@ CONTAINS
     , dH2S_dt(:)        &   ! d[H2S]/dt (umol L-1 s-1)
     , dS0_dt(:)         &   ! d[S]/dt (nmol g(DW)-1 s-1) *solid
     , dSO4_dt(:)        &   ! d[SO42-]/dt (umol L-1 s-1)
+    ! output parameters
+    , pH                &   ! pH (total scale)
+    , Wcal              &   ! Calcite saturation state
+    , Warg              &   ! Aragonite saturation state
     )
 
 
@@ -815,7 +819,7 @@ CONTAINS
 
 !===== Nitrogen fixation ==============================================
 
-    Nfx = k_Nfx * exp(b_Nfx*Tmp) * MAX( PhyC(iCt,iCya), 0.0d0 )  !!!! To be updated !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+    Nfx = k_Nfx * exp(b_Nfx*Tmp) * MAX( PhyN(iNt,iCya), 0.0d0 )  !!!! To be updated !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 
     !     === Mass balance ===
 
