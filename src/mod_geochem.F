@@ -1739,11 +1739,15 @@ contains
 #else
     [ 2004.7,  -11.57, 0.93413,  45.795, -46.885,  60.398,  7.9545,  7.77   ]
 #endif
-
-  real(8) :: x(7) = [ T, T*T, S, S*S, d, d*d, T*d ]
   
-  DIC_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                     + a(5)*x(5) + a(6)*x(6) + a(7)*x(7) 
+  real(8) :: Tm20, Sm35, Dp1000
+
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  DIC_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                     + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
   DIC_Profile = max( DIC_Profile, 0.0d0 )
 
   end function DIC_Profile
@@ -1772,11 +1776,15 @@ contains
       [ 2297.4, -1.0691, 0.30873,  68.021, -13.129, -22.406, -3.9028, -2.2066 ]
 #endif
 
-    real(8) :: x(7) = [ T, T*T, S, S*S, d, d*d, T*d ]
-    
-    TA_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                      + a(5)*x(5) + a(6)*x(6) + a(7)*x(7) 
-    TA_Profile = max( TA_Profile, 0.0d0 )
+  real(8) :: Tm20, Sm35, Dp1000
+
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  TA_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                    + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
+  TA_Profile = max( TA_Profile, 0.0d0 )
 
   end function TA_Profile
 
@@ -1804,10 +1812,14 @@ contains
     [ 223.65,  2.5876, -0.95841,  6.3665,   79.41, -71.675, -15.363, -11.386 ]
 #endif
 
-  real(8) :: x(7) = [ T, T*T, S, S*S, d, d*d, T*d ]
+  real(8) :: Tm20, Sm35, Dp1000
   
-  DO_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                    + a(5)*x(5) + a(6)*x(6) + a(7)*x(7) 
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  DO_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                    + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
   DO_Profile = max( DO_Profile, 0.0d0 )
 
   end function DO_Profile
@@ -1873,12 +1885,12 @@ contains
 !--- Phytoplankton -------------------------------------
 !     Based on GLODAPv2.2022
 
-  real(8) function PhyC_Profile(iphy, T, S, d)
+  real(8) function PhyC_Profile(T, S, d, m)
   implicit none
-  integer, intent(in) :: iphy ! Phytoplankton functional group num 
   real(8), intent(in) :: T    ! Potential temperatureture (oC)
   real(8), intent(in) :: S    ! Salinity (PSU)
   real(8), intent(in) :: d    ! Depth (m)
+  integer, intent(in) :: m    ! Index of Phytoplankton functional group 
 
   real(8), parameter :: a(0:8)  = &
 #if defined BIO_VPROFILE_YAEYAMA
@@ -1898,12 +1910,18 @@ contains
   real(8), parameter :: r(4)        = [ 0.4d0, 0.3d0, 0.1d0, 0.2d0 ]
   real(8), parameter :: Chl2PhyC(4) = [ 0.2d0, 0.2d0, 0.2d0, 0.2d0 ] !Conversion ratio from Chl-a to phyC (umolC/L)/(ug/L)
 
-  real(8) :: x(8) = [ T, T*T, S, S*S, d, d*d, d*d*d, T*d ]
+  real(8) :: Tm20, Sm35, Dp1000
+
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
   ! Chl-a concentration (ug/L)
-  PhyC_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                      + a(5)*x(5) + a(6)*x(6) + a(7)*x(7) + a(8)*x(8)
+  PhyC_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35           &
+                      + a(5)*Dp1000 + a(6)*Dp1000*Dp1000  + a(7)*Dp1000*Dp1000*Dp1000     &
+                      + a(7)*Tm20*Dp1000 
   ! PhyC density (umolC/L)
-  PhyC_Profile = PhyC_Profile * r(iphy) * Chl2PhyC(iphy)              
+  PhyC_Profile = PhyC_Profile * r(m) * Chl2PhyC(m)              
   PhyC_Profile = max( PhyC_Profile, 0.0d0 )
 
   end function PhyC_Profile
@@ -1982,6 +2000,50 @@ contains
 
   end function ZOO_Profile2
 
+!--- Zooplankton -------------------------------------
+!     Based on GLODAPv2.2022
+
+  real(8) function ZooC_Profile(T, S, d, m)
+  implicit none
+  real(8), intent(in) :: T    ! Potential temperatureture (oC)
+  real(8), intent(in) :: S    ! Salinity (PSU)
+  real(8), intent(in) :: d    ! Depth (m)
+  integer, intent(in) :: m    ! Index of Phytoplankton functional group 
+
+  real(8), parameter :: a(0:8)  = &
+#if defined BIO_VPROFILE_YAEYAMA
+    [ 0.22899, -0.044904, 0.0023059,-0.032198,-0.0085123, 0.57808, -16.399,  42.786,   0.279 ]
+#elif defined BIO_VPROFILE_SHIZUGAWA
+    [ 0.8377 , -0.092857, 0.001421 ,  0.62685,   0.20414,  -15.15,  94.699, -117.52, 0.67562 ]
+#elif defined BIO_VPROFILE_TOKYOBAY
+    [ 0.58184, -0.07835 , 0.0025208,  0.2612 ,   0.17559, -4.4179,  3.1193,  39.441, 0.55383 ]
+#elif defined BIO_VPROFILE_PALAU
+    [ 0.19481, -0.015131,0.00021533,  0.03188, 0.0063201, 0.87858,  -16.46,  47.271, 0.13102 ]
+#elif defined BIO_VPROFILE_JAPAN
+    [ 0.26379, -0.036883,0.00098696,-0.0067455,-0.010478,-0.51103, -11.061,  43.275, 0.27491 ]
+#else
+    [ 0.26379, -0.036883,0.00098696,-0.0067455,-0.010478,-0.51103, -11.061,  43.275, 0.27491 ]
+#endif
+                                      !  Dnfl   Dtm    Ccl    Cya
+  real(8), parameter :: r(4)        = [ 0.4d0, 0.3d0, 0.1d0, 0.2d0 ]
+  real(8), parameter :: Chl2PhyC(4) = [ 0.2d0, 0.2d0, 0.2d0, 0.2d0 ] !Conversion ratio from Chl-a to phyC (umolC/L)/(ug/L)
+
+  real(8) :: Tm20, Sm35, Dp1000
+
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  ! Chl-a concentration (ug/L)
+  ZooC_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35           &
+                      + a(5)*Dp1000 + a(6)*Dp1000*Dp1000  + a(7)*Dp1000*Dp1000*Dp1000     &
+                      + a(7)*Tm20*Dp1000 
+  ! PhyC density (umolC/L)
+  ZooC_Profile = ZooC_Profile * Chl2PhyC(m) *0.1d0             
+  ZooC_Profile = max( ZooC_Profile, 0.0d0 )
+
+  end function ZooC_Profile
+
 !--- NO3 -------------------------------------
 !     Based on GLODAPv2.2022
 
@@ -2006,10 +2068,15 @@ contains
     [ 0.81133,  -1.0881, 0.13916,-0.46799, -7.1662,  9.4007,  1.9147,  1.3848 ]
 #endif
 
-  real(8) :: x(7) = [ T, T*T, S, S*S, d, d*d, T*d ]
+  real(8) :: Tm20, Sm35, Dp1000
   
-  NO3_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                     + a(5)*x(5) + a(6)*x(6) + a(7)*x(7) 
+  Tm20 = min(T,27.0d0)-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  NO3_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                     + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
+  NO3_Profile = max( NO3_Profile, 0.2d0 )
 
   end function NO3_Profile
 
@@ -2076,11 +2143,15 @@ contains
     [ 0.080835, -0.074531,  0.010308, -0.08938, -0.57938, 0.66142,  0.14611,  0.10271 ]
 #endif
 
-  real(8) :: x(7) = [ T, T*T, S, S*S, d, d*d, T*d ]
+  real(8) :: Tm20, Sm35, Dp1000
   
-  PO4_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                     + a(5)*x(5) + a(6)*x(6) + a(7)*x(7)
-  PO4_Profile = max( PO4_Profile, 0.0d0 )
+  Tm20 = min(T,27.0d0)-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  PO4_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                     + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
+  PO4_Profile = max( PO4_Profile, 0.04d0 )
 
   end function PO4_Profile
 
@@ -2125,11 +2196,12 @@ contains
 !--- DOC -------------------------------------
 !     Based on GLODAPv2.2022
 
-  real(8) function DOC_Profile(T, S, d)
+  real(8) function DOC_Profile(T, S, d, m)
   implicit none
   real(8), intent(in) :: T   ! Potential temperatureture (oC)
   real(8), intent(in) :: S   ! Salinity (PSU)
   real(8), intent(in) :: d   ! Depth (m)
+  Integer, intent(in) :: m   ! Index of DOM category
 
   real(8), parameter :: a(0:7)  = &
 #if defined BIO_VPROFILE_YAEYAMA
@@ -2145,14 +2217,59 @@ contains
 #else
     [  64.282,   1.303,  0.008285,  7.5523,  12.042, -33.224, 0.036558, -1.7053 ]
 #endif
+                                       ! LDOM    RDOM
+  real(8), parameter :: r(2)        = [ 0.42d0, 0.58d0 ]
 
-  real(8) :: x(7) = [ T, T*T, S, S*S, d, d*d, T*d ]
-  
-  DOC_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                     + a(5)*x(5) + a(6)*x(6) + a(7)*x(7) 
-  DOC_Profile = max( DOC_Profile, 0.0d0 )
+  real(8) :: Tm20, Sm35, Dp1000
+ 
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  DOC_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                     + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
+  DOC_Profile = max( DOC_Profile, 0.0d0 )*r(m)
 
   end function DOC_Profile
+
+!--- POC -------------------------------------
+!     Based on ?????????????てきとう。要修正 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  real(8) function POC_Profile(T, S, d, m)
+  implicit none
+  real(8), intent(in) :: T   ! Potential temperatureture (oC)
+  real(8), intent(in) :: S   ! Salinity (PSU)
+  real(8), intent(in) :: d   ! Depth (m)
+  Integer, intent(in) :: m   ! Index of POM category
+
+  real(8), parameter :: a(0:7)  = &
+#if defined BIO_VPROFILE_YAEYAMA
+    [  62.599,   1.872,  0.048378,  4.6167,  6.7483, -8.4206,  0.37596,-0.30665 ]
+#elif defined BIO_VPROFILE_SHIZUGAWA
+    [  56.171, 0.91687, -0.019579, -26.166,  -9.841,  -55.44, -0.24788, -3.0331 ]
+#elif defined BIO_VPROFILE_TOKYOBAY
+    [  63.563,  1.0345, -0.012349, -22.643, -14.282, -32.301,-0.026612, -1.7206 ]
+#elif defined BIO_VPROFILE_PALAU
+    [  50.837,   1.889,  0.030908, -10.907, -9.1075,  21.078,  -1.6244, 0.61922 ]
+#elif defined BIO_VPROFILE_JAPAN
+    [  64.282,   1.303,  0.008285,  7.5523,  12.042, -33.224, 0.036558, -1.7053 ]
+#else
+    [  64.282,   1.303,  0.008285,  7.5523,  12.042, -33.224, 0.036558, -1.7053 ]
+#endif
+                                       ! LPOM    RPOM    CPOM
+  real(8), parameter :: r(3)        = [ 0.42d0, 0.58d0, 0.0d0 ]
+
+  real(8) :: Tm20, Sm35, Dp1000
+  
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  POC_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                     + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
+  POC_Profile = max( POC_Profile, 0.0d0 )*0.1d0*r(m)  ! 10% of DOC
+
+  end function POC_Profile
 
 !--- d13C_DIC -------------------------------------
 !     Based on GLODAPv2.2022
@@ -2178,10 +2295,14 @@ contains
     [ 0.91762,  0.075141, -0.002297, -0.14969,  0.035444, 0.37965,-0.049614,-0.0097213 ]
 #endif
 
-  real(8) :: x(7) = [ T, T*T, S, S*S, d, d*d, T*d ]
-  
-  d13C_DIC_Profile = a(0) + a(1)*x(1) + a(2)*x(2) + a(3)*x(3) + a(4)*x(4) &
-                     + a(5)*x(5) + a(6)*x(6) + a(7)*x(7) 
+  real(8) :: Tm20, Sm35, Dp1000
+
+  Tm20 = T-20.0d0
+  Sm35 = S-35.0d0
+  Dp1000 = max(d,0.0d0)*0.001d0
+
+  d13C_DIC_Profile = a(0) + a(1)*Tm20 + a(2)*Tm20*Tm20 + a(3)*Sm35 + a(4)*Sm35*Sm35  &
+                     + a(5)*Dp1000 + a(6)*Dp1000*Dp1000 + a(7)*Tm20*Dp1000 
   d13C_DIC_Profile = max( d13C_DIC_Profile, -10.0d0 )
   d13C_DIC_Profile = min( d13C_DIC_Profile,  10.0d0 )
 
