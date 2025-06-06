@@ -865,26 +865,6 @@ PROGRAM main
           t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt_sgd*dt
 #endif
         end do
-
-!------------------------------------------------------------------------------
-
-      else if (nSetting .eq. 8) then
-        
-        !        t(i,j,k,nstp,iTemp)=t(i,j,k,nstp,iTemp)+0.
-        !        t(i,j,k,nstp,iSalt)=t(i,j,k,nstp,iSalt)+0.
-        !        t(i,j,k,nstp,iSedi)=t(i,j,k,nstp,iSedi)+0.
-                
-        do id=1,Nid
-
-          t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt(k,id)*dt
-#if defined SEDECO_SGD && defined SGD_ON
-          ! Overflowing of the SGD volume flux is assumed 
-          dtrc_dt_sgd = -0.01d0*sgd_flux *t(i,j,k,nstp,id)/dz(i,j,1)/dble(N)
-          t(i,j,k,nstp,id)=t(i,j,k,nstp,id) + dtrc_dt_sgd*dt
-#endif
-        end do
-
-
       end if
           
 !------------------------------------------------------------------------------
