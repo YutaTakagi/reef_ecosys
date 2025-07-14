@@ -402,8 +402,10 @@ CONTAINS
 
             ! Set Total OM values
             SEDECO(ng)%DIC(iCt,k,i,j)        = 1915.0d0 !DIC  (umol L-1)
-            SEDECO(ng)%DOC(iCt,iLDOM,k,i,j)  = 10.0d0   !LDOC (umol L-1) 
-            SEDECO(ng)%DOC(iCt,iRDOM,k,i,j)  = 50.0d0   !RDOC (umol L-1) 
+            ! SEDECO(ng)%DOC(iCt,iLDOM,k,i,j)  = 10.0d0   !LDOC (umol L-1) 
+            ! SEDECO(ng)%DOC(iCt,iRDOM,k,i,j)  = 50.0d0   !RDOC (umol L-1) 
+            SEDECO(ng)%DOC(iCt,iLDOM,k,i,j)  = 0.0d0   !LDOC (umol L-1) yt_edit
+            SEDECO(ng)%DOC(iCt,iRDOM,k,i,j)  = 0.0d0   !RDOC (umol L-1) yt_edit
             SEDECO(ng)%POC(iCt,iLPOM,k,i,j)  = OrgC_sed*1.0d-6!LPOC (nmol g-1)
             SEDECO(ng)%POC(iCt,iRPOM,k,i,j)  = OrgC_sed   !RPOC (nmol g-1)
             SEDECO(ng)%POC(iCt,iCPOM,k,i,j)  = 0.0d0 !CPOC (nmol g-1)
@@ -430,8 +432,10 @@ CONTAINS
             SEDECO(ng)%PIC(iD47,k,i,j)        = ???? !CaCO3 (nmol g-1)
 #   endif
 #  endif
-            SEDECO(ng)%NO3(iNt,k,i,j)       = 0.2d0        !NO3  (umol L-1) 
-            SEDECO(ng)%NH4(iNt,k,i,j)       = 0.26d0       !NH4  (umol L-1) 
+            ! SEDECO(ng)%NO3(iNt,k,i,j)       = 0.2d0        !NO3  (umol L-1) 
+            ! SEDECO(ng)%NH4(iNt,k,i,j)       = 0.26d0       !NH4  (umol L-1) 
+            SEDECO(ng)%NO3(iNt,k,i,j)       = 0.0d0        !NO3  (umol L-1) yt_test
+            SEDECO(ng)%NH4(iNt,k,i,j)       = 0.0d0        !NH4  (umol L-1) yt_test
             SEDECO(ng)%DON(iNt,iLDOM,k,i,j) = SEDECO(ng)%DOC(iCt,iLDOM,k,i,j) * rNCph   !DON  (umol L-1) 
             SEDECO(ng)%DON(iNt,iRDOM,k,i,j) = SEDECO(ng)%DOC(iCt,iRDOM,k,i,j) * rNCph   !DON  (umol L-1) 
             SEDECO(ng)%PON(iNt,iLPOM,k,i,j) = SEDECO(ng)%POC(iCt,iLPOM,k,i,j) * rNCph   !PON  (umol L-1) 
@@ -448,7 +452,8 @@ CONTAINS
             SEDECO(ng)%PON(iN15,iCPOM,k,i,j) = Ci_from_Ct_delta(SEDECO(ng)%PON(iNt,iCPOM,k,i,j), 2.0d0, R15N_AIR) !PON  (umol L-1)
 #  endif
 
-            SEDECO(ng)%PO4(iPt,k,i,j)       = 0.04d0        !PO4  (umol L-1) 
+            ! SEDECO(ng)%PO4(iPt,k,i,j)       = 0.04d0        !PO4  (umol L-1) 
+            SEDECO(ng)%PO4(iPt,k,i,j)       = 0.0d0         !PO4  (umol L-1) yt_test
             SEDECO(ng)%DOP(iPt,iLDOM,k,i,j) = SEDECO(ng)%DOC(iCt,iLDOM,k,i,j) * rPCph   !DOP  (umol L-1) 
             SEDECO(ng)%DOP(iPt,iRDOM,k,i,j) = SEDECO(ng)%DOC(iCt,iRDOM,k,i,j) * rPCph   !DOP  (umol L-1) 
             SEDECO(ng)%POP(iPt,iLPOM,k,i,j) = SEDECO(ng)%POC(iCt,iLPOM,k,i,j) * rPCph   !POP  (umol L-1) 

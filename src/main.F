@@ -103,7 +103,7 @@ PROGRAM main
   real(8) :: fvol_rc, fvol_ch
   real(8) :: dtrc_dt_sgd
 
-  integer :: in_file(12)
+  integer :: in_file(20)
   real(8) :: Tmax, time0
   integer :: nSetting
   integer :: Im, Jm, N
@@ -299,7 +299,7 @@ PROGRAM main
 
 !------ Set environmental parameters ----------------------------
 
-    CALL setdata(nSetting, in_file)
+    CALL setdata(nSetting, in_file, dt, nstp)
         
 #if defined REEF_FLOW
     if (nSetting .eq. 4) then
@@ -442,7 +442,8 @@ PROGRAM main
 #endif
 
 #if defined SEDECO_SGD && defined SGD_ON
-    sgd_flux  = sgd_flux_in
+    ! sgd_flux  = sgd_flux_in
+    sgd_flux  = sgd
     sgd_Tmp   = sgd_Tmp_in 
     sgd_Sal   = sgd_Sal_in 
     sgd_DOx   = sgd_DOx_in
@@ -914,6 +915,8 @@ PROGRAM main
       endif
       
       write(*,*) 'Time (day): ', time  ! Output for standard out
+      ! write(*,*) 'pH', pH  ! Output for standard out
+      ! write(*,*) 'DOx', t(i,j,:,nstp,iOxyg)  ! Output for standard out
       write(sFNUM,'(I4.4)') ifnum
       CALL write_env_data(10)
 #if defined SEDIMENT_TESTMODE

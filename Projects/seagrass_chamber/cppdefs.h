@@ -3,7 +3,7 @@
 
 /*** submarine groundwater discharge ***/
 
-/*#define SGD_ON*/    /*Original CPP flag */
+#define SGD_ON    /*Original CPP flag */
 
 /***  Biological model options. (Original CPP flags) ***/
 
@@ -61,8 +61,9 @@
 /*** Seagrass model options. ***/
 # if defined SEAGRASS
 #  define SEAGRASS_LEAF_NUTRIENT_UPTAKE
+#  define SEAGRASS_IMMEDIATE_NO3_TO_NH4_CONVERSION /* Turn on to coverts from nitrate to ammonium in internal stockpile upon uptake */
 #  if defined SEDIMENT_ECOSYS
-#   define SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE
+/*#   define SEAGRASS_ROOT_CARBON_OXYGEN_EXCHANGE*/
 #  endif
 #  if defined SEDIMENT_ECOSYS
 #   define SEAGRASS_ROOT_NUTRIENT_UPTAKE
@@ -71,6 +72,9 @@
 #  if defined SEDIMENT_ECOSYS
 #   define SEAGRASS_ROOT_POM
 #  endif
+/*#  define NET_ZERO_MASS_START*/
+/*# define FULL_STOCK_START*/
+# define CHAMBER_EQUILIBRIUM_STOCK_START
 # endif
 
 
@@ -92,7 +96,7 @@
 /*** Box model option ***/
 
 /* Set output interval for each model */
-#define ECOSYS_OUTPUT_INTERVAL 60.0d0  /* Output interval (min) */
+#define ECOSYS_OUTPUT_INTERVAL 1.0d0  /* Output interval (min) */
 #define SEDECO_OUTPUT_INTERVAL 1440.0d0  /* Output interval (min) */
 #define CORAL_OUTPUT_INTERVAL   5.0d0  /* Output interval (min) */
 #define CORAL_AVERAGE_INTERVAL  1.0d0  /* Averaging interval (day) */
